@@ -7,21 +7,21 @@ namespace iscore {
 class SettingsPresenter;
 }  // namespace iscore
 
-using namespace iscore;
 namespace Network
 {
 NetworkSettings::NetworkSettings()
 {
 }
 
-SettingsDelegateViewInterface* NetworkSettings::makeView()
+iscore::SettingsDelegateViewInterface* NetworkSettings::makeView()
 {
     return new NetworkSettingsView(nullptr);
 }
 
-SettingsDelegatePresenterInterface* NetworkSettings::makePresenter(SettingsPresenter* p,
-        SettingsDelegateModelInterface* m,
-        SettingsDelegateViewInterface* v)
+iscore::SettingsDelegatePresenterInterface* NetworkSettings::makePresenter(
+        iscore::SettingsPresenter* p,
+        iscore::SettingsDelegateModelInterface* m,
+        iscore::SettingsDelegateViewInterface* v)
 {
     auto pres = new NetworkSettingsPresenter(p, m, v);
 
@@ -33,7 +33,7 @@ SettingsDelegatePresenterInterface* NetworkSettings::makePresenter(SettingsPrese
     return pres;
 }
 
-SettingsDelegateModelInterface* NetworkSettings::makeModel()
+iscore::SettingsDelegateModelInterface* NetworkSettings::makeModel()
 {
     return new NetworkSettingsModel();
 }

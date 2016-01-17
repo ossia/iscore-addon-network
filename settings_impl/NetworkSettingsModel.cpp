@@ -4,7 +4,6 @@
 #include "NetworkSettingsModel.hpp"
 #include <iscore/plugins/settingsdelegate/SettingsDelegateModelInterface.hpp>
 
-using namespace iscore;
 namespace Network
 {
 NetworkSettingsModel::NetworkSettingsModel() :
@@ -63,7 +62,8 @@ int NetworkSettingsModel::getMasterPort() const
     return masterPort;
 }
 
-void NetworkSettingsModel::setPresenter(SettingsDelegatePresenterInterface* presenter)
+void NetworkSettingsModel::setPresenter(
+        iscore::SettingsDelegatePresenterInterface* presenter)
 {
 }
 

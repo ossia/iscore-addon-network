@@ -14,13 +14,12 @@ class SettingsDelegateViewInterface;
 class SettingsPresenter;
 }  // namespace iscore
 
-using namespace iscore;
-
 namespace Network
 {
-NetworkSettingsPresenter::NetworkSettingsPresenter(SettingsPresenter* parent,
-        SettingsDelegateModelInterface* model,
-        SettingsDelegateViewInterface* view) :
+NetworkSettingsPresenter::NetworkSettingsPresenter(
+        iscore::SettingsPresenter* parent,
+        iscore::SettingsDelegateModelInterface* model,
+        iscore::SettingsDelegateViewInterface* view) :
     SettingsDelegatePresenterInterface {parent, model, view}
 {
     auto net_model = static_cast<NetworkSettingsModel*>(model);
