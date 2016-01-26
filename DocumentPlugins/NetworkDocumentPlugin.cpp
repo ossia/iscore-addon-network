@@ -90,7 +90,7 @@ class ScenarioFindEventVisitor
 NetworkDocumentPlugin::NetworkDocumentPlugin(
         NetworkPolicyInterface *policy,
         iscore::Document& doc):
-    iscore::DocumentPluginModel{doc, "NetworkDocumentPlugin", &doc.model()},
+    iscore::SerializableDocumentPluginModel{doc, "NetworkDocumentPlugin", &doc.model()},
     m_policy{policy},
     m_groups{new GroupManager{this}}
 {
@@ -143,14 +143,20 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
 
 NetworkDocumentPlugin::NetworkDocumentPlugin(const VisitorVariant &loader,
                                              iscore::Document& doc):
-    iscore::DocumentPluginModel{doc, "NetworkDocumentPlugin", &doc.model()}
+    iscore::SerializableDocumentPluginModel{doc, "NetworkDocumentPlugin", &doc.model()}
 {
     deserialize_dyn(loader, *this);
 }
 
-void NetworkDocumentPlugin::serialize(const VisitorVariant & vis) const
+void NetworkDocumentPlugin::serialize_impl(const VisitorVariant & vis) const
 {
+    ISCORE_TODO; // save uuid
     serialize_dyn(vis, *this);
+}
+
+auto NetworkDocumentPlugin::uuid() const -> ConcreteFactoryKey
+{
+    ISCORE_RETURN_UUID(b9383b66-860f-4878-bdbc-236cbcd2509c)
 }
 
 void NetworkDocumentPlugin::setPolicy(NetworkPolicyInterface * pol)

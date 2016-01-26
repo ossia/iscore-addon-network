@@ -30,7 +30,8 @@ class NetworkPolicyInterface : public QObject
         virtual Session* session() const = 0;
 };
 
-class NetworkDocumentPlugin : public iscore::DocumentPluginModel
+class NetworkDocumentPlugin final :
+        public iscore::SerializableDocumentPluginModel
 {
         Q_OBJECT
 
@@ -42,8 +43,19 @@ class NetworkDocumentPlugin : public iscore::DocumentPluginModel
         // Loading has to be in two steps since the plugin policy is different from the client
         // and server.
         NetworkDocumentPlugin(const VisitorVariant& loader, iscore::Document& doc);
+
         void setPolicy(NetworkPolicyInterface*);
 
+        GroupManager* groupManager() const
+        { return m_groups; }
+
+        NetworkPolicyInterface* policy() const
+        { return m_policy; }
+
+    signals:
+        void sessionChanged();
+
+    private:
         std::vector<iscore::ElementPluginModelType> elementPlugins() const override;
 
         iscore::ElementPluginModel* makeElementPlugin(
@@ -64,19 +76,9 @@ class NetworkDocumentPlugin : public iscore::DocumentPluginModel
         virtual QWidget *makeElementPluginWidget(
                 const iscore::ElementPluginModel*, QWidget* widg) const override;
 
-        void serialize(const VisitorVariant&) const override;
+        void serialize_impl(const VisitorVariant&) const override;
+        ConcreteFactoryKey uuid() const override;
 
-
-        GroupManager* groupManager() const
-        { return m_groups; }
-
-        NetworkPolicyInterface* policy() const
-        { return m_policy; }
-
-    signals:
-        void sessionChanged();
-
-    private:
         void setupGroupPlugin(GroupMetadata* grp);
 
         NetworkPolicyInterface* m_policy{};
