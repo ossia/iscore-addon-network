@@ -111,14 +111,4 @@ void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
     m_sessionBuilder->initiateConnection();
 }
 
-iscore::DocumentPluginModel *NetworkApplicationPlugin::loadDocumentPlugin(
-        const QString &name,
-        const VisitorVariant &var,
-        iscore::Document* parent)
-{
-    if(name != NetworkDocumentPlugin::staticMetaObject.className())
-        return nullptr;
-
-    return new NetworkDocumentPlugin{var, *parent};
-}
 }

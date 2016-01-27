@@ -34,10 +34,6 @@ class NetworkApplicationPlugin : public QObject, public iscore::GUIApplicationCo
         void setupClientConnection(QString ip, int port);
 
     private:
-        virtual iscore::DocumentPluginModel* loadDocumentPlugin(
-                const QString& name,
-                const VisitorVariant& var,
-                iscore::Document* parent) override;
 
         std::unique_ptr<ClientSessionBuilder> m_sessionBuilder;
 

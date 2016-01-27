@@ -2,6 +2,7 @@
 
 #include <iscore/plugins/qt_interfaces/GUIApplicationContextPlugin_QtInterface.hpp>
 #include <iscore/plugins/qt_interfaces/PanelFactoryInterface_QtInterface.hpp>
+#include <iscore/plugins/qt_interfaces/FactoryInterface_QtInterface.hpp>
 #include <QObject>
 #include <utility>
 #include <vector>
@@ -19,6 +20,7 @@ class iscore_addon_network :
         public QObject,
         public iscore::GUIApplicationContextPlugin_QtInterface,
         public iscore::CommandFactory_QtInterface,
+        public iscore::FactoryInterface_QtInterface,
         // public iscore::SettingsDelegateFactoryInterface_QtInterface,
         public iscore::PanelFactory_QtInterface
 {
@@ -27,6 +29,7 @@ class iscore_addon_network :
         Q_INTERFACES(
                 iscore::GUIApplicationContextPlugin_QtInterface
                 iscore::CommandFactory_QtInterface
+                iscore::FactoryInterface_QtInterface
                 //iscore::SettingsDelegateFactoryInterface_QtInterface
                 iscore::PanelFactory_QtInterface)
 
@@ -35,7 +38,12 @@ class iscore_addon_network :
 
         //iscore::SettingsDelegateFactoryInterface* settings_make() override;
 
-        iscore::GUIApplicationContextPlugin* make_applicationPlugin(const iscore::ApplicationContext& app) override;
+        std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>> factories(
+                const iscore::ApplicationContext& ctx,
+                const iscore::AbstractFactoryKey& factoryName) const override;
+
+        iscore::GUIApplicationContextPlugin* make_applicationPlugin(
+                const iscore::ApplicationContext& app) override;
 
         std::pair<const CommandParentFactoryKey, CommandGeneratorMap> make_commands() override;
 

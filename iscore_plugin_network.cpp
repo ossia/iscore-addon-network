@@ -6,7 +6,9 @@
 #include "DistributedScenario/Panel/GroupPanelFactory.hpp"
 #include <iscore/plugins/qt_interfaces/GUIApplicationContextPlugin_QtInterface.hpp>
 #include <iscore_addon_network_commands_files.hpp>
+#include <DocumentPlugins/NetworkDocumentPlugin.hpp>
 
+#include <iscore/plugins/customfactory/FactorySetup.hpp>
 namespace iscore {
 
 class PanelFactory;
@@ -29,14 +31,30 @@ iscore::SettingsDelegateFactoryInterface* iscore_plugin_network::settings_make()
     return new NetworkSettings;
 }
 */
-iscore::GUIApplicationContextPlugin* iscore_addon_network::make_applicationPlugin(const iscore::ApplicationContext& app)
+iscore::GUIApplicationContextPlugin*
+iscore_addon_network::make_applicationPlugin(
+        const iscore::ApplicationContext& app)
 {
     return new Network::NetworkApplicationPlugin{app};
 }
 
-std::vector<iscore::PanelFactory*> iscore_addon_network::panels()
+std::vector<iscore::PanelFactory*>
+iscore_addon_network::panels()
 {
     return {new Network::GroupPanelFactory};
+}
+
+std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>>
+iscore_addon_network::factories(
+        const iscore::ApplicationContext& ctx,
+        const iscore::AbstractFactoryKey& key) const
+{
+    return instantiate_factories<
+            iscore::ApplicationContext,
+    TL<
+        FW<iscore::DocumentPluginFactory,
+             Network::DocumentPluginFactory>
+    >>(ctx, key);
 }
 
 

@@ -7,6 +7,7 @@
 
 #include <iscore/serialization/DataStreamVisitor.hpp>
 #include <iscore/serialization/JSONVisitor.hpp>
+#include <core/document/Document.hpp>
 
 class DataStream;
 class JSONObject;
@@ -31,7 +32,7 @@ class NetworkPolicyInterface : public QObject
 };
 
 class NetworkDocumentPlugin final :
-        public iscore::SerializableDocumentPluginModel
+        public iscore::SerializableDocumentPlugin
 {
         Q_OBJECT
 
@@ -77,13 +78,28 @@ class NetworkDocumentPlugin final :
                 const iscore::ElementPluginModel*, QWidget* widg) const override;
 
         void serialize_impl(const VisitorVariant&) const override;
-        ConcreteFactoryKey uuid() const override;
+        ConcreteFactoryKey concreteFactoryKey() const override;
 
         void setupGroupPlugin(GroupMetadata* grp);
 
         NetworkPolicyInterface* m_policy{};
         GroupManager* m_groups{};
 
+};
+
+class DocumentPluginFactory :
+        public iscore::DocumentPluginFactory
+{
+        ISCORE_CONCRETE_FACTORY_DECL("58c9e19a-fde3-47d0-a121-35853fec667d")
+
+    public:
+        iscore::DocumentPlugin* load(
+                const VisitorVariant& var,
+                iscore::DocumentContext& doc,
+                QObject* parent) override
+        {
+            return new NetworkDocumentPlugin{var, doc.document}; // TODO Smell
+        }
 };
 }
 
