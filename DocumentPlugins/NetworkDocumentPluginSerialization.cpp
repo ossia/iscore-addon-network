@@ -10,7 +10,7 @@ template <typename T> class Writer;
 
 
 template<>
-void Visitor<Reader<DataStream>>::readFrom(
+void Visitor<Reader<DataStream>>::readFrom_impl(
         const Network::NetworkDocumentPlugin& elt)
 {
     readFrom(*elt.groupManager());
@@ -31,7 +31,7 @@ void Visitor<Writer<DataStream>>::writeTo(
 }
 
 template<>
-void Visitor<Reader<JSONObject>>::readFrom(
+void Visitor<Reader<JSONObject>>::readFrom_impl(
         const Network::NetworkDocumentPlugin& elt)
 {
     readFrom(*elt.groupManager());
