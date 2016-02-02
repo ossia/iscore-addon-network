@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iscore/plugins/qt_interfaces/PluginRequirements_QtInterface.hpp>
 #include <iscore/plugins/qt_interfaces/GUIApplicationContextPlugin_QtInterface.hpp>
 #include <iscore/plugins/qt_interfaces/PanelFactoryInterface_QtInterface.hpp>
 #include <iscore/plugins/qt_interfaces/FactoryInterface_QtInterface.hpp>
@@ -18,6 +19,7 @@ class PanelFactory;
 
 class iscore_addon_network :
         public QObject,
+        public iscore::Plugin_QtInterface,
         public iscore::GUIApplicationContextPlugin_QtInterface,
         public iscore::CommandFactory_QtInterface,
         public iscore::FactoryInterface_QtInterface,
@@ -27,6 +29,7 @@ class iscore_addon_network :
         Q_OBJECT
         Q_PLUGIN_METADATA(IID GUIApplicationContextPlugin_QtInterface_iid)
         Q_INTERFACES(
+                iscore::Plugin_QtInterface
                 iscore::GUIApplicationContextPlugin_QtInterface
                 iscore::CommandFactory_QtInterface
                 iscore::FactoryInterface_QtInterface
@@ -35,7 +38,9 @@ class iscore_addon_network :
 
     public:
         iscore_addon_network();
+        virtual ~iscore_addon_network();
 
+    private:
         //iscore::SettingsDelegateFactoryInterface* settings_make() override;
 
         std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>> factories(
@@ -47,6 +52,8 @@ class iscore_addon_network :
 
         std::pair<const CommandParentFactoryKey, CommandGeneratorMap> make_commands() override;
 
-
         std::vector<iscore::PanelFactory*> panels() override;
+
+        int32_t version() const override;
+        UuidKey<iscore::Plugin> key() const override;
 };

@@ -9,6 +9,9 @@
 #include <DocumentPlugins/NetworkDocumentPlugin.hpp>
 
 #include <iscore/plugins/customfactory/FactorySetup.hpp>
+
+#include <iscore/command/CommandGeneratorMap.hpp>
+#include <unordered_map>
 namespace iscore {
 
 class PanelFactory;
@@ -21,6 +24,11 @@ iscore_addon_network::iscore_addon_network() :
         iscore::GUIApplicationContextPlugin_QtInterface {}//,
         //iscore::SettingsDelegateFactoryInterface_QtInterface {}
 {
+}
+
+iscore_addon_network::~iscore_addon_network()
+{
+
 }
 
 // Interfaces implementations :
@@ -57,10 +65,6 @@ iscore_addon_network::factories(
     >>(ctx, key);
 }
 
-
-#include <iscore/command/CommandGeneratorMap.hpp>
-#include <unordered_map>
-
 std::pair<const CommandParentFactoryKey, CommandGeneratorMap> iscore_addon_network::make_commands()
 {
     using namespace Network;
@@ -75,4 +79,14 @@ std::pair<const CommandParentFactoryKey, CommandGeneratorMap> iscore_addon_netwo
 
 
     return cmds;
+}
+
+int32_t iscore_addon_network::version() const
+{
+    return 1;
+}
+
+UuidKey<iscore::Plugin> iscore_addon_network::key() const
+{
+    return "33508c6d-46a1-4449-bfff-57246d579621";
 }
