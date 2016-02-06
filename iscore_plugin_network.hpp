@@ -54,6 +54,6 @@ class iscore_addon_network :
 
         std::vector<iscore::PanelFactory*> panels() override;
 
-        int32_t version() const override;
+        iscore::Version version() const override;
         UuidKey<iscore::Plugin> key() const override;
 };

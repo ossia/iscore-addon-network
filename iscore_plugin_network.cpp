@@ -81,9 +81,9 @@ std::pair<const CommandParentFactoryKey, CommandGeneratorMap> iscore_addon_netwo
     return cmds;
 }
 
-int32_t iscore_addon_network::version() const
+iscore::Version iscore_addon_network::version() const
 {
-    return 1;
+    return iscore::Version{1};
 }
 
 UuidKey<iscore::Plugin> iscore_addon_network::key() const
