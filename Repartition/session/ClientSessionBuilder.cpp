@@ -18,6 +18,7 @@
 #include "session/../client/RemoteClient.hpp"
 #include "DocumentPlugins/NetworkDocumentPlugin.hpp"
 #include "DocumentPlugins/NetworkClientDocumentPlugin.hpp"
+#include <iscore/plugins/documentdelegate/DocumentDelegateFactoryInterface.hpp>
 
 namespace Network
 {
@@ -101,7 +102,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
         iscore::Document* doc = m_context.documents.loadDocument(
                        m_context,
                        m_documentData,
-                       m_context.components.availableDocuments().front()); // TODO id instead
+                       *m_context.components.factory<iscore::DocumentDelegateList>().begin()); // TODO id instead
 
         if(!doc)
         {
