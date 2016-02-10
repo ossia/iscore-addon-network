@@ -17,10 +17,9 @@ class NetworkSettings : public iscore::SettingsDelegateFactory
         NetworkSettings();
         virtual ~NetworkSettings() = default;
 
-        // SettingsGroup interface
-    public:
+    private:
         iscore::SettingsDelegateViewInterface* makeView() override;
-        iscore::SettingsDelegatePresenterInterface* makePresenter(
+        iscore::SettingsDelegatePresenterInterface* makePresenter_impl(
                 iscore::SettingsDelegateModelInterface& m,
                 iscore::SettingsDelegateViewInterface& v,
                 QObject* parent) override;

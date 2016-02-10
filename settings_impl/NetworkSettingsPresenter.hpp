@@ -19,18 +19,19 @@ class MasterPortChangedCommand;
 class NetworkSettingsModel;
 class NetworkSettingsView;
 
-class NetworkSettingsPresenter : public iscore::SettingsDelegatePresenterInterface
+class NetworkSettingsPresenter :
+        public iscore::SettingsDelegatePresenterInterface
 {
         Q_OBJECT
     public:
+        using model_type = NetworkSettingsModel;
+        using view_type = NetworkSettingsView;
         NetworkSettingsPresenter(
-                iscore::SettingsDelegateModelInterface& model,
-                iscore::SettingsDelegateViewInterface& view,
+                NetworkSettingsModel& m,
+                NetworkSettingsView& v,
                 QObject* parent);
 
-        void on_accept() override;
-        void on_reject() override;
-
+    private:
         QString settingsName() override
         {
             return tr("Network");
@@ -38,23 +39,8 @@ class NetworkSettingsPresenter : public iscore::SettingsDelegatePresenterInterfa
 
         QIcon settingsIcon() override;
 
-        void load();
-        NetworkSettingsModel& model();
-        NetworkSettingsView& view();
-
-    public slots:
         void updateMasterPort();
         void updateClientPort();
         void updateClientName();
-
-        void setMasterPortCommand(MasterPortChangedCommand* cmd);
-        void setClientPortCommand(ClientPortChangedCommand* cmd);
-        void setClientNameCommand(ClientNameChangedCommand* cmd);
-
-    private:
-        // S'il y avait plusieurs contrôles chaque contrôle devrait avoir sa "commande".
-        iscore::Command* m_masterportCommand {nullptr};
-        iscore::Command* m_clientportCommand {nullptr};
-        iscore::Command* m_clientnameCommand {nullptr};
 };
 }

@@ -38,4 +38,9 @@ class NetworkSettingsModel : public iscore::SettingsDelegateModelInterface
         int clientPort;
         QString clientName;
 };
+
+ISCORE_SETTINGS_PARAMETER(NetworkSettingsModel, ClientName)
+ISCORE_SETTINGS_PARAMETER(NetworkSettingsModel, ClientPort)
+ISCORE_SETTINGS_PARAMETER(NetworkSettingsModel, MasterPort)
+
 }

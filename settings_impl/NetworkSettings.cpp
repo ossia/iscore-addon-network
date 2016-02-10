@@ -18,19 +18,15 @@ iscore::SettingsDelegateViewInterface* NetworkSettings::makeView()
     return new NetworkSettingsView(nullptr);
 }
 
-iscore::SettingsDelegatePresenterInterface* NetworkSettings::makePresenter(
+iscore::SettingsDelegatePresenterInterface* NetworkSettings::makePresenter_impl(
         iscore::SettingsDelegateModelInterface& m,
         iscore::SettingsDelegateViewInterface& v,
         QObject* parent)
 {
-    auto pres = new NetworkSettingsPresenter(m, v, parent);
-
-    v.setPresenter(pres);
-
-    pres->load();
-    pres->view().doConnections();
-
-    return pres;
+    return new NetworkSettingsPresenter(
+                static_cast<NetworkSettingsModel&>(m),
+                static_cast<NetworkSettingsView&>(v),
+                parent);
 }
 
 iscore::SettingsDelegateModelInterface* NetworkSettings::makeModel()

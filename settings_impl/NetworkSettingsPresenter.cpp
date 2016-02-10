@@ -17,149 +17,50 @@ class SettingsPresenter;
 namespace Network
 {
 NetworkSettingsPresenter::NetworkSettingsPresenter(
-        iscore::SettingsDelegateModelInterface& model,
-        iscore::SettingsDelegateViewInterface& view,
+        NetworkSettingsModel& m,
+        NetworkSettingsView& v,
         QObject* parent) :
-    SettingsDelegatePresenterInterface {model, view, parent}
+    SettingsDelegatePresenterInterface {m, v, parent}
 {
-    auto& net_model = static_cast<NetworkSettingsModel&>(model);
-    con(net_model, SIGNAL(masterPortChanged()),
-    this,	   SLOT(updateMasterPort()));
-    con(net_model, SIGNAL(clientPortChanged()),
-    this,	   SLOT(updateClientPort()));
-    con(net_model, SIGNAL(clientNameChanged()),
-    this,	   SLOT(updateClientName()));
-}
+    auto& net_model = static_cast<NetworkSettingsModel&>(m_model);
+    con(net_model, &NetworkSettingsModel::masterPortChanged,
+        this,	   &NetworkSettingsPresenter::updateMasterPort);
+    con(net_model, &NetworkSettingsModel::clientPortChanged,
+        this,	   &NetworkSettingsPresenter::updateClientPort);
+    con(net_model, &NetworkSettingsModel::clientNameChanged,
+        this,	   &NetworkSettingsPresenter::updateClientName);
 
-void NetworkSettingsPresenter::on_accept()
-{
-    if(m_masterportCommand)
-    {
-        m_masterportCommand->redo();
-    }
+    con(v, &NetworkSettingsView::masterPortChanged,
+        this, [&] (auto param) {
+            m_disp.submitCommand<SetMasterPort>(this->model(this), param);
+    });
+    con(v, &NetworkSettingsView::clientPortChanged,
+        this, [&] (auto param) {
+            m_disp.submitCommand<SetClientPort>(this->model(this), param);
+    });
+    con(v, &NetworkSettingsView::clientNameChanged,
+        this, [&] (auto param) {
+            m_disp.submitCommand<SetClientName>(this->model(this), param);
+    });
 
-    if(m_clientportCommand)
-    {
-        m_clientportCommand->redo();
-    }
-
-    if(m_clientnameCommand)
-    {
-        m_clientnameCommand->redo();
-    }
-
-    delete m_masterportCommand;
-    m_masterportCommand = nullptr;
-    delete m_clientportCommand;
-    m_clientportCommand = nullptr;
-    delete m_clientnameCommand;
-    m_clientnameCommand = nullptr;
-}
-
-void NetworkSettingsPresenter::on_reject()
-{
-    if(m_masterportCommand)
-    {
-        m_masterportCommand->undo();
-    }
-
-    if(m_clientportCommand)
-    {
-        m_clientportCommand->undo();
-    }
-
-    if(m_clientnameCommand)
-    {
-        m_clientnameCommand->undo();
-    }
-
-    delete m_masterportCommand;
-    m_masterportCommand = nullptr;
-    delete m_clientportCommand;
-    m_clientportCommand = nullptr;
-    delete m_clientnameCommand;
-    m_clientnameCommand = nullptr;
-}
-
-void NetworkSettingsPresenter::load()
-{
     updateMasterPort();
     updateClientPort();
     updateClientName();
-
-    view().load();
 }
+
 
 // Partie modèle -> vue
 void NetworkSettingsPresenter::updateMasterPort()
 {
-    view().setMasterPort(model().getMasterPort());
+    view(this).setMasterPort(model(this).getMasterPort());
 }
 void NetworkSettingsPresenter::updateClientPort()
 {
-    view().setClientPort(model().getClientPort());
+    view(this).setClientPort(model(this).getClientPort());
 }
 void NetworkSettingsPresenter::updateClientName()
 {
-    view().setClientName(model().getClientName());
-}
-
-// Partie vue -> commande
-void NetworkSettingsPresenter::setMasterPortCommand(MasterPortChangedCommand* cmd)
-{
-    ISCORE_TODO;
-    /*
-    if(!m_masterportCommand)
-    {
-        m_masterportCommand = cmd;
-    }
-    else
-    {
-        m_masterportCommand->mergeWith(cmd);
-        delete cmd;
-    }
-    */
-}
-void NetworkSettingsPresenter::setClientPortCommand(ClientPortChangedCommand* cmd)
-{
-    ISCORE_TODO;
-    /*
-    if(!m_clientportCommand)
-    {
-        m_clientportCommand = cmd;
-    }
-    else
-    {
-        m_clientportCommand->mergeWith(cmd);
-        delete cmd;
-    }
-    */
-}
-void NetworkSettingsPresenter::setClientNameCommand(ClientNameChangedCommand* cmd)
-{
-    ISCORE_TODO;
-    /*
-    if(!m_clientnameCommand)
-    {
-        m_clientnameCommand = cmd;
-    }
-    else
-    {
-        m_clientnameCommand->mergeWith(cmd);
-        delete cmd;
-    }
-    */
-}
-
-
-NetworkSettingsModel& NetworkSettingsPresenter::model()
-{
-    return static_cast<NetworkSettingsModel&>(m_model);
-}
-
-NetworkSettingsView& NetworkSettingsPresenter::view()
-{
-    return static_cast<NetworkSettingsView&>(m_view);
+    view(this).setClientName(model(this).getClientName());
 }
 
 QIcon NetworkSettingsPresenter::settingsIcon()

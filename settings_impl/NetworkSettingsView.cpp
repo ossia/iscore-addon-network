@@ -28,6 +28,15 @@ NetworkSettingsView::NetworkSettingsView(QObject* parent) :
 
     layout->addWidget(new QLabel{"Client Name"}, 2, 0);
     layout->addWidget(m_clientName, 2, 1);
+
+    connect(m_clientName,	&QLineEdit::textChanged,
+            this,			&NetworkSettingsView::clientNameChanged);
+
+    // http://stackoverflow.com/questions/16794695/qt5-overloaded-signals-and-slots
+    connect(m_masterPort,	SIGNAL(valueChanged(int)),
+            this,			SLOT(masterPortChanged(int)));
+    connect(m_clientPort,	SIGNAL(valueChanged(int)),
+            this,			SLOT(clientPortChanged(int)));
 }
 
 void NetworkSettingsView::setClientName(QString text)
@@ -57,63 +66,4 @@ QWidget* NetworkSettingsView::getWidget()
     return m_widget;
 }
 
-void NetworkSettingsView::load()
-{
-    m_previousMasterPort = m_masterPort->value();
-    m_previousClientPort = m_clientPort->value();
-    m_previousClientName = m_clientName->text();
-}
-
-void NetworkSettingsView::doConnections()
-{
-    connect(m_clientName,	&QLineEdit::textChanged,
-            this,			&NetworkSettingsView::on_clientNameChanged);
-
-    // http://stackoverflow.com/questions/16794695/qt5-overloaded-signals-and-slots
-    connect(m_masterPort,	SIGNAL(valueChanged(int)),
-            this,			SLOT(on_masterPortChanged(int)));
-    connect(m_clientPort,	SIGNAL(valueChanged(int)),
-            this,			SLOT(on_clientPortChanged(int)));
-}
-
-void NetworkSettingsView::on_masterPortChanged(int x)
-{
-    /*
-    auto newVal = m_masterPort->value();
-
-    if(newVal != m_previousMasterPort)
-    {
-        presenter()->setMasterPortCommand(new MasterPortChangedCommand {m_previousMasterPort, newVal});
-        m_previousMasterPort = newVal;
-    }*/
-}
-
-void NetworkSettingsView::on_clientPortChanged(int)
-{
-    /*
-    auto newVal = m_clientPort->value();
-
-    if(newVal != m_previousClientPort)
-    {
-        presenter()->setClientPortCommand(new ClientPortChangedCommand {m_previousClientPort, newVal});
-        m_previousClientPort = newVal;
-    }
-    */
-}
-void NetworkSettingsView::on_clientNameChanged()
-{
-    /*
-    auto newText = m_clientName->text();
-
-    if(newText != m_previousClientName)
-    {
-        presenter()->setClientNameCommand(new ClientNameChangedCommand {m_previousClientName, newText});
-        m_previousClientName = newText;
-    }*/
-}
-
-NetworkSettingsPresenter* NetworkSettingsView::presenter()
-{
-    return static_cast<NetworkSettingsPresenter*>(m_presenter);
-}
 }
