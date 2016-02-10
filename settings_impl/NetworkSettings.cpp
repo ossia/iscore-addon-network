@@ -19,16 +19,16 @@ iscore::SettingsDelegateViewInterface* NetworkSettings::makeView()
 }
 
 iscore::SettingsDelegatePresenterInterface* NetworkSettings::makePresenter(
-        iscore::SettingsPresenter* p,
-        iscore::SettingsDelegateModelInterface* m,
-        iscore::SettingsDelegateViewInterface* v)
+        iscore::SettingsDelegateModelInterface& m,
+        iscore::SettingsDelegateViewInterface& v,
+        QObject* parent)
 {
-    auto pres = new NetworkSettingsPresenter(p, m, v);
+    auto pres = new NetworkSettingsPresenter(m, v, parent);
 
-    v->setPresenter(pres);
+    v.setPresenter(pres);
 
     pres->load();
-    pres->view()->doConnections();
+    pres->view().doConnections();
 
     return pres;
 }

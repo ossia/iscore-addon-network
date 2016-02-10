@@ -23,7 +23,6 @@ class iscore_addon_network :
         public iscore::GUIApplicationContextPlugin_QtInterface,
         public iscore::CommandFactory_QtInterface,
         public iscore::FactoryInterface_QtInterface,
-        // public iscore::SettingsDelegateFactoryInterface_QtInterface,
         public iscore::PanelFactory_QtInterface
 {
         Q_OBJECT
@@ -33,7 +32,6 @@ class iscore_addon_network :
                 iscore::GUIApplicationContextPlugin_QtInterface
                 iscore::CommandFactory_QtInterface
                 iscore::FactoryInterface_QtInterface
-                //iscore::SettingsDelegateFactoryInterface_QtInterface
                 iscore::PanelFactory_QtInterface)
 
     public:
@@ -41,8 +39,6 @@ class iscore_addon_network :
         virtual ~iscore_addon_network();
 
     private:
-        //iscore::SettingsDelegateFactoryInterface* settings_make() override;
-
         std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>> factories(
                 const iscore::ApplicationContext& ctx,
                 const iscore::AbstractFactoryKey& factoryName) const override;

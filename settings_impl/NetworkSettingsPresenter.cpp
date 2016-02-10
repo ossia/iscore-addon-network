@@ -17,17 +17,17 @@ class SettingsPresenter;
 namespace Network
 {
 NetworkSettingsPresenter::NetworkSettingsPresenter(
-        iscore::SettingsPresenter* parent,
-        iscore::SettingsDelegateModelInterface* model,
-        iscore::SettingsDelegateViewInterface* view) :
-    SettingsDelegatePresenterInterface {parent, model, view}
+        iscore::SettingsDelegateModelInterface& model,
+        iscore::SettingsDelegateViewInterface& view,
+        QObject* parent) :
+    SettingsDelegatePresenterInterface {model, view, parent}
 {
-    auto net_model = static_cast<NetworkSettingsModel*>(model);
-    connect(net_model, SIGNAL(masterPortChanged()),
+    auto& net_model = static_cast<NetworkSettingsModel&>(model);
+    con(net_model, SIGNAL(masterPortChanged()),
     this,	   SLOT(updateMasterPort()));
-    connect(net_model, SIGNAL(clientPortChanged()),
+    con(net_model, SIGNAL(clientPortChanged()),
     this,	   SLOT(updateClientPort()));
-    connect(net_model, SIGNAL(clientNameChanged()),
+    con(net_model, SIGNAL(clientNameChanged()),
     this,	   SLOT(updateClientName()));
 }
 
@@ -87,21 +87,21 @@ void NetworkSettingsPresenter::load()
     updateClientPort();
     updateClientName();
 
-    view()->load();
+    view().load();
 }
 
 // Partie modèle -> vue
 void NetworkSettingsPresenter::updateMasterPort()
 {
-    view()->setMasterPort(model()->getMasterPort());
+    view().setMasterPort(model().getMasterPort());
 }
 void NetworkSettingsPresenter::updateClientPort()
 {
-    view()->setClientPort(model()->getClientPort());
+    view().setClientPort(model().getClientPort());
 }
 void NetworkSettingsPresenter::updateClientName()
 {
-    view()->setClientName(model()->getClientName());
+    view().setClientName(model().getClientName());
 }
 
 // Partie vue -> commande
@@ -152,14 +152,14 @@ void NetworkSettingsPresenter::setClientNameCommand(ClientNameChangedCommand* cm
 }
 
 
-NetworkSettingsModel* NetworkSettingsPresenter::model()
+NetworkSettingsModel& NetworkSettingsPresenter::model()
 {
-    return static_cast<NetworkSettingsModel*>(m_model);
+    return static_cast<NetworkSettingsModel&>(m_model);
 }
 
-NetworkSettingsView* NetworkSettingsPresenter::view()
+NetworkSettingsView& NetworkSettingsPresenter::view()
 {
-    return static_cast<NetworkSettingsView*>(m_view);
+    return static_cast<NetworkSettingsView&>(m_view);
 }
 
 QIcon NetworkSettingsPresenter::settingsIcon()

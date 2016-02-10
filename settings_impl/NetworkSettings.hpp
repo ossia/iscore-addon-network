@@ -11,7 +11,7 @@ class SettingsPresenter;
 
 namespace Network
 {
-class NetworkSettings : public iscore::SettingsDelegateFactoryInterface
+class NetworkSettings : public iscore::SettingsDelegateFactory
 {
     public:
         NetworkSettings();
@@ -20,9 +20,10 @@ class NetworkSettings : public iscore::SettingsDelegateFactoryInterface
         // SettingsGroup interface
     public:
         iscore::SettingsDelegateViewInterface* makeView() override;
-        iscore::SettingsDelegatePresenterInterface* makePresenter(iscore::SettingsPresenter*,
-                iscore::SettingsDelegateModelInterface* m,
-                iscore::SettingsDelegateViewInterface* v) override;
+        iscore::SettingsDelegatePresenterInterface* makePresenter(
+                iscore::SettingsDelegateModelInterface& m,
+                iscore::SettingsDelegateViewInterface& v,
+                QObject* parent) override;
         iscore::SettingsDelegateModelInterface* makeModel() override;
 };
 }

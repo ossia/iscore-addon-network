@@ -62,11 +62,6 @@ int NetworkSettingsModel::getMasterPort() const
     return masterPort;
 }
 
-void NetworkSettingsModel::setPresenter(
-        iscore::SettingsDelegatePresenterInterface* presenter)
-{
-}
-
 void NetworkSettingsModel::setFirstTimeSettings()
 {
     QSettings s;

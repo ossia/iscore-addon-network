@@ -23,9 +23,10 @@ class NetworkSettingsPresenter : public iscore::SettingsDelegatePresenterInterfa
 {
         Q_OBJECT
     public:
-        NetworkSettingsPresenter(iscore::SettingsPresenter* parent,
-                                 iscore::SettingsDelegateModelInterface* model,
-                                 iscore::SettingsDelegateViewInterface* view);
+        NetworkSettingsPresenter(
+                iscore::SettingsDelegateModelInterface& model,
+                iscore::SettingsDelegateViewInterface& view,
+                QObject* parent);
 
         void on_accept() override;
         void on_reject() override;
@@ -38,8 +39,8 @@ class NetworkSettingsPresenter : public iscore::SettingsDelegatePresenterInterfa
         QIcon settingsIcon() override;
 
         void load();
-        NetworkSettingsModel* model();
-        NetworkSettingsView* view();
+        NetworkSettingsModel& model();
+        NetworkSettingsView& view();
 
     public slots:
         void updateMasterPort();

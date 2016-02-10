@@ -32,13 +32,6 @@ iscore_addon_network::~iscore_addon_network()
 }
 
 // Interfaces implementations :
-//////////////////////////
-/*
-iscore::SettingsDelegateFactoryInterface* iscore_plugin_network::settings_make()
-{
-    return new NetworkSettings;
-}
-*/
 iscore::GUIApplicationContextPlugin*
 iscore_addon_network::make_applicationPlugin(
         const iscore::ApplicationContext& app)
