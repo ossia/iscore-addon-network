@@ -188,12 +188,13 @@ NetworkDocumentPlugin::makeElementPlugin(
         iscore::ElementPluginModelType type,
         QObject* parent)
 {
+    qDebug() << element->metaObject()->className();
     switch(type)
     {
         case GroupMetadata::staticPluginId():
         {
-            if((element->metaObject()->className() == QString{"ConstraintModel"})
-            || (element->metaObject()->className() == QString{"EventModel"}))
+            if(dynamic_cast<const Scenario::ConstraintModel*>(element) ||
+               dynamic_cast<const Scenario::EventModel*>(element))
             {
                 auto plug = new GroupMetadata{element, m_groups->defaultGroup(), parent};
 
@@ -215,8 +216,8 @@ NetworkDocumentPlugin::loadElementPlugin(
         const VisitorVariant& vis,
         QObject* parent)
 {
-    if(element->metaObject()->className() == QString{"ConstraintModel"}
-    || element->metaObject()->className() == QString{"EventModel"})
+    if(dynamic_cast<const Scenario::ConstraintModel*>(element) ||
+       dynamic_cast<const Scenario::EventModel*>(element))
     {
         auto plug = deserialize_dyn(vis, [&] (auto&& deserializer)
         { return new GroupMetadata{element, deserializer, parent}; });
