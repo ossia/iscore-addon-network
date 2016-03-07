@@ -22,7 +22,7 @@ class Group;
 
 namespace Command
 {
-GroupMetadata* getGroupMetadata(QObject* obj)
+static GroupMetadata* getGroupMetadata(QObject* obj)
 {
     using namespace boost::range;
     if(auto cstr = dynamic_cast<Scenario::ConstraintModel*>(obj))
