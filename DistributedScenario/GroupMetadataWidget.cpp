@@ -89,7 +89,7 @@ void GroupMetadataWidget::updateLabel(const Id<Group>& currentGroup)
         }
     }
 
-    connect(m_combo, SignalUtils::QComboBox_currentIndexChanged_int,
+    connect(m_combo, SignalUtils::QComboBox_currentIndexChanged_int(),
             this, &GroupMetadataWidget::on_indexChanged);
 
     this->layout()->addWidget(m_combo);
