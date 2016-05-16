@@ -18,7 +18,7 @@
 #include <iscore/tools/SettableIdentifier.hpp>
 #include <iscore/tools/Todo.hpp>
 #include <iscore/document/DocumentContext.hpp>
-
+#include <iscore/widgets/SignalUtils.hpp>
 
 Q_DECLARE_METATYPE(Id<Network::Group>)
 
@@ -89,7 +89,7 @@ void GroupMetadataWidget::updateLabel(const Id<Group>& currentGroup)
         }
     }
 
-    connect(m_combo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+    connect(m_combo, SignalUtils::QComboBox_currentIndexChanged_int(),
             this, &GroupMetadataWidget::on_indexChanged);
 
     this->layout()->addWidget(m_combo);
