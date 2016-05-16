@@ -28,7 +28,7 @@ void NetworkSettingsModel::setClientName(QString txt)
     clientName = txt;
     QSettings s;
     s.setValue(SETTINGS_CLIENTNAME, txt);
-    emit clientNameChanged();
+    emit ClientNameChanged();
 }
 
 QString NetworkSettingsModel::getClientName() const
@@ -41,7 +41,7 @@ void NetworkSettingsModel::setClientPort(int val)
     clientPort = val;
     QSettings s;
     s.setValue(SETTINGS_CLIENTPORT, val);
-    emit clientPortChanged();
+    emit ClientPortChanged();
 }
 
 int NetworkSettingsModel::getClientPort() const
@@ -54,7 +54,7 @@ void NetworkSettingsModel::setMasterPort(int val)
     masterPort = val;
     QSettings s;
     s.setValue(SETTINGS_MASTERPORT, val);
-    emit masterPortChanged();
+    emit MasterPortChanged();
 }
 
 int NetworkSettingsModel::getMasterPort() const

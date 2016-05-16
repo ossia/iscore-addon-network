@@ -90,7 +90,7 @@ class ScenarioFindEventVisitor
 NetworkDocumentPlugin::NetworkDocumentPlugin(
         NetworkPolicyInterface *policy,
         iscore::Document& doc):
-    iscore::SerializableDocumentPlugin{doc, "NetworkDocumentPlugin", &doc.model()},
+    iscore::SerializableDocumentPlugin{doc.context(), "NetworkDocumentPlugin", &doc.model()},
     m_policy{policy},
     m_groups{new GroupManager{this}}
 {
@@ -143,7 +143,7 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
 
 NetworkDocumentPlugin::NetworkDocumentPlugin(const VisitorVariant &loader,
                                              iscore::Document& doc):
-    iscore::SerializableDocumentPlugin{doc, "NetworkDocumentPlugin", &doc.model()}
+    iscore::SerializableDocumentPlugin{doc.context(), "NetworkDocumentPlugin", &doc.model()}
 {
     deserialize_dyn(loader, *this);
 }

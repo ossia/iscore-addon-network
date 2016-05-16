@@ -29,9 +29,9 @@ class NetworkSettingsModel : public iscore::SettingsDelegateModelInterface
         void setFirstTimeSettings() override;
 
     signals:
-        void clientNameChanged();
-        void clientPortChanged();
-        void masterPortChanged();
+        void ClientNameChanged();
+        void ClientPortChanged();
+        void MasterPortChanged();
 
     private:
         int masterPort;

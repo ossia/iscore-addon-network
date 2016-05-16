@@ -23,24 +23,24 @@ NetworkSettingsPresenter::NetworkSettingsPresenter(
     SettingsDelegatePresenterInterface {m, v, parent}
 {
     auto& net_model = static_cast<NetworkSettingsModel&>(m_model);
-    con(net_model, &NetworkSettingsModel::masterPortChanged,
+    con(net_model, &NetworkSettingsModel::MasterPortChanged,
         this,	   &NetworkSettingsPresenter::updateMasterPort);
-    con(net_model, &NetworkSettingsModel::clientPortChanged,
+    con(net_model, &NetworkSettingsModel::ClientPortChanged,
         this,	   &NetworkSettingsPresenter::updateClientPort);
-    con(net_model, &NetworkSettingsModel::clientNameChanged,
+    con(net_model, &NetworkSettingsModel::ClientNameChanged,
         this,	   &NetworkSettingsPresenter::updateClientName);
 
     con(v, &NetworkSettingsView::masterPortChanged,
         this, [&] (auto param) {
-            m_disp.submitCommand<SetMasterPort>(this->model(this), param);
+            m_disp.submitCommand<SetNetworkSettingsModelMasterPort>(this->model(this), param);
     });
     con(v, &NetworkSettingsView::clientPortChanged,
         this, [&] (auto param) {
-            m_disp.submitCommand<SetClientPort>(this->model(this), param);
+            m_disp.submitCommand<SetNetworkSettingsModelClientPort>(this->model(this), param);
     });
     con(v, &NetworkSettingsView::clientNameChanged,
         this, [&] (auto param) {
-            m_disp.submitCommand<SetClientName>(this->model(this), param);
+            m_disp.submitCommand<SetNetworkSettingsModelClientName>(this->model(this), param);
     });
 
     updateMasterPort();
