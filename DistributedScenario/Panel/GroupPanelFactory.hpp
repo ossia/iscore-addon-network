@@ -1,34 +1,49 @@
 #pragma once
-#include <iscore/plugins/panel/PanelFactory.hpp>
-#include <QString>
-
-#include <iscore/application/ApplicationContext.hpp>
-#include <iscore/plugins/panel/PanelModel.hpp>
-#include <iscore/plugins/panel/PanelPresenter.hpp>
-#include <iscore/plugins/panel/PanelView.hpp>
-
-namespace iscore {
-class DocumentModel;
-
-
-}  // namespace iscore
-
+#include <iscore/plugins/panel/PanelDelegate.hpp>
 namespace Network
 {
-class GroupPanelFactory : public iscore::PanelFactory
+class GroupManager;
+class Session;
+class PanelDelegate final :
+        public QObject,
+        public iscore::PanelDelegate
 {
     public:
-        int panelId() const override;
-        QString panelName() const override;
-        iscore::PanelView* makeView(
-                const iscore::ApplicationContext& ctx,
-                QObject*) override;
-        iscore::PanelPresenter* makePresenter(
-                const iscore::ApplicationContext& ctx,
-                iscore::PanelView* view,
-                QObject* parent) override;
-        iscore::PanelModel* makeModel(
-                const iscore::DocumentContext& ctx,
-                QObject* parent) override;
+        PanelDelegate(
+                const iscore::ApplicationContext& ctx);
+
+    private:
+        QWidget *widget() override;
+
+        const iscore::PanelStatus& defaultPanelStatus() const override;
+
+        void on_modelChanged(
+                maybe_document_t oldm,
+                maybe_document_t newm) override;
+
+
+        void setView(const GroupManager* mgr,
+                     const Session* session);
+
+        void setEmptyView();
+
+        void on_update();
+        void scanPlugins(const iscore::DocumentContext& ctx);
+
+        QWidget* m_widget{};
+        QWidget* m_subWidget{};
+
+        QMetaObject::Connection m_con;
 };
+
+// MOVEME
+class PanelDelegateFactory final :
+        public iscore::PanelDelegateFactory
+{
+        ISCORE_CONCRETE_FACTORY_DECL("5ec8ea88-5cf3-438d-983c-9437691e3817")
+
+        std::unique_ptr<iscore::PanelDelegate> make(
+                const iscore::ApplicationContext& ctx) override;
+};
+
 }

@@ -1,49 +1,147 @@
-#include <core/view/View.hpp>
-
 #include "GroupPanelFactory.hpp"
-#include "GroupPanelModel.hpp"
-#include "GroupPanelPresenter.hpp"
-#include "GroupPanelView.hpp"
-#include "GroupPanelId.hpp"
 
-namespace iscore {
-class DocumentModel;
+#include <DistributedScenario/Commands/CreateGroup.hpp>
+#include <DistributedScenario/Panel/Widgets/GroupListWidget.hpp>
+#include <DistributedScenario/Panel/Widgets/GroupTableWidget.hpp>
+#include <DistributedScenario/GroupManager.hpp>
+#include <DocumentPlugins/NetworkDocumentPlugin.hpp>
 
-}  // namespace iscore
-// TODO review if it is really useful to make the panel view with iscore::View
+#include <Repartition/session/Session.hpp>
+
+#include <iscore/document/DocumentInterface.hpp>
+
+#include <QLabel>
+#include <QPushButton>
+#include <QInputDialog>
+#include <QVBoxLayout>
 
 namespace Network
 {
-int GroupPanelFactory::panelId() const
+PanelDelegate::PanelDelegate(const iscore::ApplicationContext& ctx):
+    iscore::PanelDelegate{ctx},
+    m_widget{new QWidget}
 {
-    return GROUP_PANEL_ID;
+    new QVBoxLayout{m_widget};
 }
 
-QString GroupPanelFactory::panelName() const
+QWidget* PanelDelegate::widget()
 {
-    return "Groups";
+    return m_widget;
 }
 
-iscore::PanelView* GroupPanelFactory::makeView(
-        const iscore::ApplicationContext& ctx,
-        QObject* v)
+const iscore::PanelStatus&PanelDelegate::defaultPanelStatus() const
 {
-    return new GroupPanelView{v};
+    static const iscore::PanelStatus status{
+        false,
+        Qt::RightDockWidgetArea,
+                1,
+                QObject::tr("Groups"),
+                QObject::tr("Ctrl+G")};
+
+    return status;
 }
 
-iscore::PanelPresenter* GroupPanelFactory::makePresenter(
-        const iscore::ApplicationContext& ctx,
-        iscore::PanelView* view,
-        QObject* parent)
+std::unique_ptr<iscore::PanelDelegate> PanelDelegateFactory::make(
+        const iscore::ApplicationContext& ctx)
 {
-    return new GroupPanelPresenter{view, parent};
+    return std::make_unique<PanelDelegate>(ctx);
 }
 
-iscore::PanelModel* GroupPanelFactory::makeModel(
-        const iscore::DocumentContext& ctx,
-        QObject* parent)
+
+void PanelDelegate::on_modelChanged(
+        iscore::PanelDelegate::maybe_document_t oldm,
+        iscore::PanelDelegate::maybe_document_t newm)
 {
-    return new GroupPanelModel{
-        ctx, parent};
+    disconnect(m_con);
+    if(!newm)
+    {
+        setEmptyView();
+        return;
+    }
+
+    auto netplug = newm->findPlugin<NetworkDocumentPlugin>();
+
+    if(netplug)
+    {
+        if(!netplug->policy())
+            return;
+
+        m_con = connect(netplug, &NetworkDocumentPlugin::sessionChanged,
+                this, [=] () {
+            auto currentManager = netplug->groupManager();
+            auto currentSession = netplug->policy()->session();
+
+            if(currentManager)
+            {
+                setView(currentManager, currentSession);
+            }
+            else
+            {
+                setEmptyView();
+            }
+        });
+
+        auto currentManager = netplug->groupManager();
+        auto currentSession = netplug->policy()->session();
+        if(currentManager)
+        {
+            setView(currentManager, currentSession);
+        }
+        else
+        {
+            setEmptyView();
+        }
+    }
+
+
 }
+
+void PanelDelegate::setView(
+        const GroupManager* mgr,
+        const Session* session)
+{
+    // Make the containing widget
+    delete m_subWidget;
+    m_subWidget = new QWidget;
+
+    auto lay = new QVBoxLayout;
+    m_subWidget->setLayout(lay);
+
+    m_widget->layout()->addWidget(m_subWidget);
+
+    // The sub-widgets (group data presentation)
+    m_subWidget->layout()->addWidget(new QLabel{session->metaObject()->className()});
+    m_subWidget->layout()->addWidget(new GroupListWidget{mgr, m_subWidget});
+
+    // Add group button
+    auto button = new QPushButton{QObject::tr("Add group")};
+    ObjectPath mgrpath{iscore::IDocument::unsafe_path(mgr)};
+    connect(button, &QPushButton::pressed, this, [=] ( )
+    {
+        bool ok;
+        QString text = QInputDialog::getText(m_widget, tr("New group"),
+                                             tr("Group name:"), QLineEdit::Normal, "", &ok);
+        if (ok && !text.isEmpty())
+        {
+            auto cmd = new Command::CreateGroup{ObjectPath{mgrpath}, text};
+
+            CommandDispatcher<> dispatcher{
+                iscore::IDocument::documentContext(*mgr).commandStack
+            };
+            dispatcher.submitCommand(cmd);
+        }
+    });
+    m_subWidget->layout()->addWidget(button);
+
+    // Group table
+    m_subWidget->layout()->addWidget(new GroupTableWidget{mgr, session, m_widget});
+}
+
+void PanelDelegate::setEmptyView()
+{
+    delete m_subWidget;
+    m_subWidget = nullptr;
+}
+
+
 }

@@ -16,13 +16,7 @@ namespace iscore {
 
 class PanelFactory;
 }  // namespace iscore
-
-#define PROCESS_NAME "Network Process"
-
-iscore_addon_network::iscore_addon_network() :
-    QObject {},
-        iscore::GUIApplicationContextPlugin_QtInterface {}//,
-        //iscore::SettingsDelegateFactoryInterface_QtInterface {}
+iscore_addon_network::iscore_addon_network()
 {
 }
 
@@ -39,12 +33,6 @@ iscore_addon_network::make_applicationPlugin(
     return new Network::NetworkApplicationPlugin{app};
 }
 
-std::vector<iscore::PanelFactory*>
-iscore_addon_network::panels()
-{
-    return {new Network::GroupPanelFactory};
-}
-
 std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>>
 iscore_addon_network::factories(
         const iscore::ApplicationContext& ctx,
@@ -54,7 +42,9 @@ iscore_addon_network::factories(
             iscore::ApplicationContext,
     TL<
         FW<iscore::DocumentPluginFactory,
-             Network::DocumentPluginFactory>
+             Network::DocumentPluginFactory>,
+        FW<iscore::PanelDelegateFactory,
+            Network::PanelDelegateFactory>
     >>(ctx, key);
 }
 
