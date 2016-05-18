@@ -25,7 +25,7 @@ class IpWidget : public QFrame
         explicit IpWidget(QWidget *parent = 0);
         ~IpWidget();
 
-        virtual bool eventFilter( QObject *obj, QEvent *event );
+        bool eventFilter( QObject *obj, QEvent *event ) override;
 
         std::array<QLineEdit*, QTUTL_IP_SIZE> lineEdits;
     public slots:
