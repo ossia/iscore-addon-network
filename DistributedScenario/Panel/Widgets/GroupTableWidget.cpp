@@ -1,4 +1,4 @@
-#include <boost/optional/optional.hpp>
+#include <iscore/tools/std/Optional.hpp>
 #include <iscore/document/DocumentInterface.hpp>
 #include <QGridLayout>
 #include <QLabel>

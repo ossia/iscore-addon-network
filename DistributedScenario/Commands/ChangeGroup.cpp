@@ -24,7 +24,6 @@ namespace Command
 {
 static GroupMetadata* getGroupMetadata(QObject* obj)
 {
-    using namespace boost::range;
     if(auto cstr = dynamic_cast<Scenario::ConstraintModel*>(obj))
     {
         auto& plugs = cstr->pluginModelList.list();

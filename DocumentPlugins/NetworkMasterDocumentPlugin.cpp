@@ -1,5 +1,5 @@
 #include <Serialization/MessageMapper.hpp>
-#include <boost/optional/optional.hpp>
+#include <iscore/tools/std/Optional.hpp>
 #include <iscore/document/DocumentContext.hpp>
 #include <QByteArray>
 #include <QDataStream>

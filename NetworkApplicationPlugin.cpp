@@ -1,4 +1,4 @@
-#include <boost/optional/optional.hpp>
+#include <iscore/tools/std/Optional.hpp>
 #include <core/document/Document.hpp>
 #include <QAction>
 #include <QApplication>

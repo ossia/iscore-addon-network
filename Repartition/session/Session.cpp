@@ -1,6 +1,6 @@
 #include <Serialization/MessageMapper.hpp>
 #include <Serialization/MessageValidator.hpp>
-#include <boost/optional/optional.hpp>
+#include <iscore/tools/std/Optional.hpp>
 
 #include "Serialization/NetworkMessage.hpp"
 #include "Session.hpp"
@@ -29,8 +29,8 @@ NetworkMessage Session::makeMessage(QString address)
 {
     NetworkMessage m;
     m.address = address;
-    m.clientId = localClient().id().val().get();
-    m.sessionId = id().val().get();
+    m.clientId = *localClient().id().val();
+    m.sessionId = *id().val();
 
     return m;
 }

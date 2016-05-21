@@ -1,4 +1,4 @@
-#include <boost/optional/optional.hpp>
+#include <iscore/tools/std/Optional.hpp>
 
 #if defined(USE_ZEROCONF)
 #include <KF5/KDNSSD/DNSSD/PublicService>
