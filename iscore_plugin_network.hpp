@@ -42,7 +42,7 @@ class iscore_addon_network :
                 const iscore::AbstractFactoryKey& factoryName) const override;
 
         iscore::GUIApplicationContextPlugin* make_applicationPlugin(
-                const iscore::ApplicationContext& app) override;
+                const iscore::GUIApplicationContext& app) override;
 
         std::pair<const CommandParentFactoryKey, CommandGeneratorMap> make_commands() override;
 

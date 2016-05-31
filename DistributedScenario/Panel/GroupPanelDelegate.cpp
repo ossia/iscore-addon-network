@@ -42,8 +42,8 @@ const iscore::PanelStatus&PanelDelegate::defaultPanelStatus() const
 }
 
 void PanelDelegate::on_modelChanged(
-        iscore::PanelDelegate::maybe_document_t oldm,
-        iscore::PanelDelegate::maybe_document_t newm)
+        iscore::MaybeDocument oldm,
+        iscore::MaybeDocument newm)
 {
     disconnect(m_con);
     if(!newm)

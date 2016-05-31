@@ -19,10 +19,10 @@
 #include <core/command/CommandStack.hpp>
 #include <core/document/DocumentModel.hpp>
 #include <core/presenter/DocumentManager.hpp>
-#include <core/presenter/MenubarManager.hpp>
 #include <iscore/menu/MenuInterface.hpp>
 #include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
 #include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/menu/MenuInterface.hpp>
 #include "session/../client/LocalClient.hpp"
 #include "session/MasterSession.hpp"
 
@@ -40,8 +40,8 @@ namespace Network
 class Client;
 class Session;
 
-NetworkApplicationPlugin::NetworkApplicationPlugin(const iscore::ApplicationContext& app) :
-    GUIApplicationContextPlugin {app, "NetworkApplicationPlugin", nullptr}
+NetworkApplicationPlugin::NetworkApplicationPlugin(const iscore::GUIApplicationContext& app) :
+    GUIApplicationContextPlugin {app}
 {
 #ifdef USE_ZEROCONF
     m_zeroconfBrowser = new ZeroconfBrowser{"_iscore._tcp", qApp->activeWindow()};
@@ -50,8 +50,28 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(const iscore::ApplicationCont
 #endif
 }
 
-void NetworkApplicationPlugin::populateMenus(iscore::MenubarManager* menu)
+void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
 {
+    m_sessionBuilder = std::make_unique<ClientSessionBuilder>(
+                context,
+                ip,
+                port);
+
+    connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady,
+            this, [&] () {
+        m_sessionBuilder.reset();
+    });
+    connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed,
+            this, [&] () {
+        m_sessionBuilder.reset();
+    });
+
+    m_sessionBuilder->initiateConnection();
+}
+
+iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
+{
+
     using namespace iscore;
 #ifdef USE_ZEROCONF
     menu->insertActionIntoToplevelMenu(ToplevelMenuElement::FileMenu,
@@ -59,6 +79,9 @@ void NetworkApplicationPlugin::populateMenus(iscore::MenubarManager* menu)
                                        m_zeroconfBrowser->makeAction());
 #endif
 
+    QMenu* menu = context.menus.get().at(iscore::Menus::File()).menu();
+    qDebug() << menu->actions();
+    /*
     QAction* makeServer = new QAction {tr("Make Server"), this};
     connect(makeServer, &QAction::triggered, this,
             [&] ()
@@ -90,25 +113,9 @@ void NetworkApplicationPlugin::populateMenus(iscore::MenubarManager* menu)
     menu->insertActionIntoToplevelMenu(ToplevelMenuElement::FileMenu,
                                        FileMenuElement::Separator_Load,
                                        connectLocal);
-}
+                                       */
 
-void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
-{
-    m_sessionBuilder = std::make_unique<ClientSessionBuilder>(
-                context,
-                ip,
-                port);
-
-    connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady,
-            this, [&] () {
-        m_sessionBuilder.reset();
-    });
-    connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed,
-            this, [&] () {
-        m_sessionBuilder.reset();
-    });
-
-    m_sessionBuilder->initiateConnection();
+    return {};
 }
 
 }
