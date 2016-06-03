@@ -2,12 +2,12 @@
 #include <QVariant>
 
 #include "NetworkSettingsModel.hpp"
-#include <iscore/plugins/settingsdelegate/SettingsDelegateModelInterface.hpp>
+#include <iscore/plugins/settingsdelegate/SettingsDelegateModel.hpp>
 
 namespace Network
 {
 NetworkSettingsModel::NetworkSettingsModel() :
-    iscore::SettingsDelegateModelInterface {}
+    iscore::SettingsDelegateModel {}
 {
     this->setObjectName("NetworkSettingsModel");
 

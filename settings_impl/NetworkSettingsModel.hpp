@@ -1,10 +1,10 @@
 #pragma once
-#include <iscore/plugins/settingsdelegate/SettingsDelegateModelInterface.hpp>
+#include <iscore/plugins/settingsdelegate/SettingsDelegateModel.hpp>
 #include <QString>
 
 namespace iscore
 {
-    class SettingsDelegatePresenterInterface;
+    class SettingsDelegatePresenter;
 }
 // TODO find a better way...
 #define SETTINGS_CLIENTPORT "iscore_plugin_network/ClientPort"
@@ -13,7 +13,7 @@ namespace iscore
 
 namespace Network
 {
-class NetworkSettingsModel : public iscore::SettingsDelegateModelInterface
+class NetworkSettingsModel : public iscore::SettingsDelegateModel
 {
         Q_OBJECT
     public:

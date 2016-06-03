@@ -6,11 +6,11 @@
 #include "NetworkSettingsPresenter.hpp"
 #include "NetworkSettingsView.hpp"
 #include <iscore/command/Command.hpp>
-#include <iscore/plugins/settingsdelegate/SettingsDelegatePresenterInterface.hpp>
+#include <iscore/plugins/settingsdelegate/SettingsDelegatePresenter.hpp>
 #include <iscore/tools/Todo.hpp>
 namespace iscore {
-class SettingsDelegateModelInterface;
-class SettingsDelegateViewInterface;
+class SettingsDelegateModel;
+class SettingsDelegateView;
 class SettingsPresenter;
 }  // namespace iscore
 
@@ -20,7 +20,7 @@ NetworkSettingsPresenter::NetworkSettingsPresenter(
         NetworkSettingsModel& m,
         NetworkSettingsView& v,
         QObject* parent) :
-    SettingsDelegatePresenterInterface {m, v, parent}
+    SettingsDelegatePresenter {m, v, parent}
 {
     auto& net_model = static_cast<NetworkSettingsModel&>(m_model);
     con(net_model, &NetworkSettingsModel::MasterPortChanged,

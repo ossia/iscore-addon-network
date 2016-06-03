@@ -3,14 +3,14 @@
 
 #include "NetworkSettingsPresenter.hpp"
 #include "NetworkSettingsView.hpp"
-#include <iscore/plugins/settingsdelegate/SettingsDelegateViewInterface.hpp>
+#include <iscore/plugins/settingsdelegate/SettingsDelegateView.hpp>
 
 class QObject;
 
 namespace Network
 {
 NetworkSettingsView::NetworkSettingsView(QObject* parent) :
-    iscore::SettingsDelegateViewInterface {parent}
+    iscore::SettingsDelegateView {parent}
 {
     auto layout = new QGridLayout(m_widget);
     m_widget->setLayout(layout);

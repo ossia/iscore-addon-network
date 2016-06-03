@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/plugins/settingsdelegate/SettingsDelegateViewInterface.hpp>
+#include <iscore/plugins/settingsdelegate/SettingsDelegateView.hpp>
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QString>
@@ -9,7 +9,7 @@ class QObject;
 namespace Network
 {
 class NetworkSettingsPresenter;
-class NetworkSettingsView : public iscore::SettingsDelegateViewInterface
+class NetworkSettingsView : public iscore::SettingsDelegateView
 {
         Q_OBJECT
     public:
