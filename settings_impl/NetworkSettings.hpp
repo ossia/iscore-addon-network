@@ -5,7 +5,7 @@
 #include <settings_impl/NetworkSettingsPresenter.hpp>
 #include <settings_impl/NetworkSettingsView.hpp>
 
-namespace Curve
+namespace Network
 {
 namespace Settings
 {
