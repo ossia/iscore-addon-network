@@ -70,9 +70,7 @@ set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/Serialization/NetworkMessage.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Serialization/NetworkServer.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/Serialization/NetworkSocket.cpp"
-#"${CMAKE_CURRENT_SOURCE_DIR}/Tests/Repartition/client/main.cpp" # TODO not here
-#"${CMAKE_CURRENT_SOURCE_DIR}/Tests/Repartition/server/main.cpp" # TODO not here
-"${CMAKE_CURRENT_SOURCE_DIR}/settings_impl/NetworkSettings.cpp"
+
 "${CMAKE_CURRENT_SOURCE_DIR}/settings_impl/NetworkSettingsModel.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/settings_impl/NetworkSettingsPresenter.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/settings_impl/NetworkSettingsView.cpp"
