@@ -10,7 +10,7 @@ NetworkSettingsModel::NetworkSettingsModel() :
     iscore::SettingsDelegateModel {}
 {
     this->setObjectName("NetworkSettingsModel");
-
+/*
     QSettings s;
 
     if(!s.contains(SETTINGS_CLIENTPORT))
@@ -21,6 +21,7 @@ NetworkSettingsModel::NetworkSettingsModel() :
     setClientPort(s.value(SETTINGS_CLIENTPORT).toInt());
     setMasterPort(s.value(SETTINGS_MASTERPORT).toInt());
     setClientName(s.value(SETTINGS_CLIENTNAME).toString());
+    */
 }
 
 void NetworkSettingsModel::setClientName(QString txt)
@@ -61,12 +62,12 @@ int NetworkSettingsModel::getMasterPort() const
 {
     return masterPort;
 }
-
+/*
 void NetworkSettingsModel::setFirstTimeSettings()
 {
     QSettings s;
     s.setValue(SETTINGS_CLIENTNAME, "i-score client");
     s.setValue(SETTINGS_CLIENTPORT, 7888);
     s.setValue(SETTINGS_MASTERPORT, 5678);
-}
+}*/
 }

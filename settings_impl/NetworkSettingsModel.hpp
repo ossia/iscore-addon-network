@@ -6,7 +6,7 @@ namespace iscore
 {
     class SettingsDelegatePresenter;
 }
-// TODO find a better way...
+// TODO update me
 #define SETTINGS_CLIENTPORT "iscore_plugin_network/ClientPort"
 #define SETTINGS_MASTERPORT "iscore_plugin_network/MasterPort"
 #define SETTINGS_CLIENTNAME "iscore_plugin_network/ClientName"
@@ -25,8 +25,6 @@ class NetworkSettingsModel : public iscore::SettingsDelegateModel
         int getClientPort() const;
         void setMasterPort(int val);
         int getMasterPort() const;
-
-        void setFirstTimeSettings() override;
 
     signals:
         void ClientNameChanged();
