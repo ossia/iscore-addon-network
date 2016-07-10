@@ -6,7 +6,7 @@ namespace Network
 class PanelDelegateFactory final :
         public iscore::PanelDelegateFactory
 {
-        ISCORE_CONCRETE_FACTORY_DECL("5ec8ea88-5cf3-438d-983c-9437691e3817")
+        ISCORE_CONCRETE_FACTORY("5ec8ea88-5cf3-438d-983c-9437691e3817")
 
         std::unique_ptr<iscore::PanelDelegate> make(
                 const iscore::ApplicationContext& ctx) override;

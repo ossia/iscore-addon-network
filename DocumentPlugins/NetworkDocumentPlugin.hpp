@@ -90,7 +90,7 @@ class NetworkDocumentPlugin final :
 class DocumentPluginFactory :
         public iscore::DocumentPluginFactory
 {
-        ISCORE_CONCRETE_FACTORY_DECL("58c9e19a-fde3-47d0-a121-35853fec667d")
+        ISCORE_CONCRETE_FACTORY("58c9e19a-fde3-47d0-a121-35853fec667d")
 
     public:
         iscore::DocumentPlugin* load(
