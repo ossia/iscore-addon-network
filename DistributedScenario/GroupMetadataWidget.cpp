@@ -1,3 +1,4 @@
+/*
 #include <iscore/tools/std/Optional.hpp>
 #include <iscore/command/Dispatchers/CommandDispatcher.hpp>
 #include <iscore/document/DocumentInterface.hpp>
@@ -95,3 +96,4 @@ void GroupMetadataWidget::updateLabel(const Id<Group>& currentGroup)
     this->layout()->addWidget(m_combo);
 }
 }
+*/

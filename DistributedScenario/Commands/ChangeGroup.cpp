@@ -1,3 +1,4 @@
+/*
 #include <boost/concept/usage.hpp>
 
 #include <boost/range/algorithm/find_if.hpp>
@@ -42,7 +43,6 @@ static GroupMetadata* getGroupMetadata(QObject* obj)
 
         return static_cast<GroupMetadata*>(*plug_it);
     }
-
     ISCORE_ABORT;
     return nullptr;
 }
@@ -75,3 +75,5 @@ void ChangeGroup::deserializeImpl(DataStreamOutput &s)
 }
 }
 }
+
+*/

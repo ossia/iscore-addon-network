@@ -13,6 +13,8 @@ namespace Network
 {
 class Group;
 
+// TODO component
+/*
 // Goes into the constraints, events, etc.
 class GroupMetadata : public iscore::ElementPluginModel
 {
@@ -61,4 +63,5 @@ class GroupMetadata : public iscore::ElementPluginModel
         const QObject* const m_element;
         Id<Group> m_id;
 };
+*/
 }

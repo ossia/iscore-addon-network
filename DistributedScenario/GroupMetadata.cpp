@@ -6,6 +6,7 @@ struct VisitorVariant;
 
 namespace Network
 {
+/*
 GroupMetadata::GroupMetadata(
         const QObject* element,
         Id<Group> id,
@@ -46,4 +47,5 @@ void GroupMetadata::setGroup(const Id<Group>& id)
         emit groupChanged(id);
     }
 }
+*/
 }

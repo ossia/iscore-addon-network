@@ -12,7 +12,7 @@
 
 template <typename T> class Reader;
 template <typename T> class Writer;
-
+/* TODO
 template<>
 void Visitor<Reader<DataStream>>::readFrom_impl(
         const Network::GroupMetadata& elt)
@@ -46,3 +46,4 @@ void Visitor<Writer<JSONObject>>::writeTo(
 {
     elt.setGroup(fromJsonValue<Id<Network::Group>>(m_obj["Group"]));
 }
+*/

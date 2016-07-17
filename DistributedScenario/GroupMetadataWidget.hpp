@@ -1,3 +1,4 @@
+/*
 #pragma once
 #include <QWidget>
 
@@ -32,3 +33,4 @@ class GroupMetadataWidget : public QWidget
         QComboBox* m_combo{};
 };
 }
+*/

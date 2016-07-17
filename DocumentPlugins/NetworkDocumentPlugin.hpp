@@ -57,6 +57,8 @@ class NetworkDocumentPlugin final :
         void sessionChanged();
 
     private:
+        // TODO
+        /*
         std::vector<iscore::ElementPluginModelType> elementPlugins() const override;
 
         iscore::ElementPluginModel* makeElementPlugin(
@@ -76,6 +78,7 @@ class NetworkDocumentPlugin final :
 
         virtual QWidget *makeElementPluginWidget(
                 const iscore::ElementPluginModel*, QWidget* widg) const override;
+        */
 
         void serialize_impl(const VisitorVariant&) const override;
         ConcreteFactoryKey concreteFactoryKey() const override;

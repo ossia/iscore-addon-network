@@ -1,4 +1,5 @@
 #pragma once
+/*
 #include <DistributedScenario/Commands/DistributedScenarioCommandFactory.hpp>
 #include <iscore/tools/std/Optional.hpp>
 #include <iscore/command/SerializableCommand.hpp>
@@ -33,3 +34,4 @@ class ChangeGroup : public iscore::SerializableCommand
 };
 }
 }
+*/

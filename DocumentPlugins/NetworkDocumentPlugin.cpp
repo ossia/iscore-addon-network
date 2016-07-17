@@ -17,7 +17,6 @@
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <iscore/plugins/documentdelegate/plugin/DocumentDelegatePluginModel.hpp>
-#include <iscore/plugins/documentdelegate/plugin/ElementPluginModelList.hpp>
 #include <iscore/tools/NotifyingMap.hpp>
 #include <iscore/tools/SettableIdentifier.hpp>
 #include "session/../client/LocalClient.hpp"
@@ -102,6 +101,8 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
     baseGroup->addClient(m_policy->session()->localClient().id());
     groupManager()->addGroup(baseGroup);
 
+    ISCORE_TODO;
+    /*
     // Create it for each constraint / event.
     Scenario::ScenarioDocumentModel* bem = safe_cast<Scenario::ScenarioDocumentModel*>(&doc.model().modelDelegate());
     {
@@ -139,6 +140,7 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
         }
     }
     // TODO here we have to instantiate Network "OSSIA" policies. OR does it go with GroupMetadata?
+    */
 }
 
 NetworkDocumentPlugin::NetworkDocumentPlugin(const VisitorVariant &loader,
@@ -167,6 +169,7 @@ void NetworkDocumentPlugin::setPolicy(NetworkPolicyInterface * pol)
     emit sessionChanged();
 }
 
+/*
 std::vector<iscore::ElementPluginModelType> NetworkDocumentPlugin::elementPlugins() const
 {
     return {GroupMetadata::staticPluginId()};
@@ -256,5 +259,6 @@ QWidget *NetworkDocumentPlugin::makeElementPluginWidget(
     return new GroupMetadataWidget{
                 static_cast<const GroupMetadata&>(*var), m_groups, widg};
 }
+*/
 }
 
