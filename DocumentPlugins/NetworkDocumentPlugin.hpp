@@ -3,8 +3,6 @@
 #include <QObject>
 #include <vector>
 
-#include <iscore/plugins/documentdelegate/plugin/ElementPluginModel.hpp>
-
 #include <iscore/serialization/DataStreamVisitor.hpp>
 #include <iscore/serialization/JSONVisitor.hpp>
 #include <core/document/Document.hpp>

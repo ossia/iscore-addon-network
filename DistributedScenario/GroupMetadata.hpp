@@ -4,7 +4,7 @@
 
 #include <QString>
 
-#include <iscore/plugins/documentdelegate/plugin/ElementPluginModel.hpp>
+
 #include <iscore/tools/SettableIdentifier.hpp>
 
 struct VisitorVariant;
