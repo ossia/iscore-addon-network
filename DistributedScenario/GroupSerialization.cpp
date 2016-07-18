@@ -39,7 +39,7 @@ void Visitor<Reader<JSONObject>>::readFrom(
         const Network::Group& elt)
 {
     readFrom(static_cast<const IdentifiedObject<Network::Group>&>(elt));
-    m_obj["Name"] = elt.name();
+    m_obj[iscore::StringConstant().Name] = elt.name();
     m_obj["Clients"] = toJsonArray(elt.clients());
 }
 
@@ -48,6 +48,6 @@ template<>
 void Visitor<Writer<JSONObject>>::writeTo(
         Network::Group& elt)
 {
-    elt.m_name = m_obj["Name"].toString();
+    elt.m_name = m_obj[iscore::StringConstant().Name].toString();
     fromJsonValueArray(m_obj["Clients"].toArray(), elt.m_executingClients);
 }
