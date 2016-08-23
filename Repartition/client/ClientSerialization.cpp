@@ -34,11 +34,11 @@ template<>
 void Visitor<Reader<JSONObject>>::readFrom(const Network::Client& elt)
 {
     readFrom(static_cast<const IdentifiedObject<Network::Client>&>(elt));
-    m_obj[iscore::StringConstant().Name] = elt.name();
+    m_obj[strings.Name] = elt.name();
 }
 
 template<>
 void Visitor<Writer<JSONObject>>::writeTo(Network::Client& elt)
 {
-    elt.setName(m_obj[iscore::StringConstant().Name].toString());
+    elt.setName(m_obj[strings.Name].toString());
 }
