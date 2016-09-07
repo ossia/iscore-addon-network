@@ -47,7 +47,7 @@ GroupMetadataWidget::GroupMetadataWidget(
     connect(m_groups, &GroupManager::groupRemoved,
             this, &GroupMetadataWidget::on_groupRemoved);
 
-    updateLabel(groupmetadata.group());
+    updateLabel(groupmetadata().group());
 }
 
 void GroupMetadataWidget::on_groupAdded(const Id<Group>& id)
