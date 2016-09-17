@@ -29,8 +29,8 @@ NetworkMessage Session::makeMessage(QString address)
 {
     NetworkMessage m;
     m.address = address;
-    m.clientId = *localClient().id().val();
-    m.sessionId = *id().val();
+    m.clientId = localClient().id().val();
+    m.sessionId = id().val();
 
     return m;
 }

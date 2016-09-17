@@ -74,7 +74,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
         NetworkMessage join;
         join.address = "/session/join";
-        join.clientId = *m_clientId.val();
+        join.clientId = m_clientId.val();
         join.sessionId = m.sessionId;
 
         m_mastersocket->sendMessage(join);

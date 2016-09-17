@@ -88,8 +88,9 @@ class ScenarioFindEventVisitor
 
 NetworkDocumentPlugin::NetworkDocumentPlugin(
         NetworkPolicyInterface *policy,
+        Id<iscore::DocumentPlugin> id,
         iscore::Document& doc):
-    iscore::SerializableDocumentPlugin{doc.context(), "NetworkDocumentPlugin", &doc.model()},
+    iscore::SerializableDocumentPlugin{doc.context(), std::move(id), "NetworkDocumentPlugin", &doc.model()},
     m_policy{policy},
     m_groups{new GroupManager{this}}
 {
@@ -143,12 +144,7 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
     */
 }
 
-NetworkDocumentPlugin::NetworkDocumentPlugin(const VisitorVariant &loader,
-                                             iscore::Document& doc):
-    iscore::SerializableDocumentPlugin{doc.context(), "NetworkDocumentPlugin", &doc.model()}
-{
-    deserialize_dyn(loader, *this);
-}
+
 
 void NetworkDocumentPlugin::serialize_impl(const VisitorVariant & vis) const
 {
@@ -167,6 +163,15 @@ void NetworkDocumentPlugin::setPolicy(NetworkPolicyInterface * pol)
     m_policy = pol;
 
     emit sessionChanged();
+}
+
+iscore::DocumentPlugin*DocumentPluginFactory::load(
+        const VisitorVariant& var,
+        iscore::DocumentContext& doc,
+        QObject* parent)
+{
+    return deserialize_dyn(var, [&] (auto&& deserializer)
+    { return new NetworkDocumentPlugin{doc, deserializer, parent}; });
 }
 
 /*

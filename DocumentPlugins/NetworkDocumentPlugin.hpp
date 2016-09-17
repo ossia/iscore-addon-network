@@ -37,11 +37,22 @@ class NetworkDocumentPlugin final :
         ISCORE_SERIALIZE_FRIENDS(NetworkDocumentPlugin, DataStream)
         ISCORE_SERIALIZE_FRIENDS(NetworkDocumentPlugin, JSONObject)
     public:
-        NetworkDocumentPlugin(NetworkPolicyInterface* policy, iscore::Document& doc);
+        NetworkDocumentPlugin(
+                NetworkPolicyInterface* policy,
+                Id<iscore::DocumentPlugin> id,
+                iscore::Document& doc);
 
         // Loading has to be in two steps since the plugin policy is different from the client
         // and server.
-        NetworkDocumentPlugin(const VisitorVariant& loader, iscore::Document& doc);
+        template<typename Impl>
+        NetworkDocumentPlugin(
+                const iscore::DocumentContext& ctx,
+                Deserializer<Impl>& vis,
+                QObject* parent):
+            iscore::SerializableDocumentPlugin{ctx, vis, parent}
+        {
+            vis.writeTo(*this);
+        }
 
         void setPolicy(NetworkPolicyInterface*);
 
@@ -97,10 +108,7 @@ class DocumentPluginFactory :
         iscore::DocumentPlugin* load(
                 const VisitorVariant& var,
                 iscore::DocumentContext& doc,
-                QObject* parent) override
-        {
-            return new NetworkDocumentPlugin{var, doc.document}; // TODO Smell
-        }
+                QObject* parent) override;
 };
 }
 
