@@ -13,12 +13,12 @@ class MenubarManager;
 }  // namespace iscore
 struct VisitorVariant;
 
-
-namespace Network
-{
 #ifdef USE_ZEROCONF
 class ZeroconfBrowser;
 #endif
+
+namespace Network
+{
 
 class ClientSession;
 class ClientSessionBuilder;

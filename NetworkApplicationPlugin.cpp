@@ -26,8 +26,8 @@
 #include "session/../client/LocalClient.hpp"
 #include "session/MasterSession.hpp"
 
-#ifdef USE_ZEROCONF
-#include "Zeroconf/ZeroconfBrowser.hpp"
+#if defined(USE_ZEROCONF)
+#include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
 #endif
 
 #include "IpDialog.hpp"
@@ -71,16 +71,15 @@ void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
 
 iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
 {
-
     using namespace iscore;
+  QMenu* menu = context.menus.get().at(iscore::Menus::File()).menu();
+  qDebug() << menu->actions();
+
+  // TODO do this better.
 #ifdef USE_ZEROCONF
-    menu->insertActionIntoToplevelMenu(ToplevelMenuElement::FileMenu,
-                                       FileMenuElement::Separator_Load,
-                                       m_zeroconfBrowser->makeAction());
+    menu->addAction(m_zeroconfBrowser->makeAction());
 #endif
 
-    QMenu* menu = context.menus.get().at(iscore::Menus::File()).menu();
-    qDebug() << menu->actions();
     /*
     QAction* makeServer = new QAction {tr("Make Server"), this};
     connect(makeServer, &QAction::triggered, this,
