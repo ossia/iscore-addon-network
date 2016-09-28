@@ -32,8 +32,8 @@ class NetworkSettingsModel : public iscore::SettingsDelegateModel
         void MasterPortChanged();
 
     private:
-        int masterPort;
-        int clientPort;
+        int masterPort{};
+        int clientPort{};
         QString clientName;
 };
 
