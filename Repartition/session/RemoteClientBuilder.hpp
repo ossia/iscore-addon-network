@@ -15,7 +15,7 @@ class Client;
 class MasterSession;
 class NetworkSocket;
 
-class RemoteClientBuilder : public QObject
+class RemoteClientBuilder final : public QObject
 {
         Q_OBJECT
     public:

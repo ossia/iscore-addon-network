@@ -18,7 +18,7 @@ class NetworkSocket;
 class Session;
 struct NetworkMessage;
 
-class ClientSessionBuilder : public QObject
+class ClientSessionBuilder final : public QObject
 {
         Q_OBJECT
     public:

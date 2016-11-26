@@ -7,7 +7,7 @@ namespace Network
 {
 class Group;
 
-class GroupWidget : public QWidget
+class GroupWidget final : public QWidget
 {
     public:
         GroupWidget(Group* group, QWidget* parent);

@@ -8,7 +8,7 @@ class QWidget;
 namespace Network
 {
 class IpWidget;
-class IpDialog : public QDialog
+class IpDialog final : public QDialog
 {
     public:
         explicit IpDialog(QWidget* parent);

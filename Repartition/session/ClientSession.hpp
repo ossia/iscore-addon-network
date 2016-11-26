@@ -8,7 +8,7 @@ namespace Network
 {
 class LocalClient;
 class RemoteClient;
-class ClientSession : public Session
+class ClientSession final : public Session
 {
     public:
         ClientSession(
