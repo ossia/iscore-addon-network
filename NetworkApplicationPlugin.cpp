@@ -25,7 +25,7 @@
 #include <iscore/menu/MenuInterface.hpp>
 #include "session/../client/LocalClient.hpp"
 #include "session/MasterSession.hpp"
-
+#include <iscore/actions/ActionManager.hpp>
 #if defined(USE_ZEROCONF)
 #include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
 #endif
