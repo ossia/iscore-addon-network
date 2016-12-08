@@ -73,7 +73,7 @@ ClientNetworkPolicy::ClientNetworkPolicy(
         writer.writeTo(cmd);
 
         m_document->commandStack().redoAndPushQuiet(
-                    m_document->context().app.components.instantiateUndoCommand(cmd));
+                    m_document->context().app.instantiateUndoCommand(cmd));
     });
 
     s->mapper().addHandler("/command/undo", [&] (NetworkMessage)

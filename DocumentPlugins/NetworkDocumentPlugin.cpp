@@ -152,9 +152,9 @@ void NetworkDocumentPlugin::serialize_impl(const VisitorVariant & vis) const
     serialize_dyn(vis, *this);
 }
 
-auto NetworkDocumentPlugin::concreteFactoryKey() const -> ConcreteFactoryKey
+auto NetworkDocumentPlugin::concreteKey() const -> ConcreteKey
 {
-    return DocumentPluginFactory::static_concreteFactoryKey();
+    return DocumentPluginFactory::static_concreteKey();
 }
 
 void NetworkDocumentPlugin::setPolicy(NetworkPolicyInterface * pol)

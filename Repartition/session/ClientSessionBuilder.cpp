@@ -19,7 +19,7 @@
 #include "DocumentPlugins/NetworkDocumentPlugin.hpp"
 #include "DocumentPlugins/NetworkClientDocumentPlugin.hpp"
 #include <iscore/plugins/documentdelegate/DocumentDelegateFactoryInterface.hpp>
-
+#include <iscore/application/ApplicationContext.hpp>
 namespace Network
 {
 ClientSessionBuilder::ClientSessionBuilder(
@@ -102,7 +102,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
         iscore::Document* doc = m_context.documents.loadDocument(
                        m_context,
                        m_documentData,
-                       *m_context.components.factory<iscore::DocumentDelegateList>().begin()); // TODO id instead
+                       *m_context.interfaces<iscore::DocumentDelegateList>().begin()); // TODO id instead
 
         if(!doc)
         {
@@ -114,7 +114,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
             return;
         }
 
-        loadCommandStack(
+        iscore::loadCommandStack(
                     m_context.components,
                     writer,
                     doc->commandStack(),

@@ -37,9 +37,9 @@ class iscore_addon_network :
         virtual ~iscore_addon_network();
 
     private:
-        std::vector<std::unique_ptr<iscore::FactoryInterfaceBase>> factories(
+        std::vector<std::unique_ptr<iscore::InterfaceBase>> factories(
                 const iscore::ApplicationContext& ctx,
-                const iscore::AbstractFactoryKey& factoryName) const override;
+                const iscore::InterfaceKey& factoryName) const override;
 
         iscore::GUIApplicationContextPlugin* make_applicationPlugin(
                 const iscore::GUIApplicationContext& app) override;

@@ -72,7 +72,7 @@ MasterNetworkPolicy::MasterNetworkPolicy(MasterSession* s,
         writer.writeTo(cmd);
 
         stack.redoAndPushQuiet(
-                    c.app.components.instantiateUndoCommand(cmd));
+                    c.app.instantiateUndoCommand(cmd));
 
 
         m_session->transmit(Id<Client>(m.clientId), m);

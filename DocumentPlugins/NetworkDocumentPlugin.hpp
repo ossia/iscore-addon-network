@@ -90,7 +90,7 @@ class NetworkDocumentPlugin final :
         */
 
         void serialize_impl(const VisitorVariant&) const override;
-        ConcreteFactoryKey concreteFactoryKey() const override;
+        ConcreteKey concreteKey() const override;
 
         void setupGroupPlugin(GroupMetadata* grp);
 
@@ -102,7 +102,7 @@ class NetworkDocumentPlugin final :
 class DocumentPluginFactory :
         public iscore::DocumentPluginFactory
 {
-        ISCORE_CONCRETE_FACTORY("58c9e19a-fde3-47d0-a121-35853fec667d")
+        ISCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
 
     public:
         iscore::DocumentPlugin* load(
