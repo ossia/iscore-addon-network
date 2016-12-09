@@ -1,5 +1,5 @@
 #include "DistributedScenarioCommandFactory.hpp"
-#include <iscore/command/SerializableCommand.hpp>
+#include <iscore/command/Command.hpp>
 
 namespace Network
 {

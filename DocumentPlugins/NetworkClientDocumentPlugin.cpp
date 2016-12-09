@@ -11,7 +11,7 @@
 #include <iscore/application/ApplicationContext.hpp>
 #include <core/command/CommandStack.hpp>
 #include <core/document/Document.hpp>
-#include <iscore/command/SerializableCommand.hpp>
+#include <iscore/command/Command.hpp>
 #include <iscore/locking/ObjectLocker.hpp>
 #include <iscore/plugins/customfactory/StringFactoryKey.hpp>
 #include <iscore/serialization/DataStreamVisitor.hpp>
@@ -32,7 +32,7 @@ ClientNetworkPolicy::ClientNetworkPolicy(
     /// To the master
     /////////////////////////////////////////////////////////////////////////////
     con(m_document->commandStack(), &iscore::CommandStack::localCommand,
-            this, [=] (iscore::SerializableCommand* cmd)
+            this, [=] (iscore::Command* cmd)
     {
         m_session->master()->sendMessage(
                     m_session->makeMessage("/command/new", iscore::CommandData{*cmd}));

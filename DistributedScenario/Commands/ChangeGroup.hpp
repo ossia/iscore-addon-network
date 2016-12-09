@@ -2,7 +2,7 @@
 /*
 #include <DistributedScenario/Commands/DistributedScenarioCommandFactory.hpp>
 #include <iscore/tools/std/Optional.hpp>
-#include <iscore/command/SerializableCommand.hpp>
+#include <iscore/command/Command.hpp>
 #include <iscore/tools/ObjectPath.hpp>
 
 #include <iscore/tools/SettableIdentifier.hpp>
@@ -15,7 +15,7 @@ namespace Network
 class Group;
 namespace Command
 {
-class ChangeGroup : public iscore::SerializableCommand
+class ChangeGroup : public iscore::Command
 {
         ISCORE_ COMMAND_DECL(DistributedScenarioCommandFactoryName(), ChangeGroup, "Change the group of an element")
 

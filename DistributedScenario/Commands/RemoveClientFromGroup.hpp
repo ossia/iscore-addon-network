@@ -1,7 +1,7 @@
 #pragma once
 #include <DistributedScenario/Commands/DistributedScenarioCommandFactory.hpp>
 #include <iscore/tools/std/Optional.hpp>
-#include <iscore/command/SerializableCommand.hpp>
+#include <iscore/command/Command.hpp>
 #include <iscore/tools/ObjectPath.hpp>
 
 #include <iscore/tools/SettableIdentifier.hpp>
@@ -16,7 +16,7 @@ class Group;
 
 namespace Command
 {
-class RemoveClientFromGroup : public iscore::SerializableCommand
+class RemoveClientFromGroup : public iscore::Command
 {
         ISCORE_COMMAND_DECL(DistributedScenarioCommandFactoryName(), RemoveClientFromGroup, "RemoveClientFromGroup")
 

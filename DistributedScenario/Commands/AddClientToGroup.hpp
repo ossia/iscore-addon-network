@@ -1,7 +1,7 @@
 #pragma once
 #include <DistributedScenario/Commands/DistributedScenarioCommandFactory.hpp>
 #include <iscore/tools/std/Optional.hpp>
-#include <iscore/command/SerializableCommand.hpp>
+#include <iscore/command/Command.hpp>
 #include <iscore/tools/ObjectPath.hpp>
 
 #include <iscore/tools/SettableIdentifier.hpp>
@@ -15,7 +15,7 @@ class Client;
 class Group;
 namespace Command
 {
-class AddClientToGroup : public iscore::SerializableCommand
+class AddClientToGroup : public iscore::Command
 {
         ISCORE_COMMAND_DECL(DistributedScenarioCommandFactoryName(), AddClientToGroup, "AddClientToGroup")
     public:

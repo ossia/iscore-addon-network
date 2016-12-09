@@ -12,7 +12,7 @@
 #include "RemoteClientBuilder.hpp"
 #include "Serialization/NetworkMessage.hpp"
 #include <core/command/CommandStack.hpp>
-#include <iscore/command/SerializableCommand.hpp>
+#include <iscore/command/Command.hpp>
 #include <iscore/command/CommandData.hpp>
 #include <iscore/plugins/customfactory/StringFactoryKey.hpp>
 #include <iscore/serialization/DataStreamVisitor.hpp>
