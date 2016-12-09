@@ -5,8 +5,8 @@ namespace Network
 {
 namespace Command
 {
-const CommandParentFactoryKey& DistributedScenarioCommandFactoryName() {
-    static const CommandParentFactoryKey key{"DistributedScenario"};
+const CommandGroupKey& DistributedScenarioCommandFactoryName() {
+    static const CommandGroupKey key{"DistributedScenario"};
     return key;
 }
 }

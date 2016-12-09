@@ -44,7 +44,7 @@ class iscore_addon_network :
         iscore::GUIApplicationContextPlugin* make_applicationPlugin(
                 const iscore::GUIApplicationContext& app) override;
 
-        std::pair<const CommandParentFactoryKey, CommandGeneratorMap> make_commands() override;
+        std::pair<const CommandGroupKey, CommandGeneratorMap> make_commands() override;
 
         iscore::Version version() const override;
         UuidKey<iscore::Plugin> key() const override;

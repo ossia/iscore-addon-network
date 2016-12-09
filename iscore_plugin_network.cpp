@@ -48,11 +48,11 @@ iscore_addon_network::factories(
     >>(ctx, key);
 }
 
-std::pair<const CommandParentFactoryKey, CommandGeneratorMap> iscore_addon_network::make_commands()
+std::pair<const CommandGroupKey, CommandGeneratorMap> iscore_addon_network::make_commands()
 {
     using namespace Network;
     using namespace Network::Command;
-    std::pair<const CommandParentFactoryKey, CommandGeneratorMap> cmds{
+    std::pair<const CommandGroupKey, CommandGeneratorMap> cmds{
         DistributedScenarioCommandFactoryName(), CommandGeneratorMap{}};
 
     using Types = TypeList<

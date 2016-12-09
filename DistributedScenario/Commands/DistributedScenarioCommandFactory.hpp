@@ -5,6 +5,6 @@ namespace Network
 {
 namespace Command
 {
-const CommandParentFactoryKey& DistributedScenarioCommandFactoryName();
+const CommandGroupKey& DistributedScenarioCommandFactoryName();
 }
 }
