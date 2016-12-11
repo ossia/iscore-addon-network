@@ -8,7 +8,10 @@
 #include <QObject>
 #include <QPair>
 #include <QString>
-
+namespace iscore
+{
+struct GUIApplicationContext;
+}
 
 namespace Network
 {
@@ -23,7 +26,7 @@ class ClientSessionBuilder final : public QObject
         Q_OBJECT
     public:
         ClientSessionBuilder(
-                const iscore::ApplicationContext&,
+                const iscore::GUIApplicationContext&,
                 QString ip,
                 int port);
 
@@ -40,7 +43,7 @@ class ClientSessionBuilder final : public QObject
         void sessionFailed();
 
     private:
-        const iscore::ApplicationContext& m_context;
+        const iscore::GUIApplicationContext& m_context;
         QString m_clientName{"A Client"};
         Id<Client> m_masterId, m_clientId;
         Id<Session> m_sessionId;

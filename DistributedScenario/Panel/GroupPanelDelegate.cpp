@@ -17,7 +17,7 @@
 
 namespace Network
 {
-PanelDelegate::PanelDelegate(const iscore::ApplicationContext& ctx):
+PanelDelegate::PanelDelegate(const iscore::GUIApplicationContext& ctx):
     iscore::PanelDelegate{ctx},
     m_widget{new QWidget}
 {

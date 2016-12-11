@@ -23,7 +23,7 @@
 namespace Network
 {
 ClientSessionBuilder::ClientSessionBuilder(
-        const iscore::ApplicationContext& ctx,
+        const iscore::GUIApplicationContext& ctx,
         QString ip,
         int port):
     m_context{ctx}

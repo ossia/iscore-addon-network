@@ -10,7 +10,7 @@ class PanelDelegate final :
 {
     public:
         PanelDelegate(
-                const iscore::ApplicationContext& ctx);
+                const iscore::GUIApplicationContext& ctx);
 
     private:
         QWidget *widget() override;
