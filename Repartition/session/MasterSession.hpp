@@ -5,7 +5,7 @@
 
 class QObject;
 class QTcpSocket;
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 namespace iscore {
 class Document;

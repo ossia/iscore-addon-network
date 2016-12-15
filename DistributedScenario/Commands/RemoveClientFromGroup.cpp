@@ -5,7 +5,7 @@
 #include "DistributedScenario/GroupManager.hpp"
 #include "RemoveClientFromGroup.hpp"
 #include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/tools/ObjectPath.hpp>
+#include <iscore/model/path/ObjectPath.hpp>
 
 namespace Network
 {

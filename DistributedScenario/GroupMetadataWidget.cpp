@@ -16,7 +16,7 @@
 #include "GroupManager.hpp"
 #include "GroupMetadata.hpp"
 #include "GroupMetadataWidget.hpp"
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 #include <iscore/tools/Todo.hpp>
 #include <iscore/document/DocumentContext.hpp>
 #include <iscore/widgets/SignalUtils.hpp>

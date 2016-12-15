@@ -1,6 +1,6 @@
 #include <Serialization/NetworkSocket.hpp>
 #include <core/document/Document.hpp>
-#include <iscore/tools/SettableIdentifierGeneration.hpp>
+#include <iscore/tools/IdentifierGeneration.hpp>
 #include <QByteArray>
 #include <QDataStream>
 #include <QIODevice>

@@ -40,12 +40,11 @@ iscore_addon_network::factories(
 {
     return instantiate_factories<
             iscore::ApplicationContext,
-    TL<
         FW<iscore::DocumentPluginFactory,
              Network::DocumentPluginFactory>,
         FW<iscore::PanelDelegateFactory,
             Network::PanelDelegateFactory>
-    >>(ctx, key);
+    >(ctx, key);
 }
 
 std::pair<const CommandGroupKey, CommandGeneratorMap> iscore_addon_network::make_commands()

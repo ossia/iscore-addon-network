@@ -8,8 +8,8 @@
 
 #include "../client/LocalClient.hpp"
 #include "../client/RemoteClient.hpp"
-#include <iscore/tools/IdentifiedObject.hpp>
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/IdentifiedObject.hpp>
+#include <iscore/model/Identifier.hpp>
 
 class QObject;
 

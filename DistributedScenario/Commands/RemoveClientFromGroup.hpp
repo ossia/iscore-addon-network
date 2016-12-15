@@ -2,9 +2,9 @@
 #include <DistributedScenario/Commands/DistributedScenarioCommandFactory.hpp>
 #include <iscore/tools/std/Optional.hpp>
 #include <iscore/command/Command.hpp>
-#include <iscore/tools/ObjectPath.hpp>
+#include <iscore/model/path/ObjectPath.hpp>
 
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 struct DataStreamInput;
 struct DataStreamOutput;

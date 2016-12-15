@@ -11,7 +11,7 @@
 #include "DocumentPlugins/NetworkDocumentPlugin.hpp"
 #include "PlaceholderNetworkPolicy.hpp"
 #include <iscore/serialization/JSONValueVisitor.hpp>
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 #include "session/../client/LocalClient.hpp"
 #include "session/../client/RemoteClient.hpp"
 #include "session/Session.hpp"

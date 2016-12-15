@@ -9,7 +9,7 @@
 #include "Serialization/NetworkSocket.hpp"
 #include <iscore/command/Command.hpp>
 #include <iscore/plugins/customfactory/StringFactoryKey.hpp>
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 #include <core/presenter/Presenter.hpp>
 #include <core/presenter/DocumentManager.hpp>
 #include <core/document/Document.hpp>
@@ -18,7 +18,7 @@
 #include "session/../client/RemoteClient.hpp"
 #include "DocumentPlugins/NetworkDocumentPlugin.hpp"
 #include "DocumentPlugins/NetworkClientDocumentPlugin.hpp"
-#include <iscore/plugins/documentdelegate/DocumentDelegateFactoryInterface.hpp>
+#include <iscore/plugins/documentdelegate/DocumentDelegateFactory.hpp>
 #include <iscore/application/ApplicationContext.hpp>
 namespace Network
 {

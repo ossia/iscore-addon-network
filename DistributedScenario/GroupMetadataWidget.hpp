@@ -3,7 +3,7 @@
 #include <QWidget>
 
 class QComboBox;
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 
 namespace Network

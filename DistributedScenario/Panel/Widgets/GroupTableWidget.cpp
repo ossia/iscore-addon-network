@@ -18,8 +18,8 @@
 #include "GroupTableWidget.hpp"
 #include "SessionHeaderItem.hpp"
 #include <iscore/command/Dispatchers/CommandDispatcher.hpp>
-#include <iscore/tools/ObjectPath.hpp>
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/path/ObjectPath.hpp>
+#include <iscore/model/Identifier.hpp>
 #include <iscore/document/DocumentContext.hpp>
 #include "session/../client/LocalClient.hpp"
 #include "session/../client/RemoteClient.hpp"

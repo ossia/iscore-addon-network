@@ -19,10 +19,11 @@
 #include <core/command/CommandStack.hpp>
 #include <core/document/DocumentModel.hpp>
 #include <core/presenter/DocumentManager.hpp>
-#include <iscore/menu/MenuInterface.hpp>
+#include <iscore/actions/MenuManager.hpp>
+#include <iscore/actions/Menu.hpp>
 #include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
-#include <iscore/tools/SettableIdentifier.hpp>
-#include <iscore/menu/MenuInterface.hpp>
+#include <iscore/model/Identifier.hpp>
+#include <iscore/actions/Menu.hpp>
 #include "session/../client/LocalClient.hpp"
 #include "session/MasterSession.hpp"
 #include <iscore/actions/ActionManager.hpp>
@@ -71,7 +72,7 @@ void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
 
 iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
 {
-    using namespace iscore;
+  using namespace iscore;
   QMenu* menu = context.menus.get().at(iscore::Menus::File()).menu();
   qDebug() << menu->actions();
 

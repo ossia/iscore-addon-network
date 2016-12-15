@@ -2,7 +2,7 @@
 #include <iscore/tools/std/Optional.hpp>
 #include <iscore/command/Command.hpp>
 #include <iscore/command/CommandData.hpp>
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 #include <QByteArray>
 #include <QList>
 #include <QObject>

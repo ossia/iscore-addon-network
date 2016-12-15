@@ -1,7 +1,7 @@
 #pragma once
 #include <QList>
 #include <QWidget>
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 
 namespace Network

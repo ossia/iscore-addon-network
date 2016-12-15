@@ -14,7 +14,7 @@
 #include <iscore/locking/ObjectLocker.hpp>
 #include <iscore/plugins/customfactory/StringFactoryKey.hpp>
 #include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 #include <iscore/tools/Todo.hpp>
 #include <core/document/Document.hpp>
 #include "session/MasterSession.hpp"

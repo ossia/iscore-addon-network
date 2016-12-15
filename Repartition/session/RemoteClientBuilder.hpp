@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QString>
 
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 class QTcpSocket;
 

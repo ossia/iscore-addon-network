@@ -4,7 +4,7 @@
 
 #include "Group.hpp"
 #include "GroupManager.hpp"
-#include <iscore/tools/IdentifiedObject.hpp>
+#include <iscore/model/IdentifiedObject.hpp>
 
 class QObject;
 

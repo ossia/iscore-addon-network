@@ -1,12 +1,12 @@
 
-#include <iscore/tools/SettableIdentifierGeneration.hpp>
+#include <iscore/tools/IdentifierGeneration.hpp>
 #include <vector>
 
 #include "CreateGroup.hpp"
 #include "DistributedScenario/Group.hpp"
 #include "DistributedScenario/GroupManager.hpp"
 #include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/tools/ObjectPath.hpp>
+#include <iscore/model/path/ObjectPath.hpp>
 
 
 namespace Network

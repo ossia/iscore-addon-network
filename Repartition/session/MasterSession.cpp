@@ -8,7 +8,7 @@
 
 #include "MasterSession.hpp"
 #include "Serialization/NetworkMessage.hpp"
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 #include <iscore/tools/Todo.hpp>
 #include "session/../client/LocalClient.hpp"
 #include "session/../client/RemoteClient.hpp"

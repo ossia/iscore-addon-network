@@ -5,7 +5,7 @@
 #include <QString>
 
 
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 struct VisitorVariant;
 

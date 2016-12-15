@@ -4,7 +4,7 @@
 #include "MessageValidator.hpp"
 #include "Serialization/MessageMapper.hpp"
 #include "Serialization/NetworkMessage.hpp"
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 namespace Network
 {

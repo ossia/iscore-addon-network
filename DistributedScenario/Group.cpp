@@ -2,7 +2,7 @@
 #include <iterator>
 
 #include "Group.hpp"
-#include <iscore/tools/IdentifiedObject.hpp>
+#include <iscore/model/IdentifiedObject.hpp>
 
 class Client;
 class QObject;

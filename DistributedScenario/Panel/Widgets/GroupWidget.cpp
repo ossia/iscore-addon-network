@@ -8,7 +8,7 @@
 #include <QString>
 
 #include "GroupWidget.hpp"
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 namespace Network
 {

@@ -1,10 +1,10 @@
 #pragma once
 #include <iscore/command/Dispatchers/CommandDispatcher.hpp>
-#include <iscore/tools/ObjectPath.hpp>
+#include <iscore/model/path/ObjectPath.hpp>
 #include <QWidget>
 
 class QTableWidget;
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 
 namespace Network
 {
