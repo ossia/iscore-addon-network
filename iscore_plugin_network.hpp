@@ -31,6 +31,7 @@ class iscore_addon_network :
                 iscore::GUIApplicationContextPlugin_QtInterface
                 iscore::CommandFactory_QtInterface
                 iscore::FactoryInterface_QtInterface)
+  ISCORE_PLUGIN_METADATA(1, "33508c6d-46a1-4449-bfff-57246d579621")
 
     public:
         iscore_addon_network();
@@ -45,7 +46,4 @@ class iscore_addon_network :
                 const iscore::GUIApplicationContext& app) override;
 
         std::pair<const CommandGroupKey, CommandGeneratorMap> make_commands() override;
-
-        iscore::Version version() const override;
-        UuidKey<iscore::Plugin> key() const override;
 };
