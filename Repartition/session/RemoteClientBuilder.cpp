@@ -63,7 +63,7 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
         doc.address = "/session/document";
 
         // Data is the serialized command stack, and the document models.
-        Visitor<Reader<DataStream>> vr{&doc.data};
+        DataStreamReader vr{&doc.data};
         vr.m_stream << m_session.document()->saveAsByteArray();
         vr.readFrom(m_session.document()->commandStack());
 

@@ -16,12 +16,9 @@
 #include "session/../client/RemoteClient.hpp"
 #include "session/Session.hpp"
 
-template <typename T> class Reader;
-template <typename T> class Writer;
 
-// Move me
-template<>
-void Visitor<Reader<DataStream>>::readFrom(
+template <>
+void DataStreamReader::read(
         const Network::NetworkPolicyInterface& elt)
 {
     m_stream << elt.session()->id();
@@ -36,25 +33,24 @@ void Visitor<Reader<DataStream>>::readFrom(
     insertDelimiter();
 }
 
-template<>
-void Visitor<Reader<JSONObject>>::readFrom(
+template <>
+void JSONObjectReader::read(
         const Network::NetworkPolicyInterface& elt)
 {
-    m_obj["SessionId"] = toJsonValue(elt.session()->id());
-    m_obj["LocalClient"] = toJsonObject(static_cast<Network::Client&>(elt.session()->localClient()));
+    obj["SessionId"] = toJsonValue(elt.session()->id());
+    obj["LocalClient"] = toJsonObject(static_cast<Network::Client&>(elt.session()->localClient()));
 
     QJsonArray arr;
     for(auto& clt : elt.session()->remoteClients())
     {
         arr.push_back(toJsonObject(static_cast<Network::Client&>(*clt)));
     }
-    m_obj["RemoteClients"] = arr;
+    obj["RemoteClients"] = arr;
 }
 
 
-
-template<>
-void Visitor<Writer<DataStream>>::writeTo(
+template <>
+void DataStreamWriter::writeTo(
         Network::PlaceholderNetworkPolicy& elt)
 {
     Id<Network::Session> sessId;
@@ -72,21 +68,19 @@ void Visitor<Writer<DataStream>>::writeTo(
     checkDelimiter();
 }
 
-
-
-template<>
-void Visitor<Writer<JSONObject>>::writeTo(
+template <>
+void JSONObjectWriter::writeTo(
         Network::PlaceholderNetworkPolicy& elt)
 {
-    Deserializer<JSONObject> localClientDeser(m_obj["LocalClient"].toObject());
+    JSONObject::Deserializer localClientDeser(obj["LocalClient"].toObject());
     elt.m_session = new Network::Session{
             new Network::LocalClient(localClientDeser, nullptr),
-            fromJsonValue<Id<Network::Session>>(m_obj["SessionId"]),
+            fromJsonValue<Id<Network::Session>>(obj["SessionId"]),
             &elt};
 
-    for(const auto& json_vref : m_obj["RemoteClients"].toArray())
+    for(const auto& json_vref : obj["RemoteClients"].toArray())
     {
-        Deserializer<JSONObject> deser(json_vref.toObject());
+        JSONObject::Deserializer deser(json_vref.toObject());
         elt.m_session->addClient(new Network::RemoteClient(deser, elt.m_session));
     }
 

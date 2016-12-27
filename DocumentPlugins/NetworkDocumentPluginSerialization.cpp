@@ -5,12 +5,8 @@
 #include "NetworkDocumentPlugin.hpp"
 #include "PlaceholderNetworkPolicy.hpp"
 
-template <typename T> class Reader;
-template <typename T> class Writer;
-
-
-template<>
-void Visitor<Reader<DataStream>>::readFrom_impl(
+template <>
+void DataStreamReader::read(
         const Network::NetworkDocumentPlugin& elt)
 {
     readFrom(*elt.groupManager());
@@ -20,8 +16,8 @@ void Visitor<Reader<DataStream>>::readFrom_impl(
     insertDelimiter();
 }
 
-template<>
-void Visitor<Writer<DataStream>>::writeTo(
+template <>
+void DataStreamWriter::writeTo(
         Network::NetworkDocumentPlugin& elt)
 {
     elt.m_groups = new Network::GroupManager{*this, &elt};
@@ -30,17 +26,16 @@ void Visitor<Writer<DataStream>>::writeTo(
     checkDelimiter();
 }
 
-template<>
-void Visitor<Reader<JSONObject>>::readFrom_impl(
+template <>
+void JSONObjectReader::read(
         const Network::NetworkDocumentPlugin& elt)
 {
     readFrom(*elt.groupManager());
     readFrom(*elt.policy());
 }
 
-
-template<>
-void Visitor<Writer<JSONObject>>::writeTo(
+template <>
+void JSONObjectWriter::writeTo(
         Network::NetworkDocumentPlugin& elt)
 {
     elt.m_groups = new Network::GroupManager{*this, &elt};

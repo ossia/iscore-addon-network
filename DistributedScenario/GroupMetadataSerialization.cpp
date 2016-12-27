@@ -14,7 +14,7 @@ template <typename T> class Reader;
 template <typename T> class Writer;
 /* TODO
 template<>
-void Visitor<Reader<DataStream>>::readFrom_impl(
+void DataStreamReader::read(
         const Network::GroupMetadata& elt)
 {
     readFrom(elt.group());
@@ -22,7 +22,7 @@ void Visitor<Reader<DataStream>>::readFrom_impl(
 }
 
 template<>
-void Visitor<Writer<DataStream>>::writeTo(
+void DataStreamWriter::writeTo(
         Network::GroupMetadata& elt)
 {
     Id<Network::Group> id;
@@ -34,16 +34,16 @@ void Visitor<Writer<DataStream>>::writeTo(
 
 
 template<>
-void Visitor<Reader<JSONObject>>::readFrom_impl(
+void JSONObjectReader::read(
         const Network::GroupMetadata& elt)
 {
-    m_obj["Group"] = toJsonValue(elt.group());
+    obj["Group"] = toJsonValue(elt.group());
 }
 
 template<>
-void Visitor<Writer<JSONObject>>::writeTo(
+void JSONObjectWriter::writeTo(
         Network::GroupMetadata& elt)
 {
-    elt.setGroup(fromJsonValue<Id<Network::Group>>(m_obj["Group"]));
+    elt.setGroup(fromJsonValue<Id<Network::Group>>(obj["Group"]));
 }
 */

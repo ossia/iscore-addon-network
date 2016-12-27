@@ -34,8 +34,7 @@ class NetworkDocumentPlugin final :
 {
         Q_OBJECT
 
-        ISCORE_SERIALIZE_FRIENDS(NetworkDocumentPlugin, DataStream)
-        ISCORE_SERIALIZE_FRIENDS(NetworkDocumentPlugin, JSONObject)
+        ISCORE_SERIALIZE_FRIENDS
     public:
         NetworkDocumentPlugin(
                 NetworkPolicyInterface* policy,
@@ -47,7 +46,7 @@ class NetworkDocumentPlugin final :
         template<typename Impl>
         NetworkDocumentPlugin(
                 const iscore::DocumentContext& ctx,
-                Deserializer<Impl>& vis,
+                Impl& vis,
                 QObject* parent):
             iscore::SerializableDocumentPlugin{ctx, vis, parent}
         {

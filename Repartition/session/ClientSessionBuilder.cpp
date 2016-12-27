@@ -90,7 +90,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
         m_session->localClient().setName(m_clientName);
 
         // We start building our document.
-        Visitor<Writer<DataStream>> writer{m.data};
+        DataStreamWriter writer{m.data};
         writer.m_stream >> m_documentData;
 
         // The SessionBuilder should have a saved document and saved command list.

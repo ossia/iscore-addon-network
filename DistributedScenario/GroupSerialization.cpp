@@ -12,42 +12,34 @@
 #include "Group.hpp"
 #include <iscore/serialization/JSONValueVisitor.hpp>
 
-template <typename T> class IdentifiedObject;
-template <typename T> class Reader;
-template <typename T> class Writer;
-
-
-template<>
-void Visitor<Reader<DataStream>>::readFrom(
+template <>
+void DataStreamReader::read(
         const Network::Group& elt)
 {
-    readFrom(static_cast<const IdentifiedObject<Network::Group>&>(elt));
     m_stream << elt.name() << elt.clients();
     insertDelimiter();
 }
 
-template<>
-void Visitor<Writer<DataStream>>::writeTo(
+template <>
+void DataStreamWriter::writeTo(
         Network::Group& elt)
 {
     m_stream >> elt.m_name >> elt.m_executingClients;
     checkDelimiter();
 }
 
-template<>
-void Visitor<Reader<JSONObject>>::readFrom(
+template <>
+void JSONObjectReader::read(
         const Network::Group& elt)
 {
-    readFrom(static_cast<const IdentifiedObject<Network::Group>&>(elt));
-    m_obj[strings.Name] = elt.name();
-    m_obj["Clients"] = toJsonArray(elt.clients());
+    obj[strings.Name] = elt.name();
+    obj["Clients"] = toJsonArray(elt.clients());
 }
 
-
-template<>
-void Visitor<Writer<JSONObject>>::writeTo(
+template <>
+void JSONObjectWriter::writeTo(
         Network::Group& elt)
 {
-    elt.m_name = m_obj[strings.Name].toString();
-    fromJsonValueArray(m_obj["Clients"].toArray(), elt.m_executingClients);
+    elt.m_name = obj[strings.Name].toString();
+    fromJsonValueArray(obj["Clients"].toArray(), elt.m_executingClients);
 }

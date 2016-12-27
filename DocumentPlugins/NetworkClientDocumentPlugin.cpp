@@ -69,7 +69,7 @@ ClientNetworkPolicy::ClientNetworkPolicy(
     [&] (NetworkMessage m)
     {
         iscore::CommandData cmd;
-        Visitor<Writer<DataStream>> writer{m.data};
+        DataStreamWriter writer{m.data};
         writer.writeTo(cmd);
 
         m_document->commandStack().redoAndPushQuiet(

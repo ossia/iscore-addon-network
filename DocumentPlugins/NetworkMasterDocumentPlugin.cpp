@@ -68,7 +68,7 @@ MasterNetworkPolicy::MasterNetworkPolicy(MasterSession* s,
     s->mapper().addHandler("/command/new", [&] (NetworkMessage m)
     {
         iscore::CommandData cmd;
-        Visitor<Writer<DataStream>> writer{m.data};
+        DataStreamWriter writer{m.data};
         writer.writeTo(cmd);
 
         stack.redoAndPushQuiet(

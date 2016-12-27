@@ -28,8 +28,7 @@ class Group : public IdentifiedObject<Group>
         Q_OBJECT
         Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
-        ISCORE_SERIALIZE_FRIENDS(Group, DataStream)
-        ISCORE_SERIALIZE_FRIENDS(Group, JSONObject)
+        ISCORE_SERIALIZE_FRIENDS
     public:
         Group(QString name, Id<Group> id, QObject* parent);
 

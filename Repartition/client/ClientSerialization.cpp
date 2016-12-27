@@ -7,21 +7,16 @@
 
 #include "Client.hpp"
 
-template <typename T> class Reader;
-template <typename T> class Writer;
-template <typename model> class IdentifiedObject;
-
-template<>
-void Visitor<Reader<DataStream>>::readFrom(
+template <>
+void DataStreamReader::read(
         const Network::Client& elt)
 {
-    readFrom(static_cast<const IdentifiedObject<Network::Client>&>(elt));
     m_stream << elt.name();
     insertDelimiter();
 }
 
-template<>
-void Visitor<Writer<DataStream>>::writeTo(Network::Client& elt)
+template <>
+void DataStreamWriter::writeTo(Network::Client& elt)
 {
     QString s;
     m_stream >> s;
@@ -30,15 +25,14 @@ void Visitor<Writer<DataStream>>::writeTo(Network::Client& elt)
     checkDelimiter();
 }
 
-template<>
-void Visitor<Reader<JSONObject>>::readFrom(const Network::Client& elt)
+template <>
+void JSONObjectReader::read(const Network::Client& elt)
 {
-    readFrom(static_cast<const IdentifiedObject<Network::Client>&>(elt));
-    m_obj[strings.Name] = elt.name();
+    obj[strings.Name] = elt.name();
 }
 
-template<>
-void Visitor<Writer<JSONObject>>::writeTo(Network::Client& elt)
+template <>
+void JSONObjectWriter::writeTo(Network::Client& elt)
 {
-    elt.setName(m_obj[strings.Name].toString());
+    elt.setName(obj[strings.Name].toString());
 }
