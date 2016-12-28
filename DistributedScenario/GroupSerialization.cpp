@@ -21,7 +21,7 @@ void DataStreamReader::read(
 }
 
 template <>
-void DataStreamWriter::writeTo(
+void DataStreamWriter::write(
         Network::Group& elt)
 {
     m_stream >> elt.m_name >> elt.m_executingClients;
@@ -37,7 +37,7 @@ void JSONObjectReader::read(
 }
 
 template <>
-void JSONObjectWriter::writeTo(
+void JSONObjectWriter::write(
         Network::Group& elt)
 {
     elt.m_name = obj[strings.Name].toString();

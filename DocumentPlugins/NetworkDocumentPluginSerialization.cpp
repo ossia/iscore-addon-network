@@ -17,7 +17,7 @@ void DataStreamReader::read(
 }
 
 template <>
-void DataStreamWriter::writeTo(
+void DataStreamWriter::write(
         Network::NetworkDocumentPlugin& elt)
 {
     elt.m_groups = new Network::GroupManager{*this, &elt};
@@ -35,7 +35,7 @@ void JSONObjectReader::read(
 }
 
 template <>
-void JSONObjectWriter::writeTo(
+void JSONObjectWriter::write(
         Network::NetworkDocumentPlugin& elt)
 {
     elt.m_groups = new Network::GroupManager{*this, &elt};

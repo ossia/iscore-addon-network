@@ -50,7 +50,7 @@ void JSONObjectReader::read(
 
 
 template <>
-void DataStreamWriter::writeTo(
+void DataStreamWriter::write(
         Network::PlaceholderNetworkPolicy& elt)
 {
     Id<Network::Session> sessId;
@@ -69,7 +69,7 @@ void DataStreamWriter::writeTo(
 }
 
 template <>
-void JSONObjectWriter::writeTo(
+void JSONObjectWriter::write(
         Network::PlaceholderNetworkPolicy& elt)
 {
     JSONObject::Deserializer localClientDeser(obj["LocalClient"].toObject());

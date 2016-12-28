@@ -26,7 +26,7 @@ void DataStreamReader::read(
 }
 
 template <>
-void DataStreamWriter::writeTo(
+void DataStreamWriter::write(
         Network::GroupManager& elt)
 {
     int32_t size;
@@ -46,7 +46,7 @@ void JSONObjectReader::read(
 }
 
 template <>
-void JSONObjectWriter::writeTo(
+void JSONObjectWriter::write(
         Network::GroupManager& elt)
 {
     auto arr = obj["GroupList"].toArray();

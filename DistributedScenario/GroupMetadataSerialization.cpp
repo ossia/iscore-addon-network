@@ -22,7 +22,7 @@ void DataStreamReader::read(
 }
 
 template<>
-void DataStreamWriter::writeTo(
+void DataStreamWriter::write(
         Network::GroupMetadata& elt)
 {
     Id<Network::Group> id;
@@ -41,7 +41,7 @@ void JSONObjectReader::read(
 }
 
 template<>
-void JSONObjectWriter::writeTo(
+void JSONObjectWriter::write(
         Network::GroupMetadata& elt)
 {
     elt.setGroup(fromJsonValue<Id<Network::Group>>(obj["Group"]));

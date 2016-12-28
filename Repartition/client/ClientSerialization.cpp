@@ -16,7 +16,7 @@ void DataStreamReader::read(
 }
 
 template <>
-void DataStreamWriter::writeTo(Network::Client& elt)
+void DataStreamWriter::write(Network::Client& elt)
 {
     QString s;
     m_stream >> s;
@@ -32,7 +32,7 @@ void JSONObjectReader::read(const Network::Client& elt)
 }
 
 template <>
-void JSONObjectWriter::writeTo(Network::Client& elt)
+void JSONObjectWriter::write(Network::Client& elt)
 {
     elt.setName(obj[strings.Name].toString());
 }
