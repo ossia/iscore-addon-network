@@ -37,9 +37,10 @@ class NetworkDocumentPlugin final :
         ISCORE_SERIALIZE_FRIENDS
     public:
         NetworkDocumentPlugin(
+                const iscore::DocumentContext& ctx,
                 NetworkPolicyInterface* policy,
                 Id<iscore::DocumentPlugin> id,
-                iscore::Document& doc);
+                QObject* parent);
 
         // Loading has to be in two steps since the plugin policy is different from the client
         // and server.

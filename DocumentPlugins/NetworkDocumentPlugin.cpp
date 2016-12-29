@@ -87,10 +87,11 @@ class ScenarioFindEventVisitor
 };
 
 NetworkDocumentPlugin::NetworkDocumentPlugin(
+        const iscore::DocumentContext& ctx,
         NetworkPolicyInterface *policy,
         Id<iscore::DocumentPlugin> id,
-        iscore::Document& doc):
-    iscore::SerializableDocumentPlugin{doc.context(), std::move(id), "NetworkDocumentPlugin", &doc.model()},
+        QObject* parent):
+    iscore::SerializableDocumentPlugin{ctx, std::move(id), "NetworkDocumentPlugin", parent},
     m_policy{policy},
     m_groups{new GroupManager{this}}
 {

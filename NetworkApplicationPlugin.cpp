@@ -14,6 +14,7 @@
 #include "DocumentPlugins/NetworkMasterDocumentPlugin.hpp"
 #include "NetworkApplicationPlugin.hpp"
 #include "Repartition/session/ClientSessionBuilder.hpp"
+#include <iscore/tools/IdentifierGeneration.hpp>
 
 #include <iscore/application/ApplicationContext.hpp>
 #include <core/command/CommandStack.hpp>
@@ -81,22 +82,22 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
     menu->addAction(m_zeroconfBrowser->makeAction());
 #endif
 
-    /*
     QAction* makeServer = new QAction {tr("Make Server"), this};
     connect(makeServer, &QAction::triggered, this,
             [&] ()
     {
+      if(auto doc = currentDocument())
+      {
         auto clt = new LocalClient(Id<Client>(0));
         clt->setName(tr("Master"));
         auto serv = new MasterSession(currentDocument(), clt, Id<Session>(1234));
         auto policy = new MasterNetworkPolicy{serv, currentDocument()->context()};
-        auto realplug = new NetworkDocumentPlugin{policy, *currentDocument()};
-        currentDocument()->model().addPluginModel(realplug);
+        auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
+        doc->model().addPluginModel(realplug);
+      }
     });
 
-    menu->insertActionIntoToplevelMenu(ToplevelMenuElement::FileMenu,
-                                       FileMenuElement::Separator_Load,
-                                       makeServer);
+    menu->addAction(makeServer);
 
     QAction* connectLocal = new QAction {tr("Join local"), this};
     connect(connectLocal, &QAction::triggered, this,
@@ -110,10 +111,8 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
         }
     });
 
-    menu->insertActionIntoToplevelMenu(ToplevelMenuElement::FileMenu,
-                                       FileMenuElement::Separator_Load,
-                                       connectLocal);
-                                       */
+    menu->addAction(connectLocal);
+
 
     return {};
 }
