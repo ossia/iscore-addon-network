@@ -13,13 +13,15 @@ namespace Network
 class ClientNetworkPolicy : public NetworkPolicyInterface
 {
     public:
-        ClientNetworkPolicy(ClientSession* s, iscore::Document* doc);
+        ClientNetworkPolicy(ClientSession* s,
+                            const iscore::DocumentContext& c);
 
         ClientSession* session() const override
         { return m_session; }
+        void play() override;
 
     private:
         ClientSession* m_session{};
-        iscore::Document* m_document{};
+        const iscore::DocumentContext& m_ctx;
 };
 }

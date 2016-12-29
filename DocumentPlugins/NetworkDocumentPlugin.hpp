@@ -6,7 +6,7 @@
 #include <iscore/serialization/DataStreamVisitor.hpp>
 #include <iscore/serialization/JSONVisitor.hpp>
 #include <core/document/Document.hpp>
-
+#include <iscore/actions/Action.hpp>
 class DataStream;
 class JSONObject;
 class QWidget;
@@ -17,8 +17,10 @@ namespace iscore
     class Document;
 }
 
+ISCORE_DECLARE_ACTION(NetworkPlay, "&Play (Network)", Network, QKeySequence::UnknownKey)
 namespace Network
 {
+
 class Session;
 class GroupManager;
 class GroupMetadata;
@@ -27,6 +29,7 @@ class NetworkPolicyInterface : public QObject
     public:
         using QObject::QObject;
         virtual Session* session() const = 0;
+        virtual void play() = 0;
 };
 
 class NetworkDocumentPlugin final :

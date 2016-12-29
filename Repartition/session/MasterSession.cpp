@@ -38,13 +38,13 @@ MasterSession::MasterSession(iscore::Document* doc, LocalClient* theclient, Id<S
 #endif
 }
 
-void MasterSession::broadcast(NetworkMessage m)
+void MasterSession::broadcastToAllClients(NetworkMessage m)
 {
     for(RemoteClient* client : remoteClients())
         client->sendMessage(m);
 }
 
-void MasterSession::transmit(Id<Client> sender, NetworkMessage m)
+void MasterSession::broadcastToOthers(Id<Client> sender, NetworkMessage m)
 {
     for(const auto& client : remoteClients())
     {

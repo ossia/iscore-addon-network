@@ -35,8 +35,8 @@ class MasterSession : public Session
                       Id<Session> id,
                       QObject* parent = nullptr);
 
-        void broadcast(NetworkMessage m);
-        void transmit(Id<Client> sender, NetworkMessage m);
+        void broadcastToAllClients(NetworkMessage m);
+        void broadcastToOthers(Id<Client> sender, NetworkMessage m);
 
         iscore::Document* document() const
         { return m_document; }

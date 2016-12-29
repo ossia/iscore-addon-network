@@ -52,7 +52,7 @@ void PanelDelegate::on_modelChanged(
         return;
     }
 
-    auto netplug = newm->findPlugin<NetworkDocumentPlugin>();
+    NetworkDocumentPlugin* netplug = newm->findPlugin<NetworkDocumentPlugin>();
 
     if(netplug)
     {

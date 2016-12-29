@@ -120,8 +120,9 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
                     doc->commandStack(),
                     [] (auto) { }); // No redo.
 
-        auto& np = doc->context().plugin<NetworkDocumentPlugin>();
-        np.setPolicy(new ClientNetworkPolicy{m_session, doc});
+        auto& ctx = doc->context();
+        auto& np = ctx.plugin<NetworkDocumentPlugin>();
+        np.setPolicy(new ClientNetworkPolicy{m_session, ctx});
 
         emit sessionReady();
     }

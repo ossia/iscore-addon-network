@@ -4,9 +4,14 @@
 #include <QByteArray>
 #include <QDataStream>
 #include <algorithm>
+#include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
+#include <DistributedScenario/Group.hpp>
+#include <DistributedScenario/GroupMetadata.hpp>
+#include <Engine/Executor/ConstraintComponent.hpp>
 
 #include "NetworkMasterDocumentPlugin.hpp"
 #include "Serialization/NetworkMessage.hpp"
+#include <Engine/ApplicationPlugin.hpp>
 
 #include <iscore/application/ApplicationContext.hpp>
 #include <core/command/CommandStack.hpp>
@@ -16,6 +21,8 @@
 #include <iscore/serialization/DataStreamVisitor.hpp>
 #include <iscore/model/Identifier.hpp>
 #include <iscore/tools/Todo.hpp>
+#include <iscore/actions/ActionManager.hpp>
+#include <iscore/document/DocumentInterface.hpp>
 #include <core/document/Document.hpp>
 #include "session/MasterSession.hpp"
 
@@ -26,98 +33,160 @@ class Client;
 
 MasterNetworkPolicy::MasterNetworkPolicy(MasterSession* s,
                                          const iscore::DocumentContext& c):
-    m_session{s}
+  m_session{s},
+  m_ctx{c}
 {
-    auto& stack = c.document.commandStack();
+  auto& stack = c.document.commandStack();
 
-    /////////////////////////////////////////////////////////////////////////////
-    /// From the master to the clients
-    /////////////////////////////////////////////////////////////////////////////
-    con(stack, &iscore::CommandStack::localCommand,
-            this, [=] (iscore::Command* cmd)
+  /////////////////////////////////////////////////////////////////////////////
+  /// From the master to the clients
+  /////////////////////////////////////////////////////////////////////////////
+  con(stack, &iscore::CommandStack::localCommand,
+      this, [=] (iscore::Command* cmd)
+  {
+    m_session->broadcastToAllClients(
+          m_session->makeMessage("/command/new",iscore::CommandData{*cmd}));
+  });
+
+  // Undo-redo
+  con(stack, &iscore::CommandStack::localUndo,
+      this, [&] ()
+  { m_session->broadcastToAllClients(m_session->makeMessage("/command/undo")); });
+  con(stack, &iscore::CommandStack::localRedo,
+      this, [&] ()
+  { m_session->broadcastToAllClients(m_session->makeMessage("/command/redo")); });
+  con(stack, &iscore::CommandStack::localIndexChanged,
+      this, [&] (int32_t idx)
+  {
+    m_session->broadcastToAllClients(m_session->makeMessage("/command/index", idx));
+  });
+
+  // Lock - unlock
+  con(c.objectLocker, &iscore::ObjectLocker::lock,
+      this, [&] (QByteArray arr)
+  { m_session->broadcastToAllClients(m_session->makeMessage("/lock", arr)); });
+  con(c.objectLocker, &iscore::ObjectLocker::unlock,
+      this, [&] (QByteArray arr)
+  { m_session->broadcastToAllClients(m_session->makeMessage("/unlock", arr)); });
+
+  // Play
+  auto& play_act = c.app.actions.action<Actions::NetworkPlay>();
+  connect(play_act.action(), &QAction::triggered,
+          this, [&] {
+    m_session->broadcastToAllClients(m_session->makeMessage("/play"));
+    play();
+  });
+
+
+  /////////////////////////////////////////////////////////////////////////////
+  /// From a client to the master and the other clients
+  /////////////////////////////////////////////////////////////////////////////
+  s->mapper().addHandler("/command/new", [&] (NetworkMessage m)
+  {
+    iscore::CommandData cmd;
+    DataStreamWriter writer{m.data};
+    writer.writeTo(cmd);
+
+    stack.redoAndPushQuiet(
+          m_ctx.app.instantiateUndoCommand(cmd));
+
+
+    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+  });
+
+  // Undo-redo
+  s->mapper().addHandler("/command/undo", [&] (NetworkMessage m)
+  {
+    stack.undoQuiet();
+    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+  });
+  s->mapper().addHandler("/command/redo", [&] (NetworkMessage m)
+  {
+    stack.redoQuiet();
+    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+  });
+
+  s->mapper().addHandler("/command/index", [&] (NetworkMessage m)
+  {
+    QDataStream stream{m.data};
+    int32_t idx;
+    stream >> idx;
+    stack.setIndexQuiet(idx);
+    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+  });
+
+
+  // Lock-unlock
+  s->mapper().addHandler("/lock", [&] (NetworkMessage m)
+  {
+    QDataStream stream{m.data};
+    QByteArray data;
+    stream >> data;
+    m_ctx.objectLocker.on_lock(data);
+    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+  });
+
+  s->mapper().addHandler("/unlock", [&] (NetworkMessage m)
+  {
+    QDataStream stream{m.data};
+    QByteArray data;
+    stream >> data;
+    m_ctx.objectLocker.on_unlock(data);
+    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+  });
+
+  s->mapper().addHandler("/play", [&] (NetworkMessage m)
+  {
+    m_session->broadcastToAllClients(m_session->makeMessage("/play"));
+    play();
+  });
+}
+
+struct NetworkBasicPruner
+{
+  const Scenario::ScenarioInterface& scenar;
+  Scenario::ConstraintModel& constraint;
+
+  bool toRemove(
+      const tsl::hopscotch_set<Scenario::ConstraintModel*>& toKeep,
+      Scenario::ConstraintModel& cst) const;
+
+  void recurse(Engine::Execution::ConstraintElement& cst, const Id<Group>& cur)
+  {
+
+    //auto comp = iscore::findComponent<GroupMetadata>(cst.iscoreConstraint().components());
+    //if(comp)
     {
-        m_session->broadcast(
-                    m_session->makeMessage("/command/new",iscore::CommandData{*cmd}));
-    });
 
-    // Undo-redo
-    con(stack, &iscore::CommandStack::localUndo,
-            this, [&] ()
-    { m_session->broadcast(m_session->makeMessage("/command/undo")); });
-    con(stack, &iscore::CommandStack::localRedo,
-            this, [&] ()
-    { m_session->broadcast(m_session->makeMessage("/command/redo")); });
-    con(stack, &iscore::CommandStack::localIndexChanged,
-            this, [&] (int32_t idx)
+    }
+    //else
     {
-        m_session->broadcast(m_session->makeMessage("/command/index", idx));
-    });
+      // We assume that we keep the parent group.
 
-    // Lock - unlock
-    con(c.objectLocker, &iscore::ObjectLocker::lock,
-            this, [&] (QByteArray arr)
-    { m_session->broadcast(m_session->makeMessage("/lock", arr)); });
-    con(c.objectLocker, &iscore::ObjectLocker::unlock,
-            this, [&] (QByteArray arr)
-    { m_session->broadcast(m_session->makeMessage("/unlock", arr)); });
+    }
+
+  }
 
 
-    /////////////////////////////////////////////////////////////////////////////
-    /// From a client to the master and the other clients
-    /////////////////////////////////////////////////////////////////////////////
-    s->mapper().addHandler("/command/new", [&] (NetworkMessage m)
-    {
-        iscore::CommandData cmd;
-        DataStreamWriter writer{m.data};
-        writer.writeTo(cmd);
+  void operator()(const Engine::Execution::Context& exec_ctx)
+  {
+    // We mute all the processes that are not in a group
+    // of this client.
+  }
 
-        stack.redoAndPushQuiet(
-                    c.app.instantiateUndoCommand(cmd));
+};
 
-
-        m_session->transmit(Id<Client>(m.clientId), m);
-    });
-
-    // Undo-redo
-    s->mapper().addHandler("/command/undo", [&] (NetworkMessage m)
-    {
-        stack.undoQuiet();
-        m_session->transmit(Id<Client>(m.clientId), m);
-    });
-    s->mapper().addHandler("/command/redo", [&] (NetworkMessage m)
-    {
-        stack.redoQuiet();
-        m_session->transmit(Id<Client>(m.clientId), m);
-    });
-
-    s->mapper().addHandler("/command/index", [&] (NetworkMessage m)
-    {
-        QDataStream stream{m.data};
-        int32_t idx;
-        stream >> idx;
-        stack.setIndexQuiet(idx);
-        m_session->transmit(Id<Client>(m.clientId), m);
-    });
-
-
-    // Lock-unlock
-    s->mapper().addHandler("/lock", [&] (NetworkMessage m)
-    {
-        QDataStream stream{m.data};
-        QByteArray data;
-        stream >> data;
-        c.objectLocker.on_lock(data);
-        m_session->transmit(Id<Client>(m.clientId), m);
-    });
-
-    s->mapper().addHandler("/unlock", [&] (NetworkMessage m)
-    {
-        QDataStream stream{m.data};
-        QByteArray data;
-        stream >> data;
-        c.objectLocker.on_unlock(data);
-        m_session->transmit(Id<Client>(m.clientId), m);
-    });
+void MasterNetworkPolicy::play()
+{
+  auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  if(sm)
+  {
+    auto& plug = iscore::AppContext().applicationPlugin<Engine::ApplicationPlugin>();
+    plug.on_play(
+          sm->baseConstraint(),
+          true, [] (const Engine::Execution::Context& ctx) { qDebug("yaay"); },
+    TimeValue{});
+  }
 }
 }
 

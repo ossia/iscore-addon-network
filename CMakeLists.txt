@@ -90,6 +90,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     iscore_lib_base
                                     iscore_plugin_scenario
                                     iscore_lib_process
+                                    iscore_plugin_engine
                                     Qt5::Core
                                     Qt5::Widgets
                                     Qt5::Network)

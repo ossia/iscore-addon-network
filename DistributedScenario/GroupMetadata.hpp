@@ -1,4 +1,6 @@
 #pragma once
+
+#include <iscore/model/ComponentSerialization.hpp>
 #include <iscore/tools/std/Optional.hpp>
 #include <QObject>
 
@@ -12,46 +14,30 @@ struct VisitorVariant;
 namespace Network
 {
 class Group;
-
-// TODO component
-/*
-// Goes into the constraints, events, etc.
-class GroupMetadata : public iscore::ElementPluginModel
+//! Goes into the constraints, events, etc.
+class GroupMetadata :
+    public iscore::SerializableComponent
 {
         Q_OBJECT
 
     public:
-        static constexpr iscore::ElementPluginModelType staticPluginId() { return 1; }
-
         GroupMetadata(
-                const QObject* element,
+                Id<Component> self,
                 Id<Group> id,
                 QObject* parent);
+
         ~GroupMetadata();
 
-        GroupMetadata* clone(const QObject* element, QObject* parent) const override;
-
         template<typename DeserializerVisitor>
-        GroupMetadata(const QObject* element,
-                      DeserializerVisitor&& vis,
+        GroupMetadata(DeserializerVisitor&& vis,
                       QObject* parent) :
-            iscore::ElementPluginModel{parent},
-            m_element{element}
+            iscore::SerializableComponent{parent}
         {
             vis.writeTo(*this);
         }
 
-        int elementPluginId() const override;
-        void serialize(const VisitorVariant&) const override;
-
         const auto& group() const
         { return m_id; }
-
-        QString elementName() const
-        { return m_element->staticMetaObject.className(); }
-
-        const QObject* element() const
-        { return m_element; }
 
     signals:
         void groupChanged(Id<Group>);
@@ -60,8 +46,7 @@ class GroupMetadata : public iscore::ElementPluginModel
         void setGroup(const Id<Group>& id);
 
     private:
-        const QObject* const m_element;
         Id<Group> m_id;
 };
-*/
+
 }

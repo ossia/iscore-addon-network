@@ -26,85 +26,25 @@ struct VisitorVariant;
 
 namespace Network
 {
-
-// TODO refactor me
-class ScenarioFindConstraintVisitor
-{
-    public:
-        std::vector<Scenario::ConstraintModel*> constraints;
-
-        void visit(Scenario::ProcessModel& s)
-        {
-            constraints.reserve(constraints.size() + s.constraints.size());
-            for(auto& constraint : s.constraints)
-            {
-                constraints.push_back(&constraint);
-                visit(constraint);
-            }
-        }
-
-        void visit(Scenario::ConstraintModel& c)
-        {
-            for(auto& proc : c.processes)
-            {
-                if(auto scenario = dynamic_cast<Scenario::ProcessModel*>(&proc))
-                {
-                    visit(*scenario);
-                }
-            }
-        }
-};
-
-
-class ScenarioFindEventVisitor
-{
-    public:
-        std::vector<Scenario::EventModel*> events;
-
-        void visit(Scenario::ConstraintModel& c)
-        {
-            for(auto& proc : c.processes)
-            {
-                if(auto scenario = dynamic_cast<Scenario::ProcessModel*>(&proc))
-                {
-                    visit(*scenario);
-                }
-            }
-        }
-
-        void visit(Scenario::ProcessModel& s)
-        {
-            events.reserve(events.size() + s.events.size());
-            for(auto& event : s.events)
-            {
-                events.push_back(&event);
-            }
-            for(auto& constraint : s.constraints)
-            {
-                visit(constraint);
-            }
-        }
-};
-
 NetworkDocumentPlugin::NetworkDocumentPlugin(
-        const iscore::DocumentContext& ctx,
-        NetworkPolicyInterface *policy,
-        Id<iscore::DocumentPlugin> id,
-        QObject* parent):
-    iscore::SerializableDocumentPlugin{ctx, std::move(id), "NetworkDocumentPlugin", parent},
-    m_policy{policy},
-    m_groups{new GroupManager{this}}
+    const iscore::DocumentContext& ctx,
+    NetworkPolicyInterface *policy,
+    Id<iscore::DocumentPlugin> id,
+    QObject* parent):
+  iscore::SerializableDocumentPlugin{ctx, std::move(id), "NetworkDocumentPlugin", parent},
+  m_policy{policy},
+  m_groups{new GroupManager{this}}
 {
-    m_policy->setParent(this);
-    using namespace std;
+  m_policy->setParent(this);
+  using namespace std;
 
-    // Base group set-up
-    auto baseGroup = new Group{"Default", Id<Group>{0}, groupManager()};
-    baseGroup->addClient(m_policy->session()->localClient().id());
-    groupManager()->addGroup(baseGroup);
+  // Base group set-up
+  auto baseGroup = new Group{"Default", Id<Group>{0}, groupManager()};
+  baseGroup->addClient(m_policy->session()->localClient().id());
+  groupManager()->addGroup(baseGroup);
 
-    ISCORE_TODO;
-    /*
+  ISCORE_TODO;
+  /*
     // Create it for each constraint / event.
     Scenario::ScenarioDocumentModel* bem = safe_cast<Scenario::ScenarioDocumentModel*>(&doc.model().modelDelegate());
     {
@@ -149,30 +89,30 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
 
 void NetworkDocumentPlugin::serialize_impl(const VisitorVariant & vis) const
 {
-    ISCORE_TODO; // save uuid
-    serialize_dyn(vis, *this);
+  ISCORE_TODO; // save uuid
+  serialize_dyn(vis, *this);
 }
 
 auto NetworkDocumentPlugin::concreteKey() const -> ConcreteKey
 {
-    return DocumentPluginFactory::static_concreteKey();
+  return DocumentPluginFactory::static_concreteKey();
 }
 
 void NetworkDocumentPlugin::setPolicy(NetworkPolicyInterface * pol)
 {
-    delete m_policy;
-    m_policy = pol;
+  delete m_policy;
+  m_policy = pol;
 
-    emit sessionChanged();
+  emit sessionChanged();
 }
 
 iscore::DocumentPlugin*DocumentPluginFactory::load(
-        const VisitorVariant& var,
-        iscore::DocumentContext& doc,
-        QObject* parent)
+    const VisitorVariant& var,
+    iscore::DocumentContext& doc,
+    QObject* parent)
 {
-    return deserialize_dyn(var, [&] (auto&& deserializer)
-    { return new NetworkDocumentPlugin{doc, deserializer, parent}; });
+  return deserialize_dyn(var, [&] (auto&& deserializer)
+  { return new NetworkDocumentPlugin{doc, deserializer, parent}; });
 }
 
 /*

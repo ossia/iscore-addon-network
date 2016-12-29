@@ -19,6 +19,7 @@ class PlaceholderNetworkPolicy : public NetworkPolicyInterface
         Session* session() const override
         { return m_session; }
 
+        void play() override { }
         Session* m_session{};
 };
 }

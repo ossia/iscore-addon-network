@@ -6,14 +6,13 @@ struct VisitorVariant;
 
 namespace Network
 {
-/*
+
 GroupMetadata::GroupMetadata(
-        const QObject* element,
-        Id<Group> id,
-        QObject* parent):
-    iscore::ElementPluginModel{parent},
-    m_element{element},
-    m_id{id}
+    Id<Component> self,
+    Id<Group> id,
+    QObject* parent):
+  iscore::SerializableComponent{self, "GroupMetadata", parent},
+  m_id{id}
 {
 
 }
@@ -23,29 +22,13 @@ GroupMetadata::~GroupMetadata()
 
 }
 
-GroupMetadata* GroupMetadata::clone(const QObject *element, QObject *parent) const
-{
-    auto grp = new GroupMetadata{element, this->group(), parent};
-    return grp;
-}
-
-int GroupMetadata::elementPluginId() const
-{
-    return 1; // TODO put this in a header
-}
-
-void GroupMetadata::serialize(const VisitorVariant& vis) const
-{
-    serialize_dyn(vis, *this);
-}
-
 void GroupMetadata::setGroup(const Id<Group>& id)
 {
-    if(id != m_id)
-    {
-        m_id = id;
-        emit groupChanged(id);
-    }
+  if(id != m_id)
+  {
+    m_id = id;
+    emit groupChanged(id);
+  }
 }
-*/
+
 }

@@ -45,11 +45,6 @@ class Session;
 NetworkApplicationPlugin::NetworkApplicationPlugin(const iscore::GUIApplicationContext& app) :
     GUIApplicationContextPlugin {app}
 {
-#ifdef USE_ZEROCONF
-    m_zeroconfBrowser = new ZeroconfBrowser{"_iscore._tcp", qApp->activeWindow()};
-    connect(m_zeroconfBrowser, SIGNAL(sessionSelected(QString,int)),
-            this, SLOT(setupClientConnection(QString, int)));
-#endif
 }
 
 void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
@@ -73,13 +68,18 @@ void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
 
 iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
 {
+#ifdef USE_ZEROCONF
+    m_zeroconfBrowser = new ZeroconfBrowser{"_iscore._tcp", qApp->activeWindow()};
+    connect(m_zeroconfBrowser, &ZeroconfBrowser::sessionSelected,
+            this, &NetworkApplicationPlugin::setupClientConnection);
+#endif
+
   using namespace iscore;
-  QMenu* menu = context.menus.get().at(iscore::Menus::File()).menu();
-  qDebug() << menu->actions();
+  QMenu* fileMenu = context.menus.get().at(iscore::Menus::File()).menu();
 
   // TODO do this better.
 #ifdef USE_ZEROCONF
-    menu->addAction(m_zeroconfBrowser->makeAction());
+    fileMenu->addAction(m_zeroconfBrowser->makeAction());
 #endif
 
     QAction* makeServer = new QAction {tr("Make Server"), this};
@@ -97,7 +97,7 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
       }
     });
 
-    menu->addAction(makeServer);
+    fileMenu->addAction(makeServer);
 
     QAction* connectLocal = new QAction {tr("Join local"), this};
     connect(connectLocal, &QAction::triggered, this,
@@ -111,10 +111,26 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
         }
     });
 
-    menu->addAction(connectLocal);
+    fileMenu->addAction(connectLocal);
 
 
-    return {};
+    QMenu* playMenu = context.menus.get().at(iscore::Menus::Play()).menu();
+    QAction* playAction = new QAction{tr("Play (network)"), this};
+    connect(playAction, &QAction::triggered, this, [&] {
+      if(auto doc = currentDocument())
+      {
+        auto np = doc->context().findPlugin<NetworkDocumentPlugin>();
+        if(np)
+          np->policy()->play();
+      }
+    });
+
+    iscore::GUIElements g;
+    g.actions.add<Actions::NetworkPlay>(playAction);
+
+    playMenu->addAction(playAction);
+
+    return g;
 }
 
 }
