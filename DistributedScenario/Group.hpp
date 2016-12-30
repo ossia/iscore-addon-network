@@ -23,6 +23,7 @@ class Client;
 // There is a "default" group that runs the constraint everywhere.
 // The groups are part of the document plugin.
 // Each client can be in a group (it will execute all the constraints that are part of this group).
+
 class Group : public IdentifiedObject<Group>
 {
         Q_OBJECT
@@ -45,6 +46,8 @@ class Group : public IdentifiedObject<Group>
 
         void addClient(Id<Client> clt);
         void removeClient(Id<Client> clt);
+        bool hasClient(const Id<Client>& clt) const;
+
         const QVector<Id<Client>>& clients() const
         { return m_executingClients; }
 

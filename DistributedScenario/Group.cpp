@@ -45,4 +45,9 @@ void Group::removeClient(Id<Client> clt)
     m_executingClients.erase(it);
     emit clientRemoved(clt);
 }
+
+bool Group::hasClient(const Id<Client>& clt) const
+{
+  return ossia::find(m_executingClients, clt);
+}
 }

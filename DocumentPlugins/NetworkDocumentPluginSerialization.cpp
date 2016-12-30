@@ -9,7 +9,7 @@ template <>
 void DataStreamReader::read(
         const Network::NetworkDocumentPlugin& elt)
 {
-    readFrom(*elt.groupManager());
+    readFrom(elt.groupManager());
     readFrom(*elt.policy());
 
     // Note : we do not save the policy since it will be different on each computer.
@@ -30,7 +30,7 @@ template <>
 void JSONObjectReader::read(
         const Network::NetworkDocumentPlugin& elt)
 {
-    readFrom(*elt.groupManager());
+    readFrom(elt.groupManager());
     readFrom(*elt.policy());
 }
 

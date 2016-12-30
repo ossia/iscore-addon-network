@@ -59,8 +59,8 @@ class NetworkDocumentPlugin final :
 
         void setPolicy(NetworkPolicyInterface*);
 
-        GroupManager* groupManager() const
-        { return m_groups; }
+        GroupManager& groupManager() const
+        { return *m_groups; }
 
         NetworkPolicyInterface* policy() const
         { return m_policy; }

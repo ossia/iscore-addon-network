@@ -22,6 +22,15 @@ void GroupManager::addGroup(Group* group)
     emit groupAdded(group->id());
 }
 
+Group*GroupManager::findGroup(const QString& str) const
+{
+  auto it = ossia::find_if(m_groups, [&] (auto ptr) { return ptr->name() == str; });
+  if(it != m_groups.end())
+    return *it;
+  else
+    return nullptr;
+}
+
 void GroupManager::removeGroup(Id<Group> group)
 {
     using namespace std;

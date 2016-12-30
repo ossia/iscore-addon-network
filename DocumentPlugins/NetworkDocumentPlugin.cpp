@@ -39,9 +39,9 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   using namespace std;
 
   // Base group set-up
-  auto baseGroup = new Group{"Default", Id<Group>{0}, groupManager()};
-  baseGroup->addClient(m_policy->session()->localClient().id());
-  groupManager()->addGroup(baseGroup);
+  auto allGroup = new Group{"All", Id<Group>{0}, &groupManager()};
+  allGroup->addClient(m_policy->session()->localClient().id());
+  groupManager().addGroup(allGroup);
 
   ISCORE_TODO;
   /*

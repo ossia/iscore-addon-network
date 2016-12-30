@@ -15,7 +15,7 @@ class GroupTableCheckbox;
 class GroupTableWidget : public QWidget
 {
     public:
-        GroupTableWidget(const GroupManager* mgr, const Session* session, QWidget* parent);
+        GroupTableWidget(const GroupManager& mgr, const Session* session, QWidget* parent);
 
         void setup();
 
@@ -25,7 +25,7 @@ class GroupTableWidget : public QWidget
         void on_checkboxChanged(int i, int j, int state);
 
         QTableWidget* m_table{};
-        const GroupManager* m_mgr;
+        const GroupManager& m_mgr;
         const Session* m_session;
 
         ObjectPath m_managerPath;

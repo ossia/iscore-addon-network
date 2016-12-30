@@ -28,17 +28,17 @@
 namespace Network
 {
 GroupTableWidget::GroupTableWidget(
-        const GroupManager* mgr,
+        const GroupManager& mgr,
         const Session* session,
         QWidget* parent):
     QWidget{parent},
     m_mgr{mgr},
     m_session{session},
     m_managerPath{iscore::IDocument::unsafe_path(m_mgr)},
-    m_dispatcher{iscore::IDocument::documentContext(*m_mgr).commandStack}
+    m_dispatcher{iscore::IDocument::documentContext(m_mgr).commandStack}
 {
-    connect(m_mgr, &GroupManager::groupAdded, this, &GroupTableWidget::setup);
-    connect(m_mgr, &GroupManager::groupRemoved, this, &GroupTableWidget::setup);
+    con(m_mgr, &GroupManager::groupAdded, this, &GroupTableWidget::setup);
+    con(m_mgr, &GroupManager::groupRemoved, this, &GroupTableWidget::setup);
     connect(m_session, &Session::clientsChanged, this, &GroupTableWidget::setup);
 
     this->setLayout(new QGridLayout);
@@ -55,10 +55,10 @@ void GroupTableWidget::setup()
     this->layout()->addWidget(m_table);
 
     // Groups
-    for(unsigned int i = 0; i < m_mgr->groups().size(); i++)
+    for(unsigned int i = 0; i < m_mgr.groups().size(); i++)
     {
         m_table->insertColumn(i);
-        m_table->setHorizontalHeaderItem(i, new GroupHeaderItem{*m_mgr->groups()[i]});
+        m_table->setHorizontalHeaderItem(i, new GroupHeaderItem{*m_mgr.groups()[i]});
     }
 
     // Clients
@@ -75,7 +75,7 @@ void GroupTableWidget::setup()
     using namespace std;
     for(int row = 0; row < m_session->remoteClients().size() + 1; row++)
     {
-        for(unsigned int col = 0; col < m_mgr->groups().size(); col++)
+        for(unsigned int col = 0; col < m_mgr.groups().size(); col++)
         {
             auto cb = new GroupTableCheckbox;
             m_table->setCellWidget(row, col, cb);
@@ -86,13 +86,13 @@ void GroupTableWidget::setup()
     }
 
     // Handlers
-    for(unsigned int i = 0; i < m_mgr->groups().size(); i++)
+    for(unsigned int i = 0; i < m_mgr.groups().size(); i++)
     {
-        connect(m_mgr->groups()[i], &Group::clientAdded,
+        connect(m_mgr.groups()[i], &Group::clientAdded,
                 m_table, [=] (Id<Client> addedClient)
         { findCheckbox(i, addedClient)->setState(Qt::Checked); });
 
-        connect(m_mgr->groups()[i], &Group::clientRemoved,
+        connect(m_mgr.groups()[i], &Group::clientRemoved,
                 m_table, [=] (Id<Client> removedClient)
         { findCheckbox(i, removedClient)->setState(Qt::Unchecked); });
     }
@@ -126,7 +126,7 @@ void GroupTableWidget::on_checkboxChanged(int i, int j, int state)
     auto group  = static_cast<GroupHeaderItem*>(m_table->horizontalHeaderItem(j))->group;
 
     // Find if we have to perform the change.
-    auto client_is_in_group = m_mgr->group(group)->clients().contains(client);
+    auto client_is_in_group = m_mgr.group(group)->clients().contains(client);
 
     if(state)
     {

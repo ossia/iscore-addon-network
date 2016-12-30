@@ -11,25 +11,25 @@
 
 namespace Network
 {
-GroupListWidget::GroupListWidget(const GroupManager* mgr, QWidget* parent):
+GroupListWidget::GroupListWidget(const GroupManager& mgr, QWidget* parent):
     QWidget{parent},
     m_mgr{mgr}
 {
     this->setLayout(new QVBoxLayout);
-    for(auto& group : m_mgr->groups())
+    for(auto& group : m_mgr.groups())
     {
         auto widg = new GroupWidget{group, this};
         this->layout()->addWidget(widg);
         m_widgets.append(widg);
     }
 
-    connect(m_mgr, &GroupManager::groupAdded, this, &GroupListWidget::addGroup);
-    connect(m_mgr, &GroupManager::groupRemoved, this, &GroupListWidget::removeGroup);
+    con(m_mgr, &GroupManager::groupAdded, this, &GroupListWidget::addGroup);
+    con(m_mgr, &GroupManager::groupRemoved, this, &GroupListWidget::removeGroup);
 }
 
 void GroupListWidget::addGroup(const Id<Group>& id)
 {
-    auto widg = new GroupWidget{m_mgr->group(id), this};
+    auto widg = new GroupWidget{m_mgr.group(id), this};
     this->layout()->addWidget(widg);
     m_widgets.append(widg);
 }

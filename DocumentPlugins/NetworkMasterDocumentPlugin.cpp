@@ -8,8 +8,10 @@
 #include <DistributedScenario/Group.hpp>
 #include <DistributedScenario/GroupMetadata.hpp>
 #include <Engine/Executor/ConstraintComponent.hpp>
+#include <Scenario/Process/ScenarioInterface.hpp>
 
 #include "NetworkMasterDocumentPlugin.hpp"
+#include <DistributedScenario/GroupManager.hpp>
 #include "Serialization/NetworkMessage.hpp"
 #include <Engine/ApplicationPlugin.hpp>
 
@@ -144,6 +146,8 @@ MasterNetworkPolicy::MasterNetworkPolicy(MasterSession* s,
 
 struct NetworkBasicPruner
 {
+  NetworkDocumentPlugin& doc;
+  const Id<Client>& self = doc.policy()->session()->localClient().id();
   const Scenario::ScenarioInterface& scenar;
   Scenario::ConstraintModel& constraint;
 
@@ -151,8 +155,10 @@ struct NetworkBasicPruner
       const tsl::hopscotch_set<Scenario::ConstraintModel*>& toKeep,
       Scenario::ConstraintModel& cst) const;
 
-  void recurse(Engine::Execution::ConstraintElement& cst, const Id<Group>& cur)
+  void recurse(Engine::Execution::ConstraintComponent& cst, const Group& cur)
   {
+    const auto& gm = doc.groupManager();
+    // First look if there is a group
 
     //auto comp = iscore::findComponent<GroupMetadata>(cst.iscoreConstraint().components());
     //if(comp)
@@ -163,6 +169,70 @@ struct NetworkBasicPruner
     {
       // We assume that we keep the parent group.
 
+    }
+
+
+    // If no group found through components, maybe through metadata :
+    auto& m = cst.iscoreConstraint().metadata().getExtendedMetadata();
+
+    // Default case :
+    const Group* cur_group = &cur;
+
+    auto it = m.find("group");
+    if(it != m.end())
+    {
+      auto str = it->toString();
+      if(str == "all")
+      {
+        cur_group = gm.group(gm.defaultGroup());
+      }
+      else if(str == "parent" || str.isEmpty())
+      {
+        // Default
+      }
+      else
+      {
+        // look for a group of this name
+        auto group = gm.findGroup(str);
+        if(group)
+        {
+          cur_group = group; // Else we default to the "parent" case.
+        }
+      }
+    }
+
+    ISCORE_ASSERT(cur_group);
+
+
+
+    if(cur_group->hasClient(self))
+    {
+      // All fine and dandy
+    }
+    else
+    {
+      for(const auto& process : cst.processes())
+      {
+        auto& proc = process->OSSIAProcess();
+        proc.mute(true);
+      }
+      // Mute it.
+    }
+
+
+    // Recursion
+    for(const auto& process : cst.processes())
+    {
+      auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process->process());
+      if(ip)
+      {
+        for(Scenario::ConstraintModel& cst : ip->getConstraints())
+        {
+          auto comp = iscore::findComponent<Engine::Execution::ConstraintComponent>(cst.components());
+          if(comp)
+            recurse(*comp, *cur_group);
+        }
+      }
     }
 
   }

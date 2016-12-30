@@ -13,13 +13,13 @@ class GroupWidget;
 class GroupListWidget : public QWidget
 {
     public:
-        GroupListWidget(const GroupManager* mgr, QWidget* parent);
+        GroupListWidget(const GroupManager& mgr, QWidget* parent);
 
     private:
         void addGroup(const Id<Group>& id);
         void removeGroup(const Id<Group>& id);
 
-        const GroupManager* m_mgr{};
+        const GroupManager& m_mgr;
         QList<GroupWidget*> m_widgets;
 };
 }

@@ -26,6 +26,7 @@ class GroupManager : public IdentifiedObject<GroupManager>
         void removeGroup(Id<Group> group);
 
         const std::vector<Group*>& groups() const;
+        Group* findGroup(const QString& str) const;
         Group* group(const Id<Group>& id) const;
         Id<Group> defaultGroup() const;
 
