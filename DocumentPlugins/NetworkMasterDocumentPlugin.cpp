@@ -14,6 +14,7 @@
 #include <DistributedScenario/GroupManager.hpp>
 #include "Serialization/NetworkMessage.hpp"
 #include <Engine/ApplicationPlugin.hpp>
+#include <Engine/Executor/BaseScenarioComponent.hpp>
 
 #include <iscore/application/ApplicationContext.hpp>
 #include <core/command/CommandStack.hpp>
@@ -147,13 +148,9 @@ MasterNetworkPolicy::MasterNetworkPolicy(MasterSession* s,
 struct NetworkBasicPruner
 {
   NetworkDocumentPlugin& doc;
-  const Id<Client>& self = doc.policy()->session()->localClient().id();
-  const Scenario::ScenarioInterface& scenar;
-  Scenario::ConstraintModel& constraint;
 
-  bool toRemove(
-      const tsl::hopscotch_set<Scenario::ConstraintModel*>& toKeep,
-      Scenario::ConstraintModel& cst) const;
+  const Id<Client>& self = doc.policy()->session()->localClient().id();
+
 
   void recurse(Engine::Execution::ConstraintComponent& cst, const Group& cur)
   {
@@ -203,22 +200,14 @@ struct NetworkBasicPruner
 
     ISCORE_ASSERT(cur_group);
 
+    // Mute the processes that are not meant to execute there.
+    cst.iscoreConstraint().setExecutionState(Scenario::ConstraintExecutionState::Muted);
 
-
-    if(cur_group->hasClient(self))
+    for(const auto& process : cst.processes())
     {
-      // All fine and dandy
+      auto& proc = process->OSSIAProcess();
+      proc.mute(!cur_group->hasClient(self));
     }
-    else
-    {
-      for(const auto& process : cst.processes())
-      {
-        auto& proc = process->OSSIAProcess();
-        proc.mute(true);
-      }
-      // Mute it.
-    }
-
 
     // Recursion
     for(const auto& process : cst.processes())
@@ -242,6 +231,11 @@ struct NetworkBasicPruner
   {
     // We mute all the processes that are not in a group
     // of this client.
+    auto& root = exec_ctx.sys.baseScenario()->baseConstraint();
+
+    // Let's assume for now that we start in the "all" group...
+    const auto& gm = doc.groupManager();
+    recurse(root, *gm.group(gm.defaultGroup()));
   }
 
 };
@@ -251,11 +245,10 @@ void MasterNetworkPolicy::play()
   auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
-    auto& plug = iscore::AppContext().applicationPlugin<Engine::ApplicationPlugin>();
+    auto& plug = m_ctx.app.applicationPlugin<Engine::ApplicationPlugin>();
     plug.on_play(
           sm->baseConstraint(),
-          true, [] (const Engine::Execution::Context& ctx) { qDebug("yaay"); },
-    TimeValue{});
+          true, NetworkBasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()}, TimeValue{});
   }
 }
 }
