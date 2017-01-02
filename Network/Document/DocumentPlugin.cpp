@@ -20,7 +20,7 @@
 #include <iscore/model/EntityMap.hpp>
 #include <iscore/model/Identifier.hpp>
 #include <Network/Client/LocalClient.hpp>
-
+#include <Network/Group/Panel/GroupPanelDelegate.hpp>
 class QWidget;
 struct VisitorVariant;
 

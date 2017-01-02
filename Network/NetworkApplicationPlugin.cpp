@@ -28,6 +28,7 @@
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Session/MasterSession.hpp>
 #include <iscore/actions/ActionManager.hpp>
+#include <Network/Group/Panel/GroupPanelDelegate.hpp>
 #if defined(USE_ZEROCONF)
 #include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
 #endif
@@ -43,35 +44,38 @@ class Client;
 class Session;
 
 NetworkApplicationPlugin::NetworkApplicationPlugin(const iscore::GUIApplicationContext& app) :
-    GUIApplicationContextPlugin {app}
+  GUIApplicationContextPlugin {app}
 {
 }
 
 void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
 {
-    m_sessionBuilder = std::make_unique<ClientSessionBuilder>(
-                context,
-                ip,
-                port);
+  m_sessionBuilder = std::make_unique<ClientSessionBuilder>(
+        context,
+        ip,
+        port);
 
-    connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady,
-            this, [&] () {
-        m_sessionBuilder.reset();
-    });
-    connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed,
-            this, [&] () {
-        m_sessionBuilder.reset();
-    });
+  connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady,
+          this, [&] () {
+    auto& panel = context.panel<Network::PanelDelegate>();
+    panel.networkPluginReady();
 
-    m_sessionBuilder->initiateConnection();
+    m_sessionBuilder.reset();
+  });
+  connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed,
+          this, [&] () {
+    m_sessionBuilder.reset();
+  });
+
+  m_sessionBuilder->initiateConnection();
 }
 
 iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
 {
 #ifdef USE_ZEROCONF
-    m_zeroconfBrowser = new ZeroconfBrowser{"_iscore._tcp", qApp->activeWindow()};
-    connect(m_zeroconfBrowser, &ZeroconfBrowser::sessionSelected,
-            this, &NetworkApplicationPlugin::setupClientConnection);
+  m_zeroconfBrowser = new ZeroconfBrowser{"_iscore._tcp", qApp->activeWindow()};
+  connect(m_zeroconfBrowser, &ZeroconfBrowser::sessionSelected,
+          this, &NetworkApplicationPlugin::setupClientConnection);
 #endif
 
   using namespace iscore;
@@ -79,58 +83,61 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
 
   // TODO do this better.
 #ifdef USE_ZEROCONF
-    fileMenu->addAction(m_zeroconfBrowser->makeAction());
+  fileMenu->addAction(m_zeroconfBrowser->makeAction());
 #endif
 
-    QAction* makeServer = new QAction {tr("Make Server"), this};
-    connect(makeServer, &QAction::triggered, this,
-            [&] ()
+  QAction* makeServer = new QAction {tr("Make Server"), this};
+  connect(makeServer, &QAction::triggered, this,
+          [&] ()
+  {
+    if(auto doc = currentDocument())
     {
-      if(auto doc = currentDocument())
-      {
-        auto clt = new LocalClient(Id<Client>(0));
-        clt->setName(tr("Master"));
-        auto serv = new MasterSession(currentDocument(), clt, Id<Session>(1234));
-        auto policy = new MasterNetworkPolicy{serv, currentDocument()->context()};
-        auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
-        doc->model().addPluginModel(realplug);
-      }
-    });
+      auto clt = new LocalClient(Id<Client>(0));
+      clt->setName(tr("Master"));
+      auto serv = new MasterSession(currentDocument(), clt, Id<Session>(1234));
+      auto policy = new MasterNetworkPolicy{serv, currentDocument()->context()};
+      auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
+      doc->model().addPluginModel(realplug);
 
-    fileMenu->addAction(makeServer);
+      auto& panel = context.panel<Network::PanelDelegate>();
+      panel.networkPluginReady();
+    }
+  });
 
-    QAction* connectLocal = new QAction {tr("Join local"), this};
-    connect(connectLocal, &QAction::triggered, this,
-            [&] () {
-        IpDialog dial{QApplication::activeWindow()};
+  fileMenu->addAction(makeServer);
 
-        if(dial.exec())
-        {
-            // Default is 127.0.0.1 : 9090
-            setupClientConnection(dial.ip(), dial.port());
-        }
-    });
+  QAction* connectLocal = new QAction {tr("Join local"), this};
+  connect(connectLocal, &QAction::triggered, this,
+          [&] () {
+    IpDialog dial{QApplication::activeWindow()};
 
-    fileMenu->addAction(connectLocal);
+    if(dial.exec())
+    {
+      // Default is 127.0.0.1 : 9090
+      setupClientConnection(dial.ip(), dial.port());
+    }
+  });
+
+  fileMenu->addAction(connectLocal);
 
 
-    QMenu* playMenu = context.menus.get().at(iscore::Menus::Play()).menu();
-    QAction* playAction = new QAction{tr("Play (network)"), this};
-    connect(playAction, &QAction::triggered, this, [&] {
-      if(auto doc = currentDocument())
-      {
-        auto np = doc->context().findPlugin<NetworkDocumentPlugin>();
-        if(np)
-          np->policy()->play();
-      }
-    });
+  QMenu* playMenu = context.menus.get().at(iscore::Menus::Play()).menu();
+  QAction* playAction = new QAction{tr("Play (network)"), this};
+  connect(playAction, &QAction::triggered, this, [&] {
+    if(auto doc = currentDocument())
+    {
+      auto np = doc->context().findPlugin<NetworkDocumentPlugin>();
+      if(np)
+        np->policy()->play();
+    }
+  });
 
-    iscore::GUIElements g;
-    g.actions.add<Actions::NetworkPlay>(playAction);
+  iscore::GUIElements g;
+  g.actions.add<Actions::NetworkPlay>(playAction);
 
-    playMenu->addAction(playAction);
+  playMenu->addAction(playAction);
 
-    return g;
+  return g;
 }
 
 }

@@ -12,6 +12,7 @@ class PanelDelegate final :
         PanelDelegate(
                 const iscore::GUIApplicationContext& ctx);
 
+        void networkPluginReady();
     private:
         QWidget *widget() override;
 

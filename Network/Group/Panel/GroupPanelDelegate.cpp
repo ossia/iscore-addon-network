@@ -118,5 +118,10 @@ void PanelDelegate::setEmptyView()
   m_subWidget = nullptr;
 }
 
+void PanelDelegate::networkPluginReady()
+{
+  on_modelChanged(document(), document());
+}
+
 
 }
