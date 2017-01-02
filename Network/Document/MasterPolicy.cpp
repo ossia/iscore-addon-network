@@ -52,7 +52,6 @@ auto us(const std::chrono::nanoseconds u) { return std::chrono::duration_cast<st
 void MasterTimekeep::ping_all()
 {
   auto t = clk::now().time_since_epoch();
-  qDebug() << "ping_all(t) = " << us(t);
   m_session.broadcastToAllClients(m_session.makeMessage("/ping"));
 
   auto b = m_timestamps.begin();
@@ -61,31 +60,19 @@ void MasterTimekeep::ping_all()
   {
     it.value().last_sent = t;
   }
-
-  for(auto it = b; it != e; ++it)
-  {
-    auto& c = it.value();
-    qDebug()
-        //<< us(c.last_sent - c.last_sent.time_since_epoch())
-        //<< us(c.last_received - c.last_received.time_since_epoch())
-        << us(c.roundtrip_latency)
-        << us(c.clock_difference)
-           ;
-  }
 }
 
 
 void MasterTimekeep::on_pong(NetworkMessage m)
 {
   auto pong_date = clk::now().time_since_epoch();
-  qDebug() << "on_pong(t) = " << us(pong_date);
+
   Id<Client> client_id{m.clientId};
   QDataStream reader(m.data);
 
   qint64 ns;
   reader >> ns;
 
-  qDebug() << "on_pong(t) client = " << us(std::chrono::nanoseconds(ns));
   auto it = m_timestamps.find(client_id);
   if(it != m_timestamps.end())
   {
