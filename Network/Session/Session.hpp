@@ -1,0 +1,101 @@
+#pragma once
+#include <Network/Communication/NetworkMessage.hpp>
+#include <QDataStream>
+#include <QIODevice>
+#include <QList>
+#include <QString>
+#include <algorithm>
+
+#include <Network/Client/LocalClient.hpp>
+#include <Network/Client/RemoteClient.hpp>
+#include <iscore/model/IdentifiedObject.hpp>
+#include <iscore/model/Identifier.hpp>
+
+class QObject;
+
+
+namespace Network
+{
+class MessageMapper;
+class MessageValidator;
+class Session : public IdentifiedObject<Session>
+{
+        Q_OBJECT
+    public:
+        Session(LocalClient* client,
+                Id<Session> id,
+                QObject* parent = nullptr);
+        ~Session();
+
+
+        MessageValidator& validator()
+        {
+            return *m_validator;
+        }
+        MessageMapper& mapper()
+        {
+            return *m_mapper;
+        }
+
+        LocalClient& localClient()
+        {
+            return *m_client;
+        }
+
+        const LocalClient& localClient() const
+        {
+            return *m_client;
+        }
+
+        const QList<RemoteClient*>& remoteClients() const
+        {
+            return m_remoteClients;
+        }
+
+        void addClient(RemoteClient* clt)
+        {
+            clt->setParent(this);
+            m_remoteClients.append(clt);
+            emit clientsChanged();
+        }
+
+        NetworkMessage makeMessage(QString address);
+
+        template<typename... Args>
+        NetworkMessage makeMessage(QString address, Args&&... args)
+        {
+            NetworkMessage m;
+            m.address = address;
+            m.clientId = localClient().id().val();
+            m.sessionId = id().val();
+
+            impl_makeMessage(QDataStream{&m.data, QIODevice::WriteOnly}, std::forward<Args&&>(args)...);
+
+            return m;
+        }
+
+    signals:
+        void clientsChanged();
+
+    public slots:
+        void validateMessage(NetworkMessage m);
+
+    private:
+        template<typename Arg>
+        void impl_makeMessage(QDataStream&& s, Arg&& arg)
+        {
+            s << arg;
+        }
+
+        template<typename Arg, typename... Args>
+        void impl_makeMessage(QDataStream&& s, Arg&& arg, Args&&... args)
+        {
+            impl_makeMessage(std::move(s << arg), std::forward<Args&&>(args)...);
+        }
+
+        LocalClient* m_client{};
+        MessageMapper* m_mapper{};
+        MessageValidator* m_validator{};
+        QList<RemoteClient*> m_remoteClients;
+};
+}

@@ -1,79 +1,108 @@
 cmake_minimum_required(VERSION 3.0)
 project(iscore_addon_network LANGUAGES CXX)
 
-if(ANDROID)
-    message("TODO FIXME ON ANDROID")
-    return()
-endif()
-
 iscore_common_setup()
 
 # Packages
 find_package(Qt5 5.3 REQUIRED COMPONENTS Core Widgets Network Xml Test)
 
 # Files & main target
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Repartition")
+set(HDRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Client/Client.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Client/LocalClient.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Client/RemoteClient.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/MessageMapper.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/MessageValidator.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkMessage.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkServer.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkSocket.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/ClientPolicy.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/DocumentPlugin.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/MasterPolicy.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/PlaceholderPolicy.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddClientToGroup.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/ChangeGroup.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/CreateGroup.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/DistributedScenarioCommandFactory.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/RemoveClientFromGroup.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/RemoveGroup.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Group.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupManager.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadata.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadataWidget.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/GroupPanelDelegate.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/GroupPanelFactory.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupHeaderItem.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupListWidget.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupTableCheckbox.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupTableWidget.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupWidget.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/SessionHeaderItem.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpDialog.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpWidget.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/NetworkApplicationPlugin.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSessionBuilder.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSession.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/MasterSession.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/RemoteClientBuilder.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/Session.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/commands/ClientNameChangedCommand.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/commands/ClientPortChangedCommand.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/commands/MasterPortChangedCommand.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettings.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsModel.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsPresenter.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsView.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/iscore_addon_network.hpp"
 
+    )
 set(SRCS
-"${CMAKE_CURRENT_SOURCE_DIR}/Repartition/client/ClientSerialization.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/GroupSerialization.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/GroupManagerSerialization.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Client/ClientSerialization.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupManagerSerialization.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadataSerialization.cpp"
 
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/GroupMetadataSerialization.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/MessageMapper.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/MessageValidator.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkMessage.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkServer.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkSocket.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/ClientPolicy.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/DocumentPlugin.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/DocumentPluginSerialization.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/PlaceholderPolicy.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/MasterPolicy.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddClientToGroup.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/ChangeGroup.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/CreateGroup.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/DistributedScenarioCommandFactory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/RemoveClientFromGroup.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Group.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupManager.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadata.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadataWidget.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupSerialization.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/GroupPanelDelegate.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/GroupPanelFactory.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupHeaderItem.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupListWidget.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupTableCheckbox.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupTableWidget.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupWidget.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/SessionHeaderItem.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpDialog.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpWidget.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/NetworkApplicationPlugin.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSessionBuilder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSession.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/MasterSession.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/RemoteClientBuilder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/Session.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsModel.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsPresenter.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsView.cpp"
 
-"${CMAKE_CURRENT_SOURCE_DIR}/DocumentPlugins/PlaceholderNetworkPolicy.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DocumentPlugins/NetworkDocumentPluginSerialization.cpp"
-
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Commands/AddClientToGroup.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Commands/RemoveClientFromGroup.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Commands/CreateGroup.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Commands/ChangeGroup.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Commands/DistributedScenarioCommandFactory.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Group.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/GroupManager.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/GroupMetadata.cpp"
-
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Panel/GroupPanelFactory.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Panel/GroupPanelDelegate.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Panel/Widgets/GroupHeaderItem.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Panel/Widgets/GroupListWidget.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Panel/Widgets/GroupTableCheckbox.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Panel/Widgets/GroupWidget.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Panel/Widgets/SessionHeaderItem.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/Panel/Widgets/GroupTableWidget.cpp"
-
-"${CMAKE_CURRENT_SOURCE_DIR}/DistributedScenario/GroupMetadataWidget.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DocumentPlugins/NetworkClientDocumentPlugin.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DocumentPlugins/NetworkDocumentPlugin.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/DocumentPlugins/NetworkMasterDocumentPlugin.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/IpDialog.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/IpWidget.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/iscore_plugin_network.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/NetworkApplicationPlugin.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Repartition/session/ClientSession.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Repartition/session/ClientSessionBuilder.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Repartition/session/MasterSession.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Repartition/session/Session.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Repartition/session/RemoteClientBuilder.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Serialization/MessageMapper.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Serialization/MessageValidator.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Serialization/NetworkMessage.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Serialization/NetworkServer.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/Serialization/NetworkSocket.cpp"
-
-"${CMAKE_CURRENT_SOURCE_DIR}/settings_impl/NetworkSettingsModel.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/settings_impl/NetworkSettingsPresenter.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/settings_impl/NetworkSettingsView.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/iscore_addon_network.cpp"
 )
-
-file(GLOB_RECURSE HDRS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
-
-#Remove zeroconf header from the glob
-foreach(item ${HDRS})
-  if(${item} MATCHES "Zeroconf")
-    list(REMOVE_ITEM HDRS ${item})
-  endif()
-endforeach()
 
 if(ISCORE_ZEROCONF)
     message("Will use ZeroConf")
