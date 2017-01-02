@@ -48,6 +48,6 @@ void Group::removeClient(Id<Client> clt)
 
 bool Group::hasClient(const Id<Client>& clt) const
 {
-  return ossia::find(m_executingClients, clt);
+  return ossia::find(m_executingClients, clt) != m_executingClients.end();
 }
 }

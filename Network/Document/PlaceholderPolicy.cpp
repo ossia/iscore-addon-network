@@ -18,7 +18,7 @@
 
 template <>
 void DataStreamReader::read(
-        const Network::NetworkPolicyInterface& elt)
+        const Network::NetworkPolicy& elt)
 {
     m_stream << elt.session()->id();
     readFrom(static_cast<Network::Client&>(elt.session()->localClient()));
@@ -34,7 +34,7 @@ void DataStreamReader::read(
 
 template <>
 void JSONObjectReader::read(
-        const Network::NetworkPolicyInterface& elt)
+        const Network::NetworkPolicy& elt)
 {
     obj["SessionId"] = toJsonValue(elt.session()->id());
     obj["LocalClient"] = toJsonObject(static_cast<Network::Client&>(elt.session()->localClient()));

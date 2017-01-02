@@ -14,104 +14,88 @@ struct VisitorVariant;
 
 namespace iscore
 {
-    class Document;
+class Document;
 }
+namespace Network
+{
+class NetworkDocumentPlugin;
+}
+UUID_METADATA(
+    ,
+    iscore::DocumentPluginFactory,
+    Network::NetworkDocumentPlugin,
+    "6e610e1f-9de2-4c36-90dd-0ef570002a21")
 
 ISCORE_DECLARE_ACTION(NetworkPlay, "&Play (Network)", Network, QKeySequence::UnknownKey)
 namespace Network
 {
 
-class Session;
-class GroupManager;
-class GroupMetadata;
-class NetworkPolicyInterface : public QObject
-{
-    public:
-        using QObject::QObject;
-        virtual Session* session() const = 0;
-        virtual void play() = 0;
-};
+  class Session;
+  class GroupManager;
+  class GroupMetadata;
+  class NetworkPolicy : public QObject
+  {
+  public:
+    using QObject::QObject;
+    virtual Session* session() const = 0;
+    virtual void play() = 0;
+  };
 
-class NetworkDocumentPlugin final :
-        public iscore::SerializableDocumentPlugin
-{
-        Q_OBJECT
+  class NetworkDocumentPlugin final :
+      public iscore::SerializableDocumentPlugin
+  {
+    Q_OBJECT
 
-        ISCORE_SERIALIZE_FRIENDS
-    public:
-        NetworkDocumentPlugin(
-                const iscore::DocumentContext& ctx,
-                NetworkPolicyInterface* policy,
-                Id<iscore::DocumentPlugin> id,
-                QObject* parent);
+    ISCORE_SERIALIZE_FRIENDS
+    SERIALIZABLE_MODEL_METADATA_IMPL(NetworkDocumentPlugin)
+  public:
+    NetworkDocumentPlugin(
+          const iscore::DocumentContext& ctx,
+          NetworkPolicy* policy,
+          Id<iscore::DocumentPlugin> id,
+          QObject* parent);
 
-        // Loading has to be in two steps since the plugin policy is different from the client
-        // and server.
-        template<typename Impl>
-        NetworkDocumentPlugin(
-                const iscore::DocumentContext& ctx,
-                Impl& vis,
-                QObject* parent):
-            iscore::SerializableDocumentPlugin{ctx, vis, parent}
-        {
-            vis.writeTo(*this);
-        }
+    // Loading has to be in two steps since the plugin policy is different from the client
+    // and server.
+    template<typename Impl>
+    NetworkDocumentPlugin(
+          const iscore::DocumentContext& ctx,
+          Impl& vis,
+          QObject* parent):
+      iscore::SerializableDocumentPlugin{ctx, vis, parent}
+    {
+      vis.writeTo(*this);
+    }
 
-        void setPolicy(NetworkPolicyInterface*);
+    void setPolicy(NetworkPolicy*);
 
-        GroupManager& groupManager() const
-        { return *m_groups; }
+    GroupManager& groupManager() const
+    { return *m_groups; }
 
-        NetworkPolicyInterface* policy() const
-        { return m_policy; }
+    NetworkPolicy* policy() const
+    { return m_policy; }
 
-    signals:
-        void sessionChanged();
+  signals:
+    void sessionChanged();
 
-    private:
-        // TODO
-        /*
-        std::vector<iscore::ElementPluginModelType> elementPlugins() const override;
+  private:
+    void setupGroupPlugin(GroupMetadata* grp);
 
-        iscore::ElementPluginModel* makeElementPlugin(
-                const QObject* element,
-                iscore::ElementPluginModelType,
-                QObject* parent) override;
+    NetworkPolicy* m_policy{};
+    GroupManager* m_groups{};
 
-        iscore::ElementPluginModel* loadElementPlugin(
-                const QObject* element,
-                const VisitorVariant&,
-                QObject* parent) override;
+  };
 
-        iscore::ElementPluginModel* cloneElementPlugin(
-                const QObject* element,
-                iscore::ElementPluginModel*,
-                QObject* parent) override;
+  class DocumentPluginFactory :
+      public iscore::DocumentPluginFactory
+  {
+    ISCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
 
-        virtual QWidget *makeElementPluginWidget(
-                const iscore::ElementPluginModel*, QWidget* widg) const override;
-        */
-
-        void serialize_impl(const VisitorVariant&) const override;
-        ConcreteKey concreteKey() const override;
-
-        void setupGroupPlugin(GroupMetadata* grp);
-
-        NetworkPolicyInterface* m_policy{};
-        GroupManager* m_groups{};
-
-};
-
-class DocumentPluginFactory :
-        public iscore::DocumentPluginFactory
-{
-        ISCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
-
-    public:
-        iscore::DocumentPlugin* load(
-                const VisitorVariant& var,
-                iscore::DocumentContext& doc,
-                QObject* parent) override;
-};
+        public:
+      iscore::DocumentPlugin* load(
+        const VisitorVariant& var,
+        iscore::DocumentContext& doc,
+        QObject* parent) override;
+  };
 }
 

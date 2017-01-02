@@ -10,7 +10,7 @@ struct DocumentContext;
 namespace Network
 {
 
-class MasterNetworkPolicy : public NetworkPolicyInterface
+class MasterNetworkPolicy : public NetworkPolicy
 {
     public:
         MasterNetworkPolicy(MasterSession* s,

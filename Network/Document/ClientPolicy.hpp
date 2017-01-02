@@ -10,7 +10,7 @@ class Document;
 // MOVEME
 namespace Network
 {
-class ClientNetworkPolicy : public NetworkPolicyInterface
+class ClientNetworkPolicy : public NetworkPolicy
 {
     public:
         ClientNetworkPolicy(ClientSession* s,

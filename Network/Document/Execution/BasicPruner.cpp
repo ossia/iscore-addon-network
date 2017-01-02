@@ -32,8 +32,8 @@ void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Gro
   //else
   {
     // We assume that we keep the parent group.
-
   }
+
   Scenario::ConstraintModel& constraint = cst.iscoreConstraint();
 
   // If no group found through components, maybe through metadata :
@@ -67,13 +67,19 @@ void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Gro
 
   ISCORE_ASSERT(cur_group);
 
+  bool isMuted = !cur_group->hasClient(self);
+  qDebug() << cur_group->name() << cur_group->clients().size() << isMuted;
+
+  for(auto clt : cur_group->clients()) qDebug() << clt << (clt == this->self);
   // Mute the processes that are not meant to execute there.
-  constraint.setExecutionState(Scenario::ConstraintExecutionState::Muted);
+  constraint.setExecutionState(isMuted
+                                 ? Scenario::ConstraintExecutionState::Muted
+                                 : Scenario::ConstraintExecutionState::Enabled);
 
   for(const auto& process : cst.processes())
   {
     auto& proc = process->OSSIAProcess();
-    proc.mute(!cur_group->hasClient(self));
+    proc.mute(isMuted);
   }
 
   // Recursion

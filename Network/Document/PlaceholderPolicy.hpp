@@ -6,12 +6,12 @@ class QObject;
 namespace Network
 {
 class Session;
-class PlaceholderNetworkPolicy : public NetworkPolicyInterface
+class PlaceholderNetworkPolicy : public NetworkPolicy
 {
     public:
         template<typename Deserializer>
         PlaceholderNetworkPolicy(Deserializer&& vis, QObject* parent) :
-            NetworkPolicyInterface{parent}
+            NetworkPolicy{parent}
         {
             vis.writeTo(*this);
         }
