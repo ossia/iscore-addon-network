@@ -15,9 +15,9 @@ struct NetworkMessage
         friend QDataStream& operator>>(QDataStream& s, NetworkMessage& m);
 
         NetworkMessage() = default;
-        NetworkMessage(Session& s, QString&& addr, QByteArray&& data);
+        NetworkMessage(Session& s, QByteArray&& addr, QByteArray&& data);
 
-        QString address;
+        QByteArray address;
         int sessionId{};
         int clientId{};
         QByteArray data;

@@ -24,7 +24,7 @@ UUID_METADATA(
     ,
     iscore::DocumentPluginFactory,
     Network::NetworkDocumentPlugin,
-    "6e610e1f-9de2-4c36-90dd-0ef570002a21")
+    "58c9e19a-fde3-47d0-a121-35853fec667d")
 
 ISCORE_DECLARE_ACTION(NetworkPlay, "&Play (Network)", Network, QKeySequence::UnknownKey)
 namespace Network

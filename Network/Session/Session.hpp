@@ -56,13 +56,14 @@ class Session : public IdentifiedObject<Session>
         {
             clt->setParent(this);
             m_remoteClients.append(clt);
+            emit clientAdded(clt);
             emit clientsChanged();
         }
 
-        NetworkMessage makeMessage(QString address);
+        NetworkMessage makeMessage(const QByteArray& address);
 
         template<typename... Args>
-        NetworkMessage makeMessage(QString address, Args&&... args)
+        NetworkMessage makeMessage(const QByteArray& address, Args&&... args)
         {
             NetworkMessage m;
             m.address = address;
@@ -75,6 +76,7 @@ class Session : public IdentifiedObject<Session>
         }
 
     signals:
+        void clientAdded(RemoteClient*);
         void clientsChanged();
 
     public slots:

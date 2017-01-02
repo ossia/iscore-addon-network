@@ -21,6 +21,7 @@
 #include <iscore/actions/ActionManager.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/ClientSession.hpp>
+#include <Network/Document/Execution/BasicPruner.hpp>
 
 namespace Network
 {
@@ -121,6 +122,12 @@ ClientNetworkPolicy::ClientNetworkPolicy(
   {
     play();
   });
+
+  s->mapper().addHandler("/ping", [&] (NetworkMessage m)
+  {
+    qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    m_session->master()->sendMessage(m_session->makeMessage("/pong", t));
+  });
 }
 
 void ClientNetworkPolicy::play()
@@ -132,7 +139,8 @@ void ClientNetworkPolicy::play()
     auto& plug = iscore::AppContext().applicationPlugin<Engine::ApplicationPlugin>();
     plug.on_play(
           sm->baseConstraint(),
-          true, [] (const Engine::Execution::Context& ctx) { qDebug("yaay"); },
+          true,
+          BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
     TimeValue{});
   }
 }

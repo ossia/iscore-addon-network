@@ -36,7 +36,6 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   m_groups{new GroupManager{this}}
 {
   m_policy->setParent(this);
-  using namespace std;
 
   // Base group set-up
   auto allGroup = new Group{"all", Id<Group>{0}, &groupManager()};

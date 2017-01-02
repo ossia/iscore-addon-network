@@ -6,25 +6,25 @@
 namespace Network
 {
 
-void MessageMapper::addHandler(QString addr, std::function<void(NetworkMessage)> fun)
+void MessageMapper::addHandler(QByteArray addr, std::function<void(NetworkMessage)> fun)
 {
-    ISCORE_ASSERT(!m_handlers.contains(addr));
+    ISCORE_ASSERT(!contains(addr));
     m_handlers[addr] = fun;
 }
-
 
 void MessageMapper::map(NetworkMessage m)
 {
     auto it = m_handlers.find(m.address);
     if(it != m_handlers.end())
-        (*it)(m);
+        (it.value())(m);
     else
-        qDebug() << "Address" << m.address << "not handled.";
+      qDebug() << "Address" << m.address << "not handled.";
 }
 
-
-QList<QString> MessageMapper::addresses() const
+bool MessageMapper::contains(const QByteArray& b) const
 {
-    return m_handlers.keys();
+  return m_handlers.find(b) != m_handlers.end();
 }
+
+
 }

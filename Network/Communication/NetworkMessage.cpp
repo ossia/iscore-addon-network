@@ -19,7 +19,7 @@ QDataStream& operator>>(QDataStream& s, Network::NetworkMessage& m)
     return s;
 }
 
-NetworkMessage::NetworkMessage(Network::Session& s, QString&& addr, QByteArray&& data):
+NetworkMessage::NetworkMessage(Network::Session& s, QByteArray&& addr, QByteArray&& data):
     address{addr},
     sessionId{s.id().val()},
     clientId{s.localClient().id().val()},

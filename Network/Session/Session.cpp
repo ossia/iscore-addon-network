@@ -25,7 +25,7 @@ Session::~Session()
     delete m_validator;
 }
 
-NetworkMessage Session::makeMessage(QString address)
+NetworkMessage Session::makeMessage(const QByteArray& address)
 {
     NetworkMessage m;
     m.address = address;

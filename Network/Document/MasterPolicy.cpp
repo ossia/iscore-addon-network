@@ -32,10 +32,78 @@ namespace Network
 
 class Client;
 
-MasterNetworkPolicy::MasterNetworkPolicy(MasterSession* s,
-                                         const iscore::DocumentContext& c):
+MasterTimekeep::MasterTimekeep(MasterSession& s):
+  m_session{s}
+{
+  connect(&m_timer, &QTimer::timeout,
+          this, &MasterTimekeep::ping_all);
+  m_timer.setInterval(1000);
+  m_timer.start();
+
+  con(m_session, &MasterSession::clientAdded,
+      this, [=] (auto client) {
+    m_timestamps.insert({client->id(), ClientTimes{}});
+  });
+  // TODO clientRemoved
+}
+
+auto us(const std::chrono::nanoseconds u) { return std::chrono::duration_cast<std::chrono::microseconds>(u).count(); }
+
+void MasterTimekeep::ping_all()
+{
+  auto t = clk::now().time_since_epoch();
+  qDebug() << "ping_all(t) = " << us(t);
+  m_session.broadcastToAllClients(m_session.makeMessage("/ping"));
+
+  auto b = m_timestamps.begin();
+  auto e = m_timestamps.end();
+  for(auto it = b; it != e; ++it)
+  {
+    it.value().last_sent = t;
+  }
+
+  for(auto it = b; it != e; ++it)
+  {
+    auto& c = it.value();
+    qDebug()
+        //<< us(c.last_sent - c.last_sent.time_since_epoch())
+        //<< us(c.last_received - c.last_received.time_since_epoch())
+        << us(c.roundtrip_latency)
+        << us(c.clock_difference)
+           ;
+  }
+}
+
+
+void MasterTimekeep::on_pong(NetworkMessage m)
+{
+  auto pong_date = clk::now().time_since_epoch();
+  qDebug() << "on_pong(t) = " << us(pong_date);
+  Id<Client> client_id{m.clientId};
+  QDataStream reader(m.data);
+
+  qint64 ns;
+  reader >> ns;
+
+  qDebug() << "on_pong(t) client = " << us(std::chrono::nanoseconds(ns));
+  auto it = m_timestamps.find(client_id);
+  if(it != m_timestamps.end())
+  {
+    ClientTimes& times = it.value();
+    times.last_received = pong_date;
+    times.roundtrip_latency = times.last_received - times.last_sent;
+
+    // Note : here we just assume that the half-trip latency is half the round trip latency.
+    times.clock_difference = std::chrono::nanoseconds(ns) - (times.last_sent + times.roundtrip_latency / 2);
+  }
+}
+
+MasterNetworkPolicy::MasterNetworkPolicy(
+    MasterSession* s,
+    const iscore::DocumentContext& c):
   m_session{s},
-  m_ctx{c}
+  m_ctx{c},
+  m_keep{*s}
 {
   auto& stack = c.document.commandStack();
 
@@ -141,6 +209,11 @@ MasterNetworkPolicy::MasterNetworkPolicy(MasterSession* s,
     m_session->broadcastToAllClients(m_session->makeMessage("/play"));
     play();
   });
+
+  s->mapper().addHandler("/pong", [&] (NetworkMessage m)
+  {
+    m_keep.on_pong(m);
+  });
 }
 
 
@@ -157,5 +230,6 @@ void MasterNetworkPolicy::play()
           TimeValue{});
   }
 }
+
 }
 

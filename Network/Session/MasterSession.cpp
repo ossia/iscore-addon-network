@@ -71,5 +71,6 @@ void MasterSession::on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt)
             this, &Session::validateMessage, Qt::QueuedConnection);
 
     addClient(clt);
+
 }
 }
