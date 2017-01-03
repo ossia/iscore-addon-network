@@ -22,7 +22,7 @@
 #include <core/presenter/DocumentManager.hpp>
 #include <iscore/actions/MenuManager.hpp>
 #include <iscore/actions/Menu.hpp>
-#include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
+#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
 #include <iscore/model/Identifier.hpp>
 #include <iscore/actions/Menu.hpp>
 #include <Network/Client/LocalClient.hpp>
@@ -44,7 +44,7 @@ class Client;
 class Session;
 
 NetworkApplicationPlugin::NetworkApplicationPlugin(const iscore::GUIApplicationContext& app) :
-  GUIApplicationContextPlugin {app}
+  GUIApplicationPlugin {app}
 {
 }
 

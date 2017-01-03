@@ -4,7 +4,7 @@
 #include <iscore/tools/ForEachType.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
 #include <Network/Group/Panel/GroupPanelFactory.hpp>
-#include <iscore/plugins/qt_interfaces/GUIApplicationContextPlugin_QtInterface.hpp>
+#include <iscore/plugins/qt_interfaces/GUIApplicationPlugin_QtInterface.hpp>
 #include <iscore_addon_network_commands_files.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 
@@ -26,7 +26,7 @@ iscore_addon_network::~iscore_addon_network()
 }
 
 // Interfaces implementations :
-iscore::GUIApplicationContextPlugin*
+iscore::GUIApplicationPlugin*
 iscore_addon_network::make_applicationPlugin(
         const iscore::GUIApplicationContext& app)
 {

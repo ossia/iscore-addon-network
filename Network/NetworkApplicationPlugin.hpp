@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
+#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
 #include <QString>
 
 #include <iscore/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
@@ -24,7 +24,7 @@ class ClientSession;
 class ClientSessionBuilder;
 class NetworkApplicationPlugin :
         public QObject,
-        public iscore::GUIApplicationContextPlugin
+        public iscore::GUIApplicationPlugin
 {
         Q_OBJECT
 
