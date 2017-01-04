@@ -2,11 +2,12 @@
 #include <QByteArray>
 #include <QString>
 #include <QMetaType>
+#include <iscore/model/Identifier.hpp>
 
 class QDataStream;
 namespace Network
 {
-
+class Client;
 class Session;
 
 struct NetworkMessage
@@ -18,8 +19,8 @@ struct NetworkMessage
         NetworkMessage(Session& s, QByteArray&& addr, QByteArray&& data);
 
         QByteArray address;
-        int sessionId{};
-        int clientId{};
+        Id<Session> sessionId;
+        Id<Client> clientId;
         QByteArray data;
 };
 }

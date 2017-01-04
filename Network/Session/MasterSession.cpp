@@ -14,7 +14,6 @@
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/RemoteClientBuilder.hpp>
 #include <Network/Session/Session.hpp>
-
 class QObject;
 class QTcpSocket;
 
@@ -38,27 +37,11 @@ MasterSession::MasterSession(iscore::Document* doc, LocalClient* theclient, Id<S
 #endif
 }
 
-void MasterSession::broadcastToAllClients(NetworkMessage m)
-{
-    for(RemoteClient* client : remoteClients())
-        client->sendMessage(m);
-}
-
-void MasterSession::broadcastToOthers(Id<Client> sender, NetworkMessage m)
-{
-    for(const auto& client : remoteClients())
-    {
-        if(client->id() != sender)
-            client->sendMessage(m);
-    }
-}
-
 void MasterSession::on_createNewClient(QTcpSocket* sock)
 {
     RemoteClientBuilder* builder = new RemoteClientBuilder(*this, sock);
     connect(builder, SIGNAL(clientReady(RemoteClientBuilder*,RemoteClient*)),
             this, SLOT(on_clientReady(RemoteClientBuilder*,RemoteClient*)));
-
     m_clientBuilders.append(builder);
 }
 
@@ -70,6 +53,8 @@ void MasterSession::on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt)
     connect(clt, &RemoteClient::messageReceived,
             this, &Session::validateMessage, Qt::QueuedConnection);
 
+    //broadcastToAllClients(
+    //      makeMessage("/client/added", clt->id(), clt->socket().socket().peerAddress(), clt->socket().socket().peerPort()));
     addClient(clt);
 
 }

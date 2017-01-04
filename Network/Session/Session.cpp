@@ -29,8 +29,8 @@ NetworkMessage Session::makeMessage(const QByteArray& address)
 {
     NetworkMessage m;
     m.address = address;
-    m.clientId = localClient().id().val();
-    m.sessionId = id().val();
+    m.clientId = localClient().id();
+    m.sessionId = id();
 
     return m;
 }

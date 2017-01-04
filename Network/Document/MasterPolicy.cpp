@@ -32,59 +32,6 @@ namespace Network
 
 class Client;
 
-MasterTimekeep::MasterTimekeep(MasterSession& s):
-  m_session{s}
-{
-  connect(&m_timer, &QTimer::timeout,
-          this, &MasterTimekeep::ping_all);
-  m_timer.setInterval(1000);
-  m_timer.start();
-
-  con(m_session, &MasterSession::clientAdded,
-      this, [=] (auto client) {
-    m_timestamps.insert({client->id(), ClientTimes{}});
-  });
-  // TODO clientRemoved
-}
-
-auto us(const std::chrono::nanoseconds u) { return std::chrono::duration_cast<std::chrono::microseconds>(u).count(); }
-
-void MasterTimekeep::ping_all()
-{
-  auto t = clk::now().time_since_epoch();
-  m_session.broadcastToAllClients(m_session.makeMessage("/ping"));
-
-  auto b = m_timestamps.begin();
-  auto e = m_timestamps.end();
-  for(auto it = b; it != e; ++it)
-  {
-    it.value().last_sent = t;
-  }
-}
-
-
-void MasterTimekeep::on_pong(NetworkMessage m)
-{
-  auto pong_date = clk::now().time_since_epoch();
-
-  Id<Client> client_id{m.clientId};
-  QDataStream reader(m.data);
-
-  qint64 ns;
-  reader >> ns;
-
-  auto it = m_timestamps.find(client_id);
-  if(it != m_timestamps.end())
-  {
-    ClientTimes& times = it.value();
-    times.last_received = pong_date;
-    times.roundtrip_latency = times.last_received - times.last_sent;
-
-    // Note : here we just assume that the half-trip latency is half the round trip latency.
-    times.clock_difference = std::chrono::nanoseconds(ns) - (times.last_sent + times.roundtrip_latency / 2);
-  }
-}
-
 MasterNetworkPolicy::MasterNetworkPolicy(
     MasterSession* s,
     const iscore::DocumentContext& c):
@@ -147,19 +94,19 @@ MasterNetworkPolicy::MasterNetworkPolicy(
           m_ctx.app.instantiateUndoCommand(cmd));
 
 
-    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+    m_session->broadcastToOthers(m.clientId, m);
   });
 
   // Undo-redo
   s->mapper().addHandler("/command/undo", [&] (NetworkMessage m)
   {
     stack.undoQuiet();
-    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+    m_session->broadcastToOthers(m.clientId, m);
   });
   s->mapper().addHandler("/command/redo", [&] (NetworkMessage m)
   {
     stack.redoQuiet();
-    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+    m_session->broadcastToOthers(m.clientId, m);
   });
 
   s->mapper().addHandler("/command/index", [&] (NetworkMessage m)
@@ -168,7 +115,7 @@ MasterNetworkPolicy::MasterNetworkPolicy(
     int32_t idx;
     stream >> idx;
     stack.setIndexQuiet(idx);
-    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+    m_session->broadcastToOthers(m.clientId, m);
   });
 
 
@@ -179,7 +126,7 @@ MasterNetworkPolicy::MasterNetworkPolicy(
     QByteArray data;
     stream >> data;
     m_ctx.objectLocker.on_lock(data);
-    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+    m_session->broadcastToOthers(m.clientId, m);
   });
 
   s->mapper().addHandler("/unlock", [&] (NetworkMessage m)
@@ -188,13 +135,19 @@ MasterNetworkPolicy::MasterNetworkPolicy(
     QByteArray data;
     stream >> data;
     m_ctx.objectLocker.on_unlock(data);
-    m_session->broadcastToOthers(Id<Client>(m.clientId), m);
+    m_session->broadcastToOthers(m.clientId, m);
   });
 
   s->mapper().addHandler("/play", [&] (NetworkMessage m)
   {
     m_session->broadcastToAllClients(m_session->makeMessage("/play"));
     play();
+  });
+
+  s->mapper().addHandler("/ping", [&] (NetworkMessage m)
+  {
+    qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    m_session->sendMessage(m.clientId, m_session->makeMessage("/pong", t));
   });
 
   s->mapper().addHandler("/pong", [&] (NetworkMessage m)

@@ -53,5 +53,7 @@ void NetworkSocket::init()
 
         emit messageReceived(m);
     });
+
+    m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 }
 }

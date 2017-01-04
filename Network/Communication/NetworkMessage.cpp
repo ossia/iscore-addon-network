@@ -22,7 +22,7 @@ QDataStream& operator>>(QDataStream& s, Network::NetworkMessage& m)
 NetworkMessage::NetworkMessage(Network::Session& s, QByteArray&& addr, QByteArray&& data):
     address{addr},
     sessionId{s.id().val()},
-    clientId{s.localClient().id().val()},
+    clientId{s.localClient().id()},
     data{data}
 {
 }

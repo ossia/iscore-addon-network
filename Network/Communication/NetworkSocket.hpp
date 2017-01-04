@@ -18,6 +18,8 @@ class NetworkSocket : public QObject
 
         void sendMessage(const NetworkMessage&);
 
+        QTcpSocket& socket() const { return *m_socket; }
+
     signals:
         void messageReceived(NetworkMessage);
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "Client.hpp"
 #include <Network/Communication/NetworkServer.hpp>
+#include <QTcpSocket>
 // Has a TCP server to receive incoming connections from other clients.
 namespace Network
 {
@@ -13,8 +14,8 @@ class LocalClient : public Client
             m_server{new NetworkServer{9090, this}}
         {
             // todo : envoyer id et name du client.
-            connect(m_server, SIGNAL(newSocket(QTcpSocket*)),
-                    this, SIGNAL(createNewClient(QTcpSocket*)));
+            connect(m_server, &NetworkServer::newSocket,
+                    this, &LocalClient::createNewClient);
         }
 
         template<typename Deserializer>

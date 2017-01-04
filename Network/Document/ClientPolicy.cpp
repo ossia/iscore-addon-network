@@ -30,7 +30,8 @@ ClientNetworkPolicy::ClientNetworkPolicy(
     ClientSession* s,
     const iscore::DocumentContext& c):
   m_session{s},
-  m_ctx{c}
+  m_ctx{c},
+  m_keep{*s}
 {
   auto& stack = c.document.commandStack();
   auto& locker = c.document.locker();
@@ -126,7 +127,12 @@ ClientNetworkPolicy::ClientNetworkPolicy(
   s->mapper().addHandler("/ping", [&] (NetworkMessage m)
   {
     qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    m_session->master()->sendMessage(m_session->makeMessage("/pong", t));
+    m_session->sendMessage(m.clientId, m_session->makeMessage("/pong", t));
+  });
+
+  s->mapper().addHandler("/pong", [&] (NetworkMessage m)
+  {
+    m_keep.on_pong(m);
   });
 }
 

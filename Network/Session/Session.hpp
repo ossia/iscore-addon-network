@@ -67,12 +67,35 @@ class Session : public IdentifiedObject<Session>
         {
             NetworkMessage m;
             m.address = address;
-            m.clientId = localClient().id().val();
-            m.sessionId = id().val();
+            m.clientId = localClient().id();
+            m.sessionId = id();
 
             impl_makeMessage(QDataStream{&m.data, QIODevice::WriteOnly}, std::forward<Args&&>(args)...);
 
             return m;
+        }
+
+        void broadcastToAllClients(NetworkMessage m)
+        {
+            for(RemoteClient* client : remoteClients())
+                client->sendMessage(m);
+        }
+
+        void broadcastToOthers(Id<Client> sender, NetworkMessage m)
+        {
+            for(const auto& client : remoteClients())
+            {
+                if(client->id() != sender)
+                    client->sendMessage(m);
+            }
+        }
+
+        void sendMessage(Id<Client> target, NetworkMessage m)
+        {
+          const auto& c = remoteClients();
+          auto it = ossia::find(c, target);
+          if(it != c.end())
+            (*it)->sendMessage(m);
         }
 
     signals:

@@ -65,8 +65,8 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 {
     if(m.address == "/session/idOffer")
     {
-        m_sessionId.setVal(m.sessionId); // The session offered
-        m_masterId.setVal(m.clientId); // Message is from the master
+        m_sessionId = m.sessionId; // The session offered
+        m_masterId = m.clientId; // Message is from the master
         QDataStream s(m.data);
         int32_t id;
         s >> id; // The offered client id
@@ -74,7 +74,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
         NetworkMessage join;
         join.address = "/session/join";
-        join.clientId = m_clientId.val();
+        join.clientId = m_clientId;
         join.sessionId = m.sessionId;
 
         m_mastersocket->sendMessage(join);

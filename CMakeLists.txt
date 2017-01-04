@@ -19,6 +19,7 @@ set(HDRS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/ClientPolicy.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/DocumentPlugin.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/MasterPolicy.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Timekeeper.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/PlaceholderPolicy.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/BasicPruner.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddClientToGroup.hpp"
@@ -117,6 +118,7 @@ endif()
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
 iscore_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
 
+target_include_directories(${PROJECT_NAME} PRIVATE "${OSSIA_3RDPARY_DIRECTORY}/libzmq/include")
 target_link_libraries(${PROJECT_NAME} PUBLIC
                                     iscore_lib_base
                                     iscore_plugin_scenario
@@ -124,8 +126,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     iscore_plugin_engine
                                     Qt5::Core
                                     Qt5::Widgets
-                                    Qt5::Network)
-
+                                    Qt5::Network
+                                    libzmq-static)
 if(ISCORE_ZEROCONF)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USE_ZEROCONF)
     target_link_libraries(${PROJECT_NAME} PUBLIC KF5::DNSSD)

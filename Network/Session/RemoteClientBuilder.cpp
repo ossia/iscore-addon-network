@@ -42,8 +42,8 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
         // TODO validation
         NetworkMessage idOffer;
         idOffer.address = "/session/idOffer";
-        idOffer.sessionId = m_session.id().val();
-        idOffer.clientId = m_session.localClient().id().val();
+        idOffer.sessionId = m_session.id();
+        idOffer.clientId = m_session.localClient().id();
         {
             QDataStream stream(&idOffer.data, QIODevice::WriteOnly);
 

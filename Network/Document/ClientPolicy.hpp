@@ -1,5 +1,6 @@
 #pragma once
 #include <Network/Session/ClientSession.hpp>
+#include <Network/Document/Timekeeper.hpp>
 
 #include "DocumentPlugin.hpp"
 
@@ -23,5 +24,6 @@ class ClientNetworkPolicy : public NetworkPolicy
     private:
         ClientSession* m_session{};
         const iscore::DocumentContext& m_ctx;
+        Timekeeper m_keep{*m_session};
 };
 }

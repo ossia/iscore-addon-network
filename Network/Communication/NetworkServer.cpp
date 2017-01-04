@@ -47,6 +47,7 @@ NetworkServer::NetworkServer(int port, QObject* parent):
     {
         emit newSocket(m_tcpServer->nextPendingConnection());
     });
+
 }
 
 int NetworkServer::port() const

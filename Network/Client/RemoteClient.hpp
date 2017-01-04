@@ -14,8 +14,8 @@ class RemoteClient : public Client
             Client(id, parent),
             m_socket{socket}
         {
-            connect(m_socket, SIGNAL(messageReceived(NetworkMessage)),
-                    this,     SIGNAL(messageReceived(NetworkMessage)));
+            connect(m_socket, &NetworkSocket::messageReceived,
+                    this,     &RemoteClient::messageReceived);
         }
 
         template<typename Deserializer>
@@ -28,6 +28,8 @@ class RemoteClient : public Client
         {
             m_socket->sendMessage(m);
         }
+
+        NetworkSocket& socket() const { return *m_socket; }
 
     signals:
         void messageReceived(NetworkMessage);
