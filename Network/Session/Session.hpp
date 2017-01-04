@@ -52,6 +52,15 @@ class Session : public IdentifiedObject<Session>
             return m_remoteClients;
         }
 
+        RemoteClient* findClient(Id<Client> target)
+        {
+          const auto& c = remoteClients();
+          auto it = ossia::find(c, target);
+          if(it != c.end())
+            return *it;
+          return nullptr;
+        }
+
         void addClient(RemoteClient* clt)
         {
             clt->setParent(this);

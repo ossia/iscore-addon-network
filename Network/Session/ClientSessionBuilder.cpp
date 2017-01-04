@@ -18,6 +18,7 @@
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/ClientPolicy.hpp>
+#include <QTcpServer>
 #include <iscore/plugins/documentdelegate/DocumentDelegateFactory.hpp>
 #include <iscore/application/ApplicationContext.hpp>
 namespace Network
@@ -123,6 +124,11 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
         auto& ctx = doc->context();
         auto& np = ctx.plugin<NetworkDocumentPlugin>();
         np.setPolicy(new ClientNetworkPolicy{m_session, ctx});
+
+        // Send a message to the server with the ports that we opened :
+        auto& local_server = m_session->localClient().server();
+        m_session->master()->sendMessage(
+              m_session->makeMessage("/session/portinfo", local_server.m_localAddress, local_server.m_localPort));
 
         emit sessionReady();
     }

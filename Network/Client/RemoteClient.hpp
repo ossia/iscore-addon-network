@@ -31,6 +31,8 @@ class RemoteClient : public Client
 
         NetworkSocket& socket() const { return *m_socket; }
 
+        QString m_clientServerAddress;
+        int m_clientServerPort{};
     signals:
         void messageReceived(NetworkMessage);
 

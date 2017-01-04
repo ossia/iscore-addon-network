@@ -4,7 +4,7 @@
 
 #include <iscore/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
 #include <memory>
-
+//#include <zmq.hpp>
 namespace iscore {
 
 class Document;
@@ -31,6 +31,7 @@ class NetworkApplicationPlugin :
     public:
         NetworkApplicationPlugin(const iscore::GUIApplicationContext& app);
 
+//        zmq::context_t zmq{1};
     public slots:
         void setupClientConnection(QString ip, int port);
 

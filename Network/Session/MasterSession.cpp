@@ -14,6 +14,7 @@
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/RemoteClientBuilder.hpp>
 #include <Network/Session/Session.hpp>
+#include <QHostAddress>
 class QObject;
 class QTcpSocket;
 
@@ -40,8 +41,8 @@ MasterSession::MasterSession(iscore::Document* doc, LocalClient* theclient, Id<S
 void MasterSession::on_createNewClient(QTcpSocket* sock)
 {
     RemoteClientBuilder* builder = new RemoteClientBuilder(*this, sock);
-    connect(builder, SIGNAL(clientReady(RemoteClientBuilder*,RemoteClient*)),
-            this, SLOT(on_clientReady(RemoteClientBuilder*,RemoteClient*)));
+    connect(builder, &RemoteClientBuilder::clientReady,
+            this, &MasterSession::on_clientReady);
     m_clientBuilders.append(builder);
 }
 

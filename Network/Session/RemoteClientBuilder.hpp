@@ -15,6 +15,7 @@ class Client;
 class MasterSession;
 class NetworkSocket;
 
+//! Used by the master to create a RemoteClient instance from a connecting client.
 class RemoteClientBuilder final : public QObject
 {
         Q_OBJECT

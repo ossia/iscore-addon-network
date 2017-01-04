@@ -21,6 +21,7 @@ class NetworkSocket;
 class Session;
 struct NetworkMessage;
 
+//! Used by a client to join a Session.
 class ClientSessionBuilder final : public QObject
 {
         Q_OBJECT

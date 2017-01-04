@@ -154,6 +154,24 @@ MasterNetworkPolicy::MasterNetworkPolicy(
   {
     m_keep.on_pong(m);
   });
+
+
+  s->mapper().addHandler("/session/portinfo", [&] (NetworkMessage m)
+  {
+    QString s;
+    int p;
+    QDataStream stream{&m.data, QIODevice::ReadOnly};
+    stream >> s >> p;
+
+    auto clt = m_session->findClient(m.clientId);
+    if(clt)
+    {
+      clt->m_clientServerAddress = s;
+      clt->m_clientServerPort = p;
+    }
+    qDebug() << s << p;
+    m_session->broadcastToOthers(m.clientId, m);
+  });
 }
 
 

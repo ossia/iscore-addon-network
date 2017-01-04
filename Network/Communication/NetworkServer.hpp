@@ -13,6 +13,10 @@ class NetworkServer : public QObject
         NetworkServer(int port, QObject* parent);
         int port() const;
 
+        QTcpServer& server() const { return *m_tcpServer; }
+
+        QString m_localAddress;
+        int m_localPort;
     signals:
         void newSocket(QTcpSocket* sock);
 

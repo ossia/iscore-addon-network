@@ -20,7 +20,6 @@ NetworkServer::NetworkServer(int port, QObject* parent):
         port++;
     }
 
-    QString ipAddress;
     QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
 
     // use the first non-localhost IPv4 address
@@ -29,25 +28,25 @@ NetworkServer::NetworkServer(int port, QObject* parent):
         if(ipAddressesList.at(i) != QHostAddress::LocalHost &&
                 ipAddressesList.at(i).toIPv4Address())
         {
-            ipAddress = ipAddressesList.at(i).toString();
+            m_localAddress = ipAddressesList.at(i).toString();
             break;
         }
     }
 
     // if we did not find one, use IPv4 localhost
-    if(ipAddress.isEmpty())
+    if(m_localAddress.isEmpty())
     {
-        ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
+        m_localAddress = QHostAddress(QHostAddress::LocalHost).toString();
     }
 
-    qDebug() << "Server: " << ipAddress << ":" << m_tcpServer->serverPort();
+    m_localPort = m_tcpServer->serverPort();
+    qDebug() << "Server: " << m_localAddress << ":" << m_localPort;
 
     connect(m_tcpServer, &QTcpServer::newConnection,
             this, [=] ()
     {
         emit newSocket(m_tcpServer->nextPendingConnection());
     });
-
 }
 
 int NetworkServer::port() const

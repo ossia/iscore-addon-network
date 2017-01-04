@@ -30,6 +30,8 @@ class LocalClient : public Client
             return m_server->port();
         }
 
+        NetworkServer& server() const { return *m_server; }
+
     signals:
         void createNewClient(QTcpSocket*);
 
