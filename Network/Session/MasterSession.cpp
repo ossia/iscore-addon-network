@@ -53,10 +53,6 @@ void MasterSession::on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt)
 
     connect(clt, &RemoteClient::messageReceived,
             this, &Session::validateMessage, Qt::QueuedConnection);
-
-    //broadcastToAllClients(
-    //      makeMessage("/client/added", clt->id(), clt->socket().socket().peerAddress(), clt->socket().socket().peerPort()));
     addClient(clt);
-
 }
 }

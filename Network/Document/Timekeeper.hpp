@@ -23,6 +23,11 @@ struct Timekeeper final : public QObject
   {
     startTimer(1000, Qt::PreciseTimer);
 
+    for(auto client : m_session.remoteClients())
+    {
+      m_timestamps.insert({client->id(), ClientTimes{}});
+    }
+
     con(m_session, &Session::clientAdded,
         this, [=] (auto client) {
       m_timestamps.insert({client->id(), ClientTimes{}});

@@ -22,6 +22,7 @@ set(HDRS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Timekeeper.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/PlaceholderPolicy.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/BasicPruner.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/DateExpression.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddClientToGroup.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/ChangeGroup.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/CreateGroup.hpp"
@@ -74,6 +75,7 @@ set(SRCS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/PlaceholderPolicy.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/MasterPolicy.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/BasicPruner.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/DateExpression.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddClientToGroup.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/ChangeGroup.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/CreateGroup.cpp"
@@ -118,7 +120,7 @@ endif()
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
 iscore_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${OSSIA_3RDPARY_DIRECTORY}/libzmq/include")
+#target_include_directories(${PROJECT_NAME} PRIVATE "${OSSIA_3RDPARY_DIRECTORY}/libzmq/include")
 target_link_libraries(${PROJECT_NAME} PUBLIC
                                     iscore_lib_base
                                     iscore_plugin_scenario
@@ -127,7 +129,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     Qt5::Core
                                     Qt5::Widgets
                                     Qt5::Network
-                                    libzmq-static)
+#                                    libzmq-static
+                                    )
 if(ISCORE_ZEROCONF)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USE_ZEROCONF)
     target_link_libraries(${PROJECT_NAME} PUBLIC KF5::DNSSD)

@@ -3,12 +3,16 @@
 #include <Network/Group/GroupManager.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Session/Session.hpp>
+#include <Network/Document/Execution/DateExpression.hpp>
 
 #include <Engine/Executor/BaseScenarioComponent.hpp>
 #include <Engine/Executor/ConstraintComponent.hpp>
+#include <Engine/Executor/TimeNodeComponent.hpp>
 #include <Scenario/Process/ScenarioInterface.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 
+#include <ossia/editor/scenario/time_node.hpp>
 namespace Network
 {
 
@@ -68,9 +72,6 @@ void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Gro
   ISCORE_ASSERT(cur_group);
 
   bool isMuted = !cur_group->hasClient(self);
-  qDebug() << cur_group->name() << cur_group->clients().size() << isMuted;
-
-  for(auto clt : cur_group->clients()) qDebug() << clt << (clt == this->self);
   // Mute the processes that are not meant to execute there.
   constraint.setExecutionState(isMuted
                                  ? Scenario::ConstraintExecutionState::Muted
@@ -88,15 +89,45 @@ void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Gro
     auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process->process());
     if(ip)
     {
-      for(Scenario::ConstraintModel& cst : ip->getConstraints())
-      {
-        auto comp = iscore::findComponent<Engine::Execution::ConstraintComponent>(cst.components());
-        if(comp)
-          recurse(*comp, *cur_group);
-      }
+      recurse(*ip, *cur_group);
     }
   }
 
+}
+
+void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
+{
+
+  for(Scenario::TimeNodeModel& tn : ip.getTimeNodes())
+  {
+    auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
+    if(comp)
+    {
+
+    }
+  }
+
+  for(Scenario::ConstraintModel& cst : ip.getConstraints())
+  {
+    auto comp = iscore::findComponent<Engine::Execution::ConstraintComponent>(cst.components());
+    if(comp)
+      recurse(*comp, cur);
+  }
+
+}
+
+void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
+{
+  auto expr = std::make_unique<DateExpression>(
+                     std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
+                     comp.makeTrigger());
+
+  ossia::expressions::expression_generic genexp;
+  genexp.expr = std::move(expr);
+  genexp.add_callback([] (bool) { });
+
+  // TODO also do a callback if the max is reached ?
+  comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
 }
 
 void BasicPruner::operator()(const Engine::Execution::Context& exec_ctx)

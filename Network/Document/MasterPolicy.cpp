@@ -169,7 +169,7 @@ MasterNetworkPolicy::MasterNetworkPolicy(
       clt->m_clientServerAddress = s;
       clt->m_clientServerPort = p;
     }
-    qDebug() << s << p;
+    qDebug() << "REMOTE CLIENT IP" <<  s << p;
     m_session->broadcastToOthers(m.clientId, m);
   });
 }

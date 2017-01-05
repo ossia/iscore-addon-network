@@ -19,6 +19,10 @@ ClientSession::ClientSession(RemoteClient* master,
     m_master{master}
 {
     addClient(master);
+
+    con(localClient(), SIGNAL(createNewClient(QTcpSocket*)),
+            this, SLOT(on_createNewClient(QTcpSocket*)));
+
     connect(master, &RemoteClient::messageReceived,
             this, &Session::validateMessage, Qt::QueuedConnection);
 }

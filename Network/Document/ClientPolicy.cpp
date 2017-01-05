@@ -134,6 +134,31 @@ ClientNetworkPolicy::ClientNetworkPolicy(
   {
     m_keep.on_pong(m);
   });
+
+
+  s->mapper().addHandler("/session/portinfo", [&] (NetworkMessage m)
+  {
+    QString ip;
+    int port;
+    QDataStream stream{&m.data, QIODevice::ReadOnly};
+    stream >> ip >> port;
+
+    auto clt = m_session->findClient(m.clientId);
+    if(clt)
+    {
+      clt->m_clientServerAddress = ip;
+      clt->m_clientServerPort = port;
+    }
+    else
+    {
+      connectToOtherClient(ip, port);
+      auto sock = new NetworkSocket{ip, port, nullptr};
+      auto clt = new RemoteClient{sock, m.clientId};
+
+      m_session->addClient(clt);
+    }
+    qDebug() << "REMOTE CLIENT IP" <<  ip << port;
+  });
 }
 
 void ClientNetworkPolicy::play()
@@ -149,5 +174,10 @@ void ClientNetworkPolicy::play()
           BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
     TimeValue{});
   }
+}
+
+void ClientNetworkPolicy::connectToOtherClient(QString ip, int port)
+{
+
 }
 }
