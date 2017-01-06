@@ -117,6 +117,15 @@ void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
 
 }
 
+struct TriggerExpressionKeeper
+{
+  iscore::hash_map<Id<Client>, optional<bool>> values;
+  // Trigger : they all have to be set, and true
+  // Event : when they are all set, the truth value of each is taken.
+
+  // Expression observation has to be done on the network.
+
+};
 void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
 {
   // Check the previous / next constraints.
@@ -132,6 +141,7 @@ void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
   // verify the condition for it to become true.
 
   // Who keeps track of the consensus for each expression ?
+  // For now, elect a "group leader" ? Or just use the master for this ?
 
   // Same for event.
   auto expr = std::make_unique<DateExpression>(
