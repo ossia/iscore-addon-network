@@ -103,6 +103,7 @@ void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
     auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
     if(comp)
     {
+      recurse(*comp);
 
     }
   }
@@ -118,13 +119,32 @@ void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
 
 void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
 {
+  // Check the previous / next constraints.
+  // If some happen to have to execute in different computers
+  // i.e. for all constraints, list their group
+  // for these groups, list their clients.
+  // if there are at least two clients we have to insert a synchronization point.
+
+  // Question : split in two ticks or do it in a single tick ?
+  // Answer : The i-score engine already does this.
+
+  // Give a "group" to the timenode : all the machines of the group have to
+  // verify the condition for it to become true.
+
+  // Who keeps track of the consensus for each expression ?
+
+  // Same for event.
   auto expr = std::make_unique<DateExpression>(
                      std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
                      comp.makeTrigger());
 
   ossia::expressions::expression_generic genexp;
   genexp.expr = std::move(expr);
-  genexp.add_callback([] (bool) { });
+  genexp.add_callback([] (bool b) {
+    if(b) {
+      // The expression became true, we have to notify others.
+    }
+  });
 
   // TODO also do a callback if the max is reached ?
   comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
