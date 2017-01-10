@@ -32,7 +32,7 @@ namespace Network
 
 class Client;
 
-MasterNetworkPolicy::MasterNetworkPolicy(
+MasterEditionPolicy::MasterEditionPolicy(
     MasterSession* s,
     const iscore::DocumentContext& c):
   m_session{s},
@@ -175,7 +175,7 @@ MasterNetworkPolicy::MasterNetworkPolicy(
 }
 
 
-void MasterNetworkPolicy::play()
+void MasterEditionPolicy::play()
 {
   auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)

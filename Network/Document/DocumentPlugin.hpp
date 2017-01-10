@@ -33,7 +33,7 @@ namespace Network
   class Session;
   class GroupManager;
   class GroupMetadata;
-  class NetworkPolicy : public QObject
+  class EditionPolicy : public QObject
   {
   public:
     using QObject::QObject;
@@ -51,7 +51,7 @@ namespace Network
   public:
     NetworkDocumentPlugin(
           const iscore::DocumentContext& ctx,
-          NetworkPolicy* policy,
+          EditionPolicy* policy,
           Id<iscore::DocumentPlugin> id,
           QObject* parent);
 
@@ -67,13 +67,13 @@ namespace Network
       vis.writeTo(*this);
     }
 
-    void setPolicy(NetworkPolicy*);
+    void setPolicy(EditionPolicy*);
 
     GroupManager& groupManager() const
     { return *m_groups; }
 
-    NetworkPolicy* policy() const
-    { return m_policy; }
+    EditionPolicy &policy() const
+    { return *m_policy; }
 
   signals:
     void sessionChanged();
@@ -81,7 +81,7 @@ namespace Network
   private:
     void setupGroupPlugin(GroupMetadata* grp);
 
-    NetworkPolicy* m_policy{};
+    EditionPolicy* m_policy{};
     GroupManager* m_groups{};
 
   };

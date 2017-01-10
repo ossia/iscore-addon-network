@@ -123,7 +123,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
         auto& ctx = doc->context();
         auto& np = ctx.plugin<NetworkDocumentPlugin>();
-        np.setPolicy(new ClientNetworkPolicy{m_session, ctx});
+        np.setPolicy(new ClientEditionPolicy{m_session, ctx});
 
         // Send a message to the server with the ports that we opened :
         auto& local_server = m_session->localClient().server();

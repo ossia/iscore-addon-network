@@ -18,7 +18,7 @@
 
 template <>
 void DataStreamReader::read(
-        const Network::NetworkPolicy& elt)
+        const Network::EditionPolicy& elt)
 {
     m_stream << elt.session()->id();
     readFrom(static_cast<Network::Client&>(elt.session()->localClient()));
@@ -34,7 +34,7 @@ void DataStreamReader::read(
 
 template <>
 void JSONObjectReader::read(
-        const Network::NetworkPolicy& elt)
+        const Network::EditionPolicy& elt)
 {
     obj["SessionId"] = toJsonValue(elt.session()->id());
     obj["LocalClient"] = toJsonObject(static_cast<Network::Client&>(elt.session()->localClient()));
@@ -50,7 +50,7 @@ void JSONObjectReader::read(
 
 template <>
 void DataStreamWriter::write(
-        Network::PlaceholderNetworkPolicy& elt)
+        Network::PlaceholderEditionPolicy& elt)
 {
     Id<Network::Session> sessId;
     m_stream >> sessId;
@@ -69,7 +69,7 @@ void DataStreamWriter::write(
 
 template <>
 void JSONObjectWriter::write(
-        Network::PlaceholderNetworkPolicy& elt)
+        Network::PlaceholderEditionPolicy& elt)
 {
     JSONObject::Deserializer localClientDeser(obj["LocalClient"].toObject());
     elt.m_session = new Network::Session{

@@ -18,7 +18,7 @@ namespace Network
 
 BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
   : doc{d}
-  , self{doc.policy()->session()->localClient().id()}
+  , self{doc.policy().session()->localClient().id()}
 {
 
 }
@@ -117,13 +117,15 @@ void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
 
 }
 
-struct TriggerExpressionKeeper
+struct NetworkExpressionData
 {
+  Engine::Execution::TimeNodeComponent& component;
   iscore::hash_map<Id<Client>, optional<bool>> values;
   // Trigger : they all have to be set, and true
   // Event : when they are all set, the truth value of each is taken.
 
   // Expression observation has to be done on the network.
+  // Saved in the network components ? For now in the document plugin?
 
 };
 void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
@@ -139,11 +141,24 @@ void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
 
   // Give a "group" to the timenode : all the machines of the group have to
   // verify the condition for it to become true.
+  // The machines not in this group don't have the expression, they just wait to be started.
 
   // Who keeps track of the consensus for each expression ?
-  // For now, elect a "group leader" ? Or just use the master for this ?
+  // For now, elect a "group leader" ? Or just use the master for this ? Choose a leader for each trigger ?
+  // This means that the Client and the Master algorithm is different.
 
   // Same for event.
+
+  // Algorithm:
+  // If the computer executes this trigger.
+  // When the sub-expression becomes true, a message is sent to the master
+  // When the master gets answers for all clients, he computes the execution date and
+  // sends it to them (and to all computer that is not in "free" mode for this trigger ?)
+
+  // What if two computers execute a scenario in "parallel" mode ?
+  // Execution modes for processes / constraints : parallel / synchronized / only one ?
+
+  // If the computer does not execute this trigger.
   auto expr = std::make_unique<DateExpression>(
                      std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
                      comp.makeTrigger());

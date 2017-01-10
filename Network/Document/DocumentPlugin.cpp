@@ -28,13 +28,14 @@ namespace Network
 {
 NetworkDocumentPlugin::NetworkDocumentPlugin(
     const iscore::DocumentContext& ctx,
-    NetworkPolicy *policy,
+    EditionPolicy *policy,
     Id<iscore::DocumentPlugin> id,
     QObject* parent):
   iscore::SerializableDocumentPlugin{ctx, std::move(id), "NetworkDocumentPlugin", parent},
   m_policy{policy},
   m_groups{new GroupManager{this}}
 {
+  ISCORE_ASSERT(policy);
   m_policy->setParent(this);
 
   // Base group set-up
@@ -43,11 +44,12 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   groupManager().addGroup(allGroup);
 }
 
-void NetworkDocumentPlugin::setPolicy(NetworkPolicy * pol)
+void NetworkDocumentPlugin::setPolicy(EditionPolicy * pol)
 {
   delete m_policy;
   m_policy = pol;
 
+  ISCORE_ASSERT(m_policy);
   emit sessionChanged();
 }
 

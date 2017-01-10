@@ -56,15 +56,12 @@ void PanelDelegate::on_modelChanged(
 
   if(netplug)
   {
-    if(!netplug->policy())
-      return;
-
     m_con = connect(netplug, &NetworkDocumentPlugin::sessionChanged,
                     this, [=] () {
-      setView(netplug->groupManager(), netplug->policy()->session());
+      setView(netplug->groupManager(), netplug->policy().session());
     });
 
-    setView(netplug->groupManager(), netplug->policy()->session());
+    setView(netplug->groupManager(), netplug->policy().session());
   }
 
 

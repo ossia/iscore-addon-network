@@ -95,7 +95,7 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
       auto clt = new LocalClient(Id<Client>(0));
       clt->setName(tr("Master"));
       auto serv = new MasterSession(currentDocument(), clt, Id<Session>(1234));
-      auto policy = new MasterNetworkPolicy{serv, currentDocument()->context()};
+      auto policy = new MasterEditionPolicy{serv, currentDocument()->context()};
       auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
       doc->model().addPluginModel(realplug);
 
@@ -128,7 +128,7 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
     {
       auto np = doc->context().findPlugin<NetworkDocumentPlugin>();
       if(np)
-        np->policy()->play();
+        np->policy().play();
     }
   });
 

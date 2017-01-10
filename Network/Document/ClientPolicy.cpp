@@ -26,7 +26,7 @@
 namespace Network
 {
 
-ClientNetworkPolicy::ClientNetworkPolicy(
+ClientEditionPolicy::ClientEditionPolicy(
     ClientSession* s,
     const iscore::DocumentContext& c):
   m_session{s},
@@ -161,7 +161,7 @@ ClientNetworkPolicy::ClientNetworkPolicy(
   });
 }
 
-void ClientNetworkPolicy::play()
+void ClientEditionPolicy::play()
 {
 
   auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
@@ -176,7 +176,7 @@ void ClientNetworkPolicy::play()
   }
 }
 
-void ClientNetworkPolicy::connectToOtherClient(QString ip, int port)
+void ClientEditionPolicy::connectToOtherClient(QString ip, int port)
 {
 
 }

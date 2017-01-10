@@ -11,10 +11,10 @@ struct DocumentContext;
 namespace Network
 {
 
-class MasterNetworkPolicy : public NetworkPolicy
+class MasterEditionPolicy : public EditionPolicy
 {
     public:
-        MasterNetworkPolicy(MasterSession* s,
+        MasterEditionPolicy(MasterSession* s,
                             const iscore::DocumentContext& c);
 
         MasterSession* session() const override

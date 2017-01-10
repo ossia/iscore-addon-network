@@ -10,7 +10,7 @@ void DataStreamReader::read(
         const Network::NetworkDocumentPlugin& elt)
 {
     readFrom(elt.groupManager());
-    readFrom(*elt.policy());
+    readFrom(elt.policy());
 
     // Note : we do not save the policy since it will be different on each computer.
     insertDelimiter();
@@ -21,7 +21,7 @@ void DataStreamWriter::write(
         Network::NetworkDocumentPlugin& elt)
 {
     elt.m_groups = new Network::GroupManager{*this, &elt};
-    elt.m_policy = new Network::PlaceholderNetworkPolicy{*this, &elt};
+    elt.m_policy = new Network::PlaceholderEditionPolicy{*this, &elt};
 
     checkDelimiter();
 }
@@ -31,7 +31,7 @@ void JSONObjectReader::read(
         const Network::NetworkDocumentPlugin& elt)
 {
     readFrom(elt.groupManager());
-    readFrom(*elt.policy());
+    readFrom(elt.policy());
 }
 
 template <>
@@ -39,5 +39,5 @@ void JSONObjectWriter::write(
         Network::NetworkDocumentPlugin& elt)
 {
     elt.m_groups = new Network::GroupManager{*this, &elt};
-    elt.m_policy = new Network::PlaceholderNetworkPolicy{*this, &elt};
+    elt.m_policy = new Network::PlaceholderEditionPolicy{*this, &elt};
 }

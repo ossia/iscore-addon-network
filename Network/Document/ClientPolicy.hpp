@@ -12,10 +12,10 @@ class Document;
 // MOVEME
 namespace Network
 {
-class ClientNetworkPolicy : public NetworkPolicy
+class ClientEditionPolicy : public EditionPolicy
 {
     public:
-        ClientNetworkPolicy(ClientSession* s,
+        ClientEditionPolicy(ClientSession* s,
                             const iscore::DocumentContext& c);
 
         ClientSession* session() const override
