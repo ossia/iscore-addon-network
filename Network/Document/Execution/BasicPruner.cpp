@@ -79,14 +79,14 @@ void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Gro
 
   for(const auto& process : cst.processes())
   {
-    auto& proc = process->OSSIAProcess();
+    auto& proc = process.second->OSSIAProcess();
     proc.mute(isMuted);
   }
 
   // Recursion
   for(const auto& process : cst.processes())
   {
-    auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process->process());
+    auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process.second->process());
     if(ip)
     {
       recurse(*ip, *cur_group);
