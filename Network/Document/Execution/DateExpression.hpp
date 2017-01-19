@@ -30,4 +30,23 @@ private:
     ossia::expression_ptr m_expression{};
     ossia::expressions::expression_callback_iterator m_callback;
 };
+
+
+class AsyncExpression :
+    public ossia::expressions::expression_generic_base
+{
+  public:
+    AsyncExpression();
+
+    void ping();
+
+    void update() override;
+    bool evaluate() const override;
+    void onFirstCallbackAdded(ossia::expressions::expression_generic& self) override;
+    void onRemovingLastCallback(ossia::expressions::expression_generic& self) override;
+
+private:
+    std::atomic_bool m_ping{};
+    std::function<void()> m_cb;
+};
 }

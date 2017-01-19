@@ -67,4 +67,42 @@ bool DateExpression::evaluate_callback(
   return res;
 }
 
+
+
+
+
+
+AsyncExpression::AsyncExpression()
+{
+
+}
+
+void AsyncExpression::ping()
+{
+  m_ping = true;
+  if(m_cb)
+    m_cb();
+}
+
+void AsyncExpression::update()
+{
+}
+
+bool AsyncExpression::evaluate() const
+{
+  return m_ping;
+}
+
+void AsyncExpression::onFirstCallbackAdded(
+    ossia::expressions::expression_generic& self)
+{
+  m_cb = [&] { self.send(m_ping); };
+}
+
+void AsyncExpression::onRemovingLastCallback(
+    ossia::expressions::expression_generic& self)
+{
+  m_cb = {};
+}
+
 }

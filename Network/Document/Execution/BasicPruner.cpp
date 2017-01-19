@@ -16,6 +16,200 @@
 namespace Network
 {
 
+
+
+struct FreeScenarioPolicy
+{
+  NetworkDocumentPlugin& doc;
+  const Id<Client>& self;
+
+  void operator()(
+      Engine::Execution::ProcessComponent& comp,
+      Scenario::ScenarioInterface& ip,
+      const Group& cur)
+  {
+    // if on the group enable everything, else disable everything (maybe even remove it from the executor)
+    comp.OSSIAProcess().enable(cur.hasClient(self));
+  }
+};
+
+template<typename T>
+Group& getGroup(GroupManager& gm, Group& cur, const T& obj)
+{
+  Group* cur_group = &cur;
+
+  /*
+  // First look if there is a group
+  auto comp = iscore::findComponent<GroupMetadata>(cst.iscoreConstraint().components());
+  if(comp)
+  {
+
+  }
+  else
+  {
+    // We assume that we keep the parent group.
+  }
+
+  // If no group found through components, maybe through metadata :
+  */
+  auto ostr = get_metadata<QString>(obj, "group");
+  if(!ostr)
+    return;
+
+  auto& str = *ostr;
+  if(str == "all")
+  {
+    cur_group = gm.group(gm.defaultGroup());
+  }
+  else if(str == "parent" || str.isEmpty())
+  {
+    // Default
+  }
+  else
+  {
+    // look for a group of this name
+    auto group = gm.findGroup(ostr);
+    if(group)
+    {
+      cur_group = group; // Else we default to the "parent" case.
+    }
+  }
+  ISCORE_ASSERT(cur_group);
+  return *cur_group;
+}
+
+struct SharedScenarioPolicy
+{
+  NetworkDocumentPlugin& doc;
+  const Id<Client>& self;
+
+  void operator()(
+      Engine::Execution::ProcessComponent& comp,
+      Scenario::ScenarioInterface& ip,
+      const Group& cur)
+  {
+    // take the code of BasicPruner
+
+    for(Scenario::TimeNodeModel& tn : ip.getTimeNodes())
+    {
+      auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
+      if(comp)
+      {
+        operator()(*comp, cur);
+
+      }
+    }
+
+    for(Scenario::ConstraintModel& cst : ip.getConstraints())
+    {
+      auto comp = iscore::findComponent<Engine::Execution::ConstraintComponent>(cst.components());
+      if(comp)
+        operator()(*comp, cur);
+    }
+
+  }
+
+  void operator()(Engine::Execution::ConstraintComponent& cst, const Group& cur)
+  {
+    const auto& gm = doc.groupManager();
+    Scenario::ConstraintModel& constraint = cst.iscoreConstraint();
+
+    const Group& cur_group = getGroup(gm, cur, constraint);
+
+    bool isMuted = !cur_group.hasClient(self);
+    // Mute the processes that are not meant to execute there.
+    constraint.setExecutionState(isMuted
+                                   ? Scenario::ConstraintExecutionState::Muted
+                                   : Scenario::ConstraintExecutionState::Enabled);
+
+    for(const auto& process : cst.processes())
+    {
+      auto& proc = process.second->OSSIAProcess();
+      proc.mute(isMuted);
+    }
+
+    // Recursion
+    for(const auto& process : cst.processes())
+    {
+      auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process.second->process());
+      if(ip)
+      {
+
+        auto syncmode = get_metadata<QString>(process.second->process(), "syncmode");
+        if(!syncmode || syncmode->isEmpty())
+          syncmode = get_metadata<QString>(constraint, "syncmode");
+        if(!syncmode || syncmode->isEmpty())
+          syncmode = "shared";
+
+        if(*syncmode == "shared")
+        {
+          FreeScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
+        }
+        else if(*syncmode == "mixed")
+        {
+          MixedScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
+        }
+        else if(*syncmode == "free")
+        {
+          SharedScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
+        }
+      }
+    }
+
+  }
+
+  void operator()(Engine::Execution::TimeNodeComponent& comp, const Group& cur)
+  {
+
+    // First fetch the required variables.
+    auto group = get_metadata<QString>(comp.iscoreTimeNode(), "group");
+    if(!group || group->isEmpty())
+      group = QString("parent");
+    auto syncmode = get_metadata<QString>(comp.iscoreTimeNode(), "syncmode");
+    if(!syncmode || syncmode->isEmpty())
+      syncmode = QString("async");
+    auto order = get_metadata<QString>(comp.iscoreTimeNode(), "order");
+    if(!order || order->isEmpty())
+      order = QString("true");
+
+    // If this group has this expression
+    if()
+
+
+    // If the computer does not execute this trigger.
+    auto expr = std::make_unique<DateExpression>(
+                       std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
+                       comp.makeTrigger());
+
+    ossia::expressions::expression_generic genexp;
+    genexp.expr = std::move(expr);
+    genexp.add_callback([] (bool b) {
+      if(b) {
+        // The expression became true, we have to notify others.
+      }
+    });
+
+    // TODO also do a callback if the max is reached ?
+    comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+  }
+};
+
+struct MixedScenarioPolicy
+{
+  NetworkDocumentPlugin& doc;
+  const Id<Client>& self;
+
+  void operator()(
+      Engine::Execution::ProcessComponent& comp,
+      Scenario::ScenarioInterface& ip,
+      const Group& cur)
+  {
+    // muzukashi
+
+  }
+};
+
+
 BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
   : doc{d}
   , self{doc.policy().session()->localClient().id()}
@@ -23,97 +217,26 @@ BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
 
 }
 
+template<typename T, typename Obj>
+optional<T> get_metadata(Obj& obj, const QString& s)
+{
+  auto& m = obj.metadata().getExtendedMetadata();
+  auto it = m.constFind(s);
+  if(it != m.constEnd())
+  {
+    const QVariant& var = *it;
+    if(var.canConvert<T>())
+      return var.value<T>();
+  }
+  return {};
+}
 void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Group& cur)
 {
-  const auto& gm = doc.groupManager();
-  // First look if there is a group
-
-  //auto comp = iscore::findComponent<GroupMetadata>(cst.iscoreConstraint().components());
-  //if(comp)
-  {
-
-  }
-  //else
-  {
-    // We assume that we keep the parent group.
-  }
-
-  Scenario::ConstraintModel& constraint = cst.iscoreConstraint();
-
-  // If no group found through components, maybe through metadata :
-  const QVariantMap& m = constraint.metadata().getExtendedMetadata();
-
-  // Default case :
-  const Group* cur_group = &cur;
-
-  auto it = m.find("group");
-  if(it != m.end())
-  {
-    auto str = it->toString();
-    if(str == "all")
-    {
-      cur_group = gm.group(gm.defaultGroup());
-    }
-    else if(str == "parent" || str.isEmpty())
-    {
-      // Default
-    }
-    else
-    {
-      // look for a group of this name
-      auto group = gm.findGroup(str);
-      if(group)
-      {
-        cur_group = group; // Else we default to the "parent" case.
-      }
-    }
-  }
-
-  ISCORE_ASSERT(cur_group);
-
-  bool isMuted = !cur_group->hasClient(self);
-  // Mute the processes that are not meant to execute there.
-  constraint.setExecutionState(isMuted
-                                 ? Scenario::ConstraintExecutionState::Muted
-                                 : Scenario::ConstraintExecutionState::Enabled);
-
-  for(const auto& process : cst.processes())
-  {
-    auto& proc = process.second->OSSIAProcess();
-    proc.mute(isMuted);
-  }
-
-  // Recursion
-  for(const auto& process : cst.processes())
-  {
-    auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process.second->process());
-    if(ip)
-    {
-      recurse(*ip, *cur_group);
-    }
-  }
 
 }
 
 void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
 {
-
-  for(Scenario::TimeNodeModel& tn : ip.getTimeNodes())
-  {
-    auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
-    if(comp)
-    {
-      recurse(*comp);
-
-    }
-  }
-
-  for(Scenario::ConstraintModel& cst : ip.getConstraints())
-  {
-    auto comp = iscore::findComponent<Engine::Execution::ConstraintComponent>(cst.components());
-    if(comp)
-      recurse(*comp, cur);
-  }
 
 }
 
@@ -158,21 +281,6 @@ void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
   // What if two computers execute a scenario in "parallel" mode ?
   // Execution modes for processes / constraints : parallel / synchronized / only one ?
 
-  // If the computer does not execute this trigger.
-  auto expr = std::make_unique<DateExpression>(
-                     std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
-                     comp.makeTrigger());
-
-  ossia::expressions::expression_generic genexp;
-  genexp.expr = std::move(expr);
-  genexp.add_callback([] (bool b) {
-    if(b) {
-      // The expression became true, we have to notify others.
-    }
-  });
-
-  // TODO also do a callback if the max is reached ?
-  comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
 }
 
 void BasicPruner::operator()(const Engine::Execution::Context& exec_ctx)

@@ -7,11 +7,24 @@
 #include <iscore/serialization/JSONVisitor.hpp>
 #include <core/document/Document.hpp>
 #include <iscore/actions/Action.hpp>
+#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <functional>
 class DataStream;
 class JSONObject;
 class QWidget;
 struct VisitorVariant;
 
+namespace std
+{
+template <typename tag>
+struct hash<Path<tag>>
+{
+  std::size_t operator()(const Path<tag>& path) const
+  {
+    return std::hash<ObjectPath>{}(path.unsafePath());
+  }
+};
+}
 namespace iscore
 {
 class Document;
@@ -74,6 +87,8 @@ namespace Network
 
     EditionPolicy &policy() const
     { return *m_policy; }
+
+    iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void()>> triggers;
 
   signals:
     void sessionChanged();
