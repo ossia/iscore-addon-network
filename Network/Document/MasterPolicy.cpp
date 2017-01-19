@@ -26,6 +26,7 @@
 #include <iscore/document/DocumentInterface.hpp>
 #include <core/document/Document.hpp>
 #include <Network/Session/MasterSession.hpp>
+#include <iscore/model/path/PathSerialization.hpp>
 
 namespace Network
 {
@@ -172,6 +173,32 @@ MasterEditionPolicy::MasterEditionPolicy(
     qDebug() << "REMOTE CLIENT IP" <<  s << p;
     m_session->broadcastToOthers(m.clientId, m);
   });
+
+
+  s->mapper().addHandler_("/trigger_entered",
+                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+  {
+  });
+
+  s->mapper().addHandler("/trigger_left",
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+ {
+ });
+
+  s->mapper().addHandler("/trigger_finished",
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+ {
+ });
+
+  s->mapper().addHandler("/trigger_expression_true",
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+ {
+ });
+
+  s->mapper().addHandler("/triggered",
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+ {
+ });
 }
 
 

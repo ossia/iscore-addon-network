@@ -4,6 +4,8 @@
 #include <vector>
 
 #include <iscore/serialization/DataStreamVisitor.hpp>
+#include <ossia/editor/expression/expression.hpp>
+
 #include <iscore/serialization/JSONVisitor.hpp>
 #include <core/document/Document.hpp>
 #include <iscore/actions/Action.hpp>
@@ -14,8 +16,46 @@ class JSONObject;
 class QWidget;
 struct VisitorVariant;
 
+namespace boost
+{
+template<>
+struct hash<QString>
+{
+  std::size_t operator()(const QString& path) const
+  {
+    return qHash(path);
+  }
+};
+template<>
+struct hash<ObjectIdentifier>
+{
+  std::size_t operator()(const ObjectIdentifier& path) const
+  {
+    std::size_t seed = 0;
+    boost::hash_combine(seed, path.objectName());
+    boost::hash_combine(seed, path.id());
+    return seed;
+  }
+};
+
+}
+
 namespace std
 {
+
+template<>
+struct hash<ObjectPath>
+{
+  std::size_t operator()(const ObjectPath& path) const
+  {
+    std::size_t seed = 0;
+    for(const auto& e : path.vec())
+    {
+      boost::hash_combine(seed, e);
+    }
+    return seed;
+  }
+};
 template <typename tag>
 struct hash<Path<tag>>
 {
@@ -88,7 +128,9 @@ namespace Network
     EditionPolicy &policy() const
     { return *m_policy; }
 
-    iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void()>> triggers;
+    iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void()>> trigger_evaluation_entered;
+    iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(bool)>> trigger_evaluation_finished;
+    iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void()>> trigger_triggered;
 
   signals:
     void sessionChanged();

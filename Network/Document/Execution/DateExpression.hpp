@@ -31,7 +31,7 @@ private:
     ossia::expressions::expression_callback_iterator m_callback;
 };
 
-
+//! this expression is triggered exclusively from an outside source
 class AsyncExpression :
     public ossia::expressions::expression_generic_base
 {
@@ -49,4 +49,5 @@ private:
     std::atomic_bool m_ping{};
     std::function<void()> m_cb;
 };
+
 }

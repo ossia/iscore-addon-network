@@ -12,17 +12,17 @@ class ClientSession final : public Session
 {
     public:
         ClientSession(
-                RemoteClient* master,
+                RemoteClient& master,
                 LocalClient* client,
                 Id<Session> id,
                 QObject* parent = nullptr);
 
-        RemoteClient* master() const
+        RemoteClient& master() const override
         {
             return m_master;
         }
 
     private:
-        RemoteClient* m_master{};
+        RemoteClient& m_master;
 };
 }

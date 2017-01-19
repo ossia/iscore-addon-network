@@ -11,12 +11,11 @@
 #include <Scenario/Process/ScenarioInterface.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
-
+#include <Scenario/Document/TimeNode/Trigger/TriggerModel.hpp>
+#include <iscore/model/path/PathSerialization.hpp>
 #include <ossia/editor/scenario/time_node.hpp>
 namespace Network
 {
-
-
 
 struct FreeScenarioPolicy
 {
@@ -26,17 +25,185 @@ struct FreeScenarioPolicy
   void operator()(
       Engine::Execution::ProcessComponent& comp,
       Scenario::ScenarioInterface& ip,
-      const Group& cur)
-  {
-    // if on the group enable everything, else disable everything (maybe even remove it from the executor)
-    comp.OSSIAProcess().enable(cur.hasClient(self));
+      const Group& cur);
+};
+
+struct MixedScenarioPolicy
+{
+  NetworkDocumentPlugin& doc;
+  const Id<Client>& self;
+
+  void operator()(
+      Engine::Execution::ProcessComponent& comp,
+      Scenario::ScenarioInterface& ip,
+      const Group& cur);
+
+  void operator()(Engine::Execution::TimeNodeComponent& comp, const Group& parent_group)
+  {/*
+    const auto& gm = doc.groupManager();
+    // First fetch the required variables.
+    const Group& tn_group = getGroup(gm, parent_group, comp.iscoreTimeNode());
+
+    auto sync = getInfos(comp.iscoreTimeNode());
+    Path<Scenario::TimeNodeModel> path{comp.iscoreTimeNode()};
+
+    if(comp.iscoreTimeNode().trigger()->active())
+    {
+      // Each trigger sends its own data, the master will choose the relevant info
+      comp.OSSIATimeNode()->enteredEvaluation.add_callback([] {
+        // Send message to master
+      });
+      comp.OSSIATimeNode()->leftEvaluation.add_callback([] {
+        // Send message to master
+      });
+      comp.OSSIATimeNode()->finishedEvaluation.add_callback([] (bool b) {
+        // Send message to master
+
+        // b : max bound reached
+      });
+      comp.OSSIATimeNode()->triggered.add_callback([] {
+        // Send message to master
+      });
+
+      // If this group has this expression
+      // Since we're in the SharedPolicy, everybody will get the same information
+      if(tn_group.hasClient(self))
+      {
+        // We will actually evaluate the expression.
+        auto base_expr = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
+
+        switch(sync)
+        {
+          case SyncMode::AsyncOrdered:
+            break;
+          case SyncMode::AsyncUnordered:
+          {
+            // Common case : set the expression
+            auto expr = std::make_unique<AsyncExpression>();
+            auto expr_ptr = expr.get();
+
+            ossia::expressions::expression_generic genexp;
+            genexp.expr = std::move(expr);
+
+            comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+
+
+            // Then set specific callbacks for outside events
+            doc.trigger_evaluation_entered[path] = [=] {
+              base_expr->it = ossia::expressions::add_callback(
+                    *base_expr->expr,
+                    [] (bool b) {
+                if(b)
+                {
+                  // Send message to master
+
+                }
+              });
+            };
+
+            doc.trigger_evaluation_finished[path] = [=] (bool b) {
+              if(base_expr->it)
+                ossia::expressions::remove_callback(
+                      *base_expr->expr, *base_expr->it);
+
+              expr_ptr->ping(); // TODO how to transmit the max bound information ??
+            };
+
+            doc.trigger_triggered[path] = [=] {
+              if(base_expr->it)
+                ossia::expressions::remove_callback(
+                      *base_expr->expr, *base_expr->it);
+
+              expr_ptr->ping();
+            };
+
+            break;
+          }
+          case SyncMode::SyncOrdered:
+            break;
+          case SyncMode::SyncUnordered:
+            break;
+        }
+      }
+      else
+      {
+        switch(sync)
+        {
+          case SyncMode::AsyncOrdered:
+            break;
+          case SyncMode::AsyncUnordered:
+          {
+            auto expr = std::make_unique<AsyncExpression>();
+            auto expr_ptr = expr.get();
+
+            doc.trigger_triggered[path] = [=] {
+              expr_ptr->ping();
+            };
+            doc.trigger_evaluation_finished[path] = [=] (bool) {
+              expr_ptr->ping(); // TODO how to transmit the max bound information ??
+            };
+
+
+            ossia::expressions::expression_generic genexp;
+            genexp.expr = std::move(expr);
+
+            comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+
+            break;
+          }
+          case SyncMode::SyncOrdered:
+            break;
+          case SyncMode::SyncUnordered:
+            break;
+        }
+
+      }
+    }
+    else
+    {
+      // Trigger not active. For now let's just hope that everything happens correctly.
+    }*/
+    /*
+    auto expr = std::make_unique<DateExpression>(
+          std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
+          comp.makeTrigger());*/
   }
 };
 
-template<typename T>
-Group& getGroup(GroupManager& gm, Group& cur, const T& obj)
+
+
+template<typename T, typename Obj>
+optional<T> get_metadata(Obj& obj, const QString& s)
 {
-  Group* cur_group = &cur;
+  auto& m = obj.metadata().getExtendedMetadata();
+  auto it = m.constFind(s);
+  if(it != m.constEnd())
+  {
+    const QVariant& var = *it;
+    if(var.canConvert<T>())
+      return var.value<T>();
+  }
+  return {};
+}
+
+void FreeScenarioPolicy::operator()(Engine::Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
+{
+  // if on the group enable everything, else disable everything (maybe even remove it from the executor)
+  comp.OSSIAProcess().enable(cur.hasClient(self));
+}
+
+
+
+
+void MixedScenarioPolicy::operator()(Engine::Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
+{
+  // muzukashi
+
+}
+template<typename T>
+const Group& getGroup(const GroupManager& gm, const Group& cur, const T& obj)
+{
+  const Group* cur_group = &cur;
 
   /*
   // First look if there is a group
@@ -54,7 +221,7 @@ Group& getGroup(GroupManager& gm, Group& cur, const T& obj)
   */
   auto ostr = get_metadata<QString>(obj, "group");
   if(!ostr)
-    return;
+    return *cur_group;
 
   auto& str = *ostr;
   if(str == "all")
@@ -68,7 +235,7 @@ Group& getGroup(GroupManager& gm, Group& cur, const T& obj)
   else
   {
     // look for a group of this name
-    auto group = gm.findGroup(ostr);
+    auto group = gm.findGroup(str);
     if(group)
     {
       cur_group = group; // Else we default to the "parent" case.
@@ -78,6 +245,13 @@ Group& getGroup(GroupManager& gm, Group& cur, const T& obj)
   return *cur_group;
 }
 
+struct expression_with_callback
+{
+  expression_with_callback(ossia::expression* e): expr{e} { }
+  ossia::expression* expr{};
+  optional<ossia::expressions::expression_callback_iterator> it;
+
+};
 struct SharedScenarioPolicy
 {
   NetworkDocumentPlugin& doc;
@@ -119,8 +293,8 @@ struct SharedScenarioPolicy
     bool isMuted = !cur_group.hasClient(self);
     // Mute the processes that are not meant to execute there.
     constraint.setExecutionState(isMuted
-                                   ? Scenario::ConstraintExecutionState::Muted
-                                   : Scenario::ConstraintExecutionState::Enabled);
+                                 ? Scenario::ConstraintExecutionState::Muted
+                                 : Scenario::ConstraintExecutionState::Enabled);
 
     for(const auto& process : cst.processes())
     {
@@ -158,54 +332,178 @@ struct SharedScenarioPolicy
 
   }
 
-  void operator()(Engine::Execution::TimeNodeComponent& comp, const Group& cur)
-  {
+  enum SyncMode { AsyncOrdered, SyncOrdered, AsyncUnordered, SyncUnordered };
 
-    // First fetch the required variables.
-    auto group = get_metadata<QString>(comp.iscoreTimeNode(), "group");
-    if(!group || group->isEmpty())
-      group = QString("parent");
-    auto syncmode = get_metadata<QString>(comp.iscoreTimeNode(), "syncmode");
+  template<typename T>
+  SyncMode getInfos(const T& obj)
+  {
+    auto syncmode = get_metadata<QString>(obj, "syncmode");
     if(!syncmode || syncmode->isEmpty())
       syncmode = QString("async");
-    auto order = get_metadata<QString>(comp.iscoreTimeNode(), "order");
+    auto order = get_metadata<QString>(obj, "order");
     if(!order || order->isEmpty())
       order = QString("true");
 
-    // If this group has this expression
-    if()
+    const QString async = QStringLiteral("async");
+    const QString sync = QStringLiteral("async");
+    const QString ordered = QStringLiteral("true");
+    const QString unordered = QStringLiteral("false");
 
+    if(syncmode == async && order == ordered)
+      return AsyncOrdered;
+    else if(syncmode == async && order == unordered)
+      return AsyncUnordered;
+    else if(syncmode == sync && order == ordered)
+      return SyncOrdered;
+    else if(syncmode == sync && order == unordered)
+      return SyncUnordered;
 
-    // If the computer does not execute this trigger.
-    auto expr = std::make_unique<DateExpression>(
-                       std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
-                       comp.makeTrigger());
-
-    ossia::expressions::expression_generic genexp;
-    genexp.expr = std::move(expr);
-    genexp.add_callback([] (bool b) {
-      if(b) {
-        // The expression became true, we have to notify others.
-      }
-    });
-
-    // TODO also do a callback if the max is reached ?
-    comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+    return AsyncOrdered;
   }
-};
-
-struct MixedScenarioPolicy
-{
-  NetworkDocumentPlugin& doc;
-  const Id<Client>& self;
-
-  void operator()(
-      Engine::Execution::ProcessComponent& comp,
-      Scenario::ScenarioInterface& ip,
-      const Group& cur)
+  struct NetworkExpressionData
   {
-    // muzukashi
+    Engine::Execution::TimeNodeComponent& component;
+    iscore::hash_map<Id<Client>, optional<bool>> values;
+    // Trigger : they all have to be set, and true
+    // Event : when they are all set, the truth value of each is taken.
 
+    // Expression observation has to be done on the network.
+    // Saved in the network components ? For now in the document plugin?
+
+  };
+
+  //! Todo isn't this the code for the mixed mode actually ?
+  //! In the "shared" mode we could assume that evaluation entering / leaving is the same
+  //! for everyone...
+  void operator()(Engine::Execution::TimeNodeComponent& comp, const Group& parent_group)
+  {
+    const auto& gm = doc.groupManager();
+    auto& session = *doc.policy().session();
+    auto master = session.master().id();
+    // First fetch the required variables.
+    const Group& tn_group = getGroup(gm, parent_group, comp.iscoreTimeNode());
+
+    auto sync = getInfos(comp.iscoreTimeNode());
+    Path<Scenario::TimeNodeModel> path{comp.iscoreTimeNode()};
+
+    if(comp.iscoreTimeNode().trigger()->active())
+    {
+      // Each trigger sends its own data, the master will choose the relevant info
+      comp.OSSIATimeNode()->enteredEvaluation.add_callback([=,&session] {
+        session.sendMessage(master, session.makeMessage("/trigger_entered", path));
+      });
+      comp.OSSIATimeNode()->leftEvaluation.add_callback([=,&session] {
+        session.sendMessage(master, session.makeMessage("/trigger_left", path));
+      });
+      comp.OSSIATimeNode()->finishedEvaluation.add_callback([=,&session] (bool b) {
+        // b : max bound reached
+        session.sendMessage(master, session.makeMessage("/trigger_finished", path, b));
+      });
+      comp.OSSIATimeNode()->triggered.add_callback([=,&session] {
+        session.sendMessage(master, session.makeMessage("/triggered", path));
+      });
+
+      // If this group has this expression
+      // Since we're in the SharedPolicy, everybody will get the same information
+      if(tn_group.hasClient(self))
+      {
+        // We will actually evaluate the expression.
+        auto base_expr = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
+
+        switch(sync)
+        {
+          case SyncMode::AsyncOrdered:
+            break;
+          case SyncMode::AsyncUnordered:
+          {
+            // Common case : set the expression
+            auto expr = std::make_unique<AsyncExpression>();
+            auto expr_ptr = expr.get();
+
+            ossia::expressions::expression_generic genexp;
+            genexp.expr = std::move(expr);
+
+            comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+
+            // Then set specific callbacks for outside events
+            doc.trigger_evaluation_entered[path] = [=,&session] {
+              base_expr->it = ossia::expressions::add_callback(
+                    *base_expr->expr,
+                    [=,&session] (bool b) {
+                if(b)
+                {
+                  session.sendMessage(master, session.makeMessage("/trigger_expression_true", path));
+                }
+              });
+            };
+
+            doc.trigger_evaluation_finished[path] = [=] (bool b) {
+              if(base_expr->it)
+                ossia::expressions::remove_callback(
+                      *base_expr->expr, *base_expr->it);
+
+              expr_ptr->ping(); // TODO how to transmit the max bound information ??
+            };
+
+            doc.trigger_triggered[path] = [=] {
+              if(base_expr->it)
+                ossia::expressions::remove_callback(
+                      *base_expr->expr, *base_expr->it);
+
+              expr_ptr->ping();
+            };
+
+            break;
+          }
+          case SyncMode::SyncOrdered:
+            break;
+          case SyncMode::SyncUnordered:
+            break;
+        }
+      }
+      else
+      {
+        // Not in the group : we wait.
+        switch(sync)
+        {
+          case SyncMode::AsyncOrdered:
+            break;
+          case SyncMode::AsyncUnordered:
+          {
+            auto expr = std::make_unique<AsyncExpression>();
+            auto expr_ptr = expr.get();
+
+            doc.trigger_triggered[path] = [=] {
+              expr_ptr->ping();
+            };
+            doc.trigger_evaluation_finished[path] = [=] (bool) {
+              expr_ptr->ping(); // TODO how to transmit the max bound information ??
+            };
+
+
+            ossia::expressions::expression_generic genexp;
+            genexp.expr = std::move(expr);
+
+            comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+
+            break;
+          }
+          case SyncMode::SyncOrdered:
+            break;
+          case SyncMode::SyncUnordered:
+            break;
+        }
+
+      }
+    }
+    else
+    {
+      // Trigger not active. For now let's just hope that everything happens correctly.
+    }
+    /*
+    auto expr = std::make_unique<DateExpression>(
+          std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
+          comp.makeTrigger());*/
   }
 };
 
@@ -215,20 +513,6 @@ BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
   , self{doc.policy().session()->localClient().id()}
 {
 
-}
-
-template<typename T, typename Obj>
-optional<T> get_metadata(Obj& obj, const QString& s)
-{
-  auto& m = obj.metadata().getExtendedMetadata();
-  auto it = m.constFind(s);
-  if(it != m.constEnd())
-  {
-    const QVariant& var = *it;
-    if(var.canConvert<T>())
-      return var.value<T>();
-  }
-  return {};
 }
 void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Group& cur)
 {
@@ -240,17 +524,6 @@ void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
 
 }
 
-struct NetworkExpressionData
-{
-  Engine::Execution::TimeNodeComponent& component;
-  iscore::hash_map<Id<Client>, optional<bool>> values;
-  // Trigger : they all have to be set, and true
-  // Event : when they are all set, the truth value of each is taken.
-
-  // Expression observation has to be done on the network.
-  // Saved in the network components ? For now in the document plugin?
-
-};
 void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
 {
   // Check the previous / next constraints.

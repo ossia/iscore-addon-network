@@ -1,11 +1,10 @@
 #include <QDebug>
 #include <iscore/tools/Todo.hpp>
 #include "MessageMapper.hpp"
-#include <Network/Communication/NetworkMessage.hpp>
+#include <QDataStream>
 
 namespace Network
 {
-
 void MessageMapper::addHandler(QByteArray addr, std::function<void(NetworkMessage)> fun)
 {
     ISCORE_ASSERT(!contains(addr));

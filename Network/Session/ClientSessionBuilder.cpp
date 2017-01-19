@@ -84,7 +84,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     {
         auto remoteClient = new RemoteClient(m_mastersocket, m_masterId);
         remoteClient->setName("RemoteMaster");
-        m_session = new ClientSession(remoteClient,
+        m_session = new ClientSession(*remoteClient,
                                       new LocalClient(m_clientId),
                                       m_sessionId,
                                       nullptr);
@@ -127,7 +127,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
         // Send a message to the server with the ports that we opened :
         auto& local_server = m_session->localClient().server();
-        m_session->master()->sendMessage(
+        m_session->master().sendMessage(
               m_session->makeMessage("/session/portinfo", local_server.m_localAddress, local_server.m_localPort));
 
         emit sessionReady();

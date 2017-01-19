@@ -38,6 +38,9 @@ class MasterSession : public Session
         iscore::Document* document() const
         { return m_document; }
 
+        LocalClient& master() const override
+        { return this->localClient(); }
+
     public slots:
         void on_createNewClient(QTcpSocket* sock);
         void on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt);

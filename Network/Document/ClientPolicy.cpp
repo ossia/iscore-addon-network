@@ -41,35 +41,35 @@ ClientEditionPolicy::ClientEditionPolicy(
   con(stack, &iscore::CommandStack::localCommand,
       this, [=] (iscore::Command* cmd)
   {
-    m_session->master()->sendMessage(
+    m_session->master().sendMessage(
           m_session->makeMessage("/command/new", iscore::CommandData{*cmd}));
   });
 
   // Undo-redo
   con(stack, &iscore::CommandStack::localUndo,
       this, [&] ()
-  { m_session->master()->sendMessage(m_session->makeMessage("/command/undo")); });
+  { m_session->master().sendMessage(m_session->makeMessage("/command/undo")); });
   con(stack, &iscore::CommandStack::localRedo,
       this, [&] ()
-  { m_session->master()->sendMessage(m_session->makeMessage("/command/redo")); });
+  { m_session->master().sendMessage(m_session->makeMessage("/command/redo")); });
   con(stack, &iscore::CommandStack::localIndexChanged,
       this, [&] (int32_t idx)
-  { m_session->master()->sendMessage(m_session->makeMessage("/command/index", idx)); });
+  { m_session->master().sendMessage(m_session->makeMessage("/command/index", idx)); });
 
   // TODO : messages : peut-être utiliser des tuples en tant que structures ?
   // Cela permettrait de spécifier les types proprement ?
   // Lock-unlock
   con(locker, &iscore::ObjectLocker::lock,
       this, [&] (QByteArray arr)
-  { qDebug() << "client send lock"; m_session->master()->sendMessage(m_session->makeMessage("/lock", arr)); });
+  { qDebug() << "client send lock"; m_session->master().sendMessage(m_session->makeMessage("/lock", arr)); });
   con(locker, &iscore::ObjectLocker::unlock,
       this, [&] (QByteArray arr)
-  { qDebug() << "client send unlock"; m_session->master()->sendMessage(m_session->makeMessage("/unlock", arr)); });
+  { qDebug() << "client send unlock"; m_session->master().sendMessage(m_session->makeMessage("/unlock", arr)); });
 
   auto& play_act = c.app.actions.action<Actions::NetworkPlay>();
   connect(play_act.action(), &QAction::triggered,
           this, [&] {
-    m_session->master()->sendMessage(m_session->makeMessage("/play"));
+    m_session->master().sendMessage(m_session->makeMessage("/play"));
   });
 
 
