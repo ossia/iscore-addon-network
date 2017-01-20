@@ -94,6 +94,12 @@ namespace Network
     virtual void play() = 0;
   };
 
+  class ExecutionPolicy : public QObject
+  {
+  public:
+    using QObject::QObject;
+  };
+
   class NetworkDocumentPlugin final :
       public iscore::SerializableDocumentPlugin
   {
@@ -121,6 +127,7 @@ namespace Network
     }
 
     void setPolicy(EditionPolicy*);
+    void setExecPolicy(ExecutionPolicy* e) { m_exec = e; e->setParent(this); }
 
     GroupManager& groupManager() const
     { return *m_groups; }
@@ -139,6 +146,7 @@ namespace Network
     void setupGroupPlugin(GroupMetadata* grp);
 
     EditionPolicy* m_policy{};
+    ExecutionPolicy* m_exec{};
     GroupManager* m_groups{};
 
   };

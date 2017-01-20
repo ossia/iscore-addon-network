@@ -96,7 +96,10 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
       clt->setName(tr("Master"));
       auto serv = new MasterSession(currentDocument(), clt, Id<Session>(1234));
       auto policy = new MasterEditionPolicy{serv, currentDocument()->context()};
+
       auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
+      auto execpol = new MasterExecutionPolicy(*serv, *realplug, doc->context());
+      realplug->setExecPolicy(execpol);
       doc->model().addPluginModel(realplug);
 
       auto& panel = context.panel<Network::PanelDelegate>();

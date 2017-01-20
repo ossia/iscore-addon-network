@@ -17,6 +17,9 @@ Session::Session(LocalClient* client, Id<Session> id, QObject* parent):
     m_validator{new MessageValidator(*this, mapper())}
 {
     m_client->setParent(this);
+    connect(this, &Session::emitMessage,
+            this, &Session::sendMessage,
+            Qt::QueuedConnection);
 }
 
 Session::~Session()

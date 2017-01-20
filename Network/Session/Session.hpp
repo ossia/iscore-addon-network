@@ -62,6 +62,8 @@ class Session : public IdentifiedObject<Session>
         void clientAdded(RemoteClient*);
         void clientsChanged();
 
+        void emitMessage(Id<Client> target, NetworkMessage m);
+
     public slots:
         void validateMessage(NetworkMessage m);
 

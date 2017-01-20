@@ -82,7 +82,7 @@ struct Timekeeper final : public QObject
   void timerEvent(QTimerEvent *event) override
   {
     ping_all();
-    debug();
+    // debug();
   }
 
 private:

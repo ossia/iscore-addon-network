@@ -49,3 +49,5 @@ class Client : public IdentifiedObject<Client>
         QString m_name;
 };
 }
+
+Q_DECLARE_METATYPE(Id<Network::Client>)

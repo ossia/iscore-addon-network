@@ -170,30 +170,11 @@ struct MixedScenarioPolicy
   }
 };
 
-
-
-template<typename T, typename Obj>
-optional<T> get_metadata(Obj& obj, const QString& s)
-{
-  auto& m = obj.metadata().getExtendedMetadata();
-  auto it = m.constFind(s);
-  if(it != m.constEnd())
-  {
-    const QVariant& var = *it;
-    if(var.canConvert<T>())
-      return var.value<T>();
-  }
-  return {};
-}
-
 void FreeScenarioPolicy::operator()(Engine::Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
 {
   // if on the group enable everything, else disable everything (maybe even remove it from the executor)
   comp.OSSIAProcess().enable(cur.hasClient(self));
 }
-
-
-
 
 void MixedScenarioPolicy::operator()(Engine::Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
 {
@@ -252,260 +233,6 @@ struct expression_with_callback
   optional<ossia::expressions::expression_callback_iterator> it;
 
 };
-struct SharedScenarioPolicy
-{
-  NetworkDocumentPlugin& doc;
-  const Id<Client>& self;
-
-  void operator()(
-      Engine::Execution::ProcessComponent& comp,
-      Scenario::ScenarioInterface& ip,
-      const Group& cur)
-  {
-    // take the code of BasicPruner
-
-    for(Scenario::TimeNodeModel& tn : ip.getTimeNodes())
-    {
-      auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
-      if(comp)
-      {
-        operator()(*comp, cur);
-
-      }
-    }
-
-    for(Scenario::ConstraintModel& cst : ip.getConstraints())
-    {
-      auto comp = iscore::findComponent<Engine::Execution::ConstraintComponent>(cst.components());
-      if(comp)
-        operator()(*comp, cur);
-    }
-
-  }
-
-  void operator()(Engine::Execution::ConstraintComponent& cst, const Group& cur)
-  {
-    const auto& gm = doc.groupManager();
-    Scenario::ConstraintModel& constraint = cst.iscoreConstraint();
-
-    const Group& cur_group = getGroup(gm, cur, constraint);
-
-    bool isMuted = !cur_group.hasClient(self);
-    // Mute the processes that are not meant to execute there.
-    constraint.setExecutionState(isMuted
-                                 ? Scenario::ConstraintExecutionState::Muted
-                                 : Scenario::ConstraintExecutionState::Enabled);
-
-    for(const auto& process : cst.processes())
-    {
-      auto& proc = process.second->OSSIAProcess();
-      proc.mute(isMuted);
-    }
-
-    // Recursion
-    for(const auto& process : cst.processes())
-    {
-      auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process.second->process());
-      if(ip)
-      {
-
-        auto syncmode = get_metadata<QString>(process.second->process(), "syncmode");
-        if(!syncmode || syncmode->isEmpty())
-          syncmode = get_metadata<QString>(constraint, "syncmode");
-        if(!syncmode || syncmode->isEmpty())
-          syncmode = "shared";
-
-        if(*syncmode == "shared")
-        {
-          FreeScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
-        }
-        else if(*syncmode == "mixed")
-        {
-          MixedScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
-        }
-        else if(*syncmode == "free")
-        {
-          SharedScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
-        }
-      }
-    }
-
-  }
-
-  enum SyncMode { AsyncOrdered, SyncOrdered, AsyncUnordered, SyncUnordered };
-
-  template<typename T>
-  SyncMode getInfos(const T& obj)
-  {
-    auto syncmode = get_metadata<QString>(obj, "syncmode");
-    if(!syncmode || syncmode->isEmpty())
-      syncmode = QString("async");
-    auto order = get_metadata<QString>(obj, "order");
-    if(!order || order->isEmpty())
-      order = QString("true");
-
-    const QString async = QStringLiteral("async");
-    const QString sync = QStringLiteral("async");
-    const QString ordered = QStringLiteral("true");
-    const QString unordered = QStringLiteral("false");
-
-    if(syncmode == async && order == ordered)
-      return AsyncOrdered;
-    else if(syncmode == async && order == unordered)
-      return AsyncUnordered;
-    else if(syncmode == sync && order == ordered)
-      return SyncOrdered;
-    else if(syncmode == sync && order == unordered)
-      return SyncUnordered;
-
-    return AsyncOrdered;
-  }
-  struct NetworkExpressionData
-  {
-    Engine::Execution::TimeNodeComponent& component;
-    iscore::hash_map<Id<Client>, optional<bool>> values;
-    // Trigger : they all have to be set, and true
-    // Event : when they are all set, the truth value of each is taken.
-
-    // Expression observation has to be done on the network.
-    // Saved in the network components ? For now in the document plugin?
-
-  };
-
-  //! Todo isn't this the code for the mixed mode actually ?
-  //! In the "shared" mode we could assume that evaluation entering / leaving is the same
-  //! for everyone...
-  void operator()(Engine::Execution::TimeNodeComponent& comp, const Group& parent_group)
-  {
-    const auto& gm = doc.groupManager();
-    auto& session = *doc.policy().session();
-    auto master = session.master().id();
-    // First fetch the required variables.
-    const Group& tn_group = getGroup(gm, parent_group, comp.iscoreTimeNode());
-
-    auto sync = getInfos(comp.iscoreTimeNode());
-    Path<Scenario::TimeNodeModel> path{comp.iscoreTimeNode()};
-
-    if(comp.iscoreTimeNode().trigger()->active())
-    {
-      // Each trigger sends its own data, the master will choose the relevant info
-      comp.OSSIATimeNode()->enteredEvaluation.add_callback([=,&session] {
-        session.sendMessage(master, session.makeMessage("/trigger_entered", path));
-      });
-      comp.OSSIATimeNode()->leftEvaluation.add_callback([=,&session] {
-        session.sendMessage(master, session.makeMessage("/trigger_left", path));
-      });
-      comp.OSSIATimeNode()->finishedEvaluation.add_callback([=,&session] (bool b) {
-        // b : max bound reached
-        session.sendMessage(master, session.makeMessage("/trigger_finished", path, b));
-      });
-      comp.OSSIATimeNode()->triggered.add_callback([=,&session] {
-        session.sendMessage(master, session.makeMessage("/triggered", path));
-      });
-
-      // If this group has this expression
-      // Since we're in the SharedPolicy, everybody will get the same information
-      if(tn_group.hasClient(self))
-      {
-        // We will actually evaluate the expression.
-        auto base_expr = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
-
-        switch(sync)
-        {
-          case SyncMode::AsyncOrdered:
-            break;
-          case SyncMode::AsyncUnordered:
-          {
-            // Common case : set the expression
-            auto expr = std::make_unique<AsyncExpression>();
-            auto expr_ptr = expr.get();
-
-            ossia::expressions::expression_generic genexp;
-            genexp.expr = std::move(expr);
-
-            comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
-
-            // Then set specific callbacks for outside events
-            doc.trigger_evaluation_entered[path] = [=,&session] {
-              base_expr->it = ossia::expressions::add_callback(
-                    *base_expr->expr,
-                    [=,&session] (bool b) {
-                if(b)
-                {
-                  session.sendMessage(master, session.makeMessage("/trigger_expression_true", path));
-                }
-              });
-            };
-
-            doc.trigger_evaluation_finished[path] = [=] (bool b) {
-              if(base_expr->it)
-                ossia::expressions::remove_callback(
-                      *base_expr->expr, *base_expr->it);
-
-              expr_ptr->ping(); // TODO how to transmit the max bound information ??
-            };
-
-            doc.trigger_triggered[path] = [=] {
-              if(base_expr->it)
-                ossia::expressions::remove_callback(
-                      *base_expr->expr, *base_expr->it);
-
-              expr_ptr->ping();
-            };
-
-            break;
-          }
-          case SyncMode::SyncOrdered:
-            break;
-          case SyncMode::SyncUnordered:
-            break;
-        }
-      }
-      else
-      {
-        // Not in the group : we wait.
-        switch(sync)
-        {
-          case SyncMode::AsyncOrdered:
-            break;
-          case SyncMode::AsyncUnordered:
-          {
-            auto expr = std::make_unique<AsyncExpression>();
-            auto expr_ptr = expr.get();
-
-            doc.trigger_triggered[path] = [=] {
-              expr_ptr->ping();
-            };
-            doc.trigger_evaluation_finished[path] = [=] (bool) {
-              expr_ptr->ping(); // TODO how to transmit the max bound information ??
-            };
-
-
-            ossia::expressions::expression_generic genexp;
-            genexp.expr = std::move(expr);
-
-            comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
-
-            break;
-          }
-          case SyncMode::SyncOrdered:
-            break;
-          case SyncMode::SyncUnordered:
-            break;
-        }
-
-      }
-    }
-    else
-    {
-      // Trigger not active. For now let's just hope that everything happens correctly.
-    }
-    /*
-    auto expr = std::make_unique<DateExpression>(
-          std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
-          comp.makeTrigger());*/
-  }
-};
 
 
 BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
@@ -516,6 +243,10 @@ BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
 }
 void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Group& cur)
 {
+  doc.trigger_evaluation_entered.clear();
+  doc.trigger_evaluation_finished.clear();
+  doc.trigger_triggered.clear();
+  SharedScenarioPolicy{doc, self}(cst, cur);
 
 }
 
@@ -565,6 +296,213 @@ void BasicPruner::operator()(const Engine::Execution::Context& exec_ctx)
   // Let's assume for now that we start in the "all" group...
   const auto& gm = doc.groupManager();
   recurse(root, *gm.group(gm.defaultGroup()));
+}
+
+void SharedScenarioPolicy::operator()(Engine::Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
+{
+  // take the code of BasicPruner
+
+  for(Scenario::TimeNodeModel& tn : ip.getTimeNodes())
+  {
+    auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
+    if(comp)
+    {
+      operator()(*comp, cur);
+
+    }
+  }
+
+  for(Scenario::ConstraintModel& cst : ip.getConstraints())
+  {
+    auto comp = iscore::findComponent<Engine::Execution::ConstraintComponent>(cst.components());
+    if(comp)
+      operator()(*comp, cur);
+  }
+
+}
+
+void SharedScenarioPolicy::operator()(Engine::Execution::ConstraintComponent& cst, const Group& cur)
+{
+  const auto& gm = doc.groupManager();
+  Scenario::ConstraintModel& constraint = cst.iscoreConstraint();
+
+  const Group& cur_group = getGroup(gm, cur, constraint);
+
+  bool isMuted = !cur_group.hasClient(self);
+  // Mute the processes that are not meant to execute there.
+  constraint.setExecutionState(isMuted
+                               ? Scenario::ConstraintExecutionState::Muted
+                               : Scenario::ConstraintExecutionState::Enabled);
+
+  for(const auto& process : cst.processes())
+  {
+    auto& proc = process.second->OSSIAProcess();
+    proc.mute(isMuted);
+  }
+
+  // Recursion
+  for(const auto& process : cst.processes())
+  {
+    auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process.second->process());
+    if(ip)
+    {
+
+      auto syncmode = get_metadata<QString>(process.second->process(), "syncmode");
+      if(!syncmode || syncmode->isEmpty())
+        syncmode = get_metadata<QString>(constraint, "syncmode");
+      if(!syncmode || syncmode->isEmpty())
+        syncmode = "shared";
+
+      if(*syncmode == "shared")
+      {
+        SharedScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
+      }
+      else if(*syncmode == "mixed")
+      {
+        MixedScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
+      }
+      else if(*syncmode == "free")
+      {
+        FreeScenarioPolicy{doc, self}(*process.second, *ip, cur_group);
+      }
+    }
+  }
+
+}
+
+void SharedScenarioPolicy::operator()(Engine::Execution::TimeNodeComponent& comp, const Group& parent_group)
+{
+  const auto& gm = doc.groupManager();
+  auto& session = *doc.policy().session();
+  auto master = session.master().id();
+  // First fetch the required variables.
+  const Group& tn_group = getGroup(gm, parent_group, comp.iscoreTimeNode());
+
+  auto sync = getInfos(comp.iscoreTimeNode());
+  Path<Scenario::TimeNodeModel> path{comp.iscoreTimeNode()};
+  qDebug() << "Registering TimeNode: " << path;
+
+  if(comp.iscoreTimeNode().trigger()->active())
+  {
+    // Each trigger sends its own data, the master will choose the relevant info
+    comp.OSSIATimeNode()->enteredEvaluation.add_callback([=,&session] {
+      session.emitMessage(master, session.makeMessage("/trigger_entered", path));
+    });
+    comp.OSSIATimeNode()->leftEvaluation.add_callback([=,&session] {
+      session.emitMessage(master, session.makeMessage("/trigger_left", path));
+    });
+    comp.OSSIATimeNode()->finishedEvaluation.add_callback([=,&session] (bool b) {
+      // b : max bound reached
+      session.emitMessage(master, session.makeMessage("/trigger_finished", path, b));
+    });
+    comp.OSSIATimeNode()->triggered.add_callback([=,&session] {
+      session.emitMessage(master, session.makeMessage("/triggered", path));
+    });
+
+    // If this group has this expression
+    // Since we're in the SharedPolicy, everybody will get the same information
+    if(tn_group.hasClient(self))
+    {
+      // We will actually evaluate the expression.
+      auto base_expr = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
+
+      switch(sync)
+      {
+        case SyncMode::AsyncOrdered:
+          break;
+        case SyncMode::AsyncUnordered:
+        {
+          // Common case : set the expression
+          auto expr = std::make_unique<AsyncExpression>();
+          auto expr_ptr = expr.get();
+
+          ossia::expressions::expression_generic genexp;
+          genexp.expr = std::move(expr);
+
+          comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+
+          // Then set specific callbacks for outside events
+          doc.trigger_evaluation_entered.emplace(path, [=,&session] {
+            base_expr->it = ossia::expressions::add_callback(
+                              *base_expr->expr,
+                              [=,&session] (bool b) {
+              if(b)
+              {
+                session.emitMessage(master, session.makeMessage("/trigger_expression_true", path));
+              }
+            });
+          });
+
+          doc.trigger_evaluation_finished.emplace(path, [=] (bool b) {
+            if(base_expr->it)
+              ossia::expressions::remove_callback(
+                    *base_expr->expr, *base_expr->it);
+
+            expr_ptr->ping(); // TODO how to transmit the max bound information ??
+          });
+
+          doc.trigger_triggered.emplace(path, [=] {
+            if(base_expr->it)
+              ossia::expressions::remove_callback(
+                    *base_expr->expr, *base_expr->it);
+
+            expr_ptr->ping();
+          });
+
+          qDebug() << "INSERTING 1 " << doc.trigger_triggered.size();
+
+          break;
+        }
+        case SyncMode::SyncOrdered:
+          break;
+        case SyncMode::SyncUnordered:
+          break;
+      }
+    }
+    else
+    {
+      // Not in the group : we wait.
+      switch(sync)
+      {
+        case SyncMode::AsyncOrdered:
+          break;
+        case SyncMode::AsyncUnordered:
+        {
+          auto expr = std::make_unique<AsyncExpression>();
+          auto expr_ptr = expr.get();
+
+          doc.trigger_triggered.emplace(path, [=] {
+            expr_ptr->ping();
+          });
+          doc.trigger_evaluation_finished.emplace(path, [=] (bool) {
+            expr_ptr->ping(); // TODO how to transmit the max bound information ??
+          });
+
+          qDebug() << "INSERTING 2 " << doc.trigger_triggered.size();
+
+          ossia::expressions::expression_generic genexp;
+          genexp.expr = std::move(expr);
+
+          comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+
+          break;
+        }
+        case SyncMode::SyncOrdered:
+          break;
+        case SyncMode::SyncUnordered:
+          break;
+      }
+
+    }
+  }
+  else
+  {
+    // Trigger not active. For now let's just hope that everything happens correctly.
+  }
+  /*
+    auto expr = std::make_unique<DateExpression>(
+          std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
+          comp.makeTrigger());*/
 }
 
 

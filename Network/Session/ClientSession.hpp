@@ -22,7 +22,9 @@ class ClientSession final : public Session
             return m_master;
         }
 
+
     private:
+        void on_createNewClient(QTcpSocket*);
         RemoteClient& m_master;
 };
 }

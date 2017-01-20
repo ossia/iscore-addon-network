@@ -26,4 +26,22 @@ class MasterEditionPolicy : public EditionPolicy
         const iscore::DocumentContext& m_ctx;
         Timekeeper m_keep{*m_session};
 };
+
+class MasterExecutionPolicy : public ExecutionPolicy
+{
+public:
+  MasterExecutionPolicy(
+      Session& s,
+      NetworkDocumentPlugin& doc,
+      const iscore::DocumentContext& c);
+};
+
+class SlaveExecutionPolicy : public ExecutionPolicy
+{
+public:
+  SlaveExecutionPolicy(
+      Session& s,
+      NetworkDocumentPlugin& doc,
+      const iscore::DocumentContext& c);
+};
 }

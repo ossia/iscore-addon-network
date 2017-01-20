@@ -20,10 +20,15 @@ ClientSession::ClientSession(RemoteClient& master,
 {
     addClient(&master);
 
-    con(localClient(), SIGNAL(createNewClient(QTcpSocket*)),
-            this, SLOT(on_createNewClient(QTcpSocket*)));
+    con(localClient(), &LocalClient::createNewClient,
+        this, &ClientSession::on_createNewClient);
 
     con(master, &RemoteClient::messageReceived,
         this, &Session::validateMessage, Qt::QueuedConnection);
+}
+
+void ClientSession::on_createNewClient(QTcpSocket*)
+{
+  qDebug() << "createNewClient";
 }
 }
