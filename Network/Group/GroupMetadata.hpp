@@ -31,7 +31,7 @@ class GroupMetadata :
         template<typename DeserializerVisitor>
         GroupMetadata(DeserializerVisitor&& vis,
                       QObject* parent) :
-            iscore::SerializableComponent{parent}
+            iscore::SerializableComponent{vis, parent}
         {
             vis.writeTo(*this);
         }

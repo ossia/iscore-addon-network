@@ -187,7 +187,7 @@ void MasterEditionPolicy::play()
           sm->baseConstraint(),
           true,
           BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
-          TimeValue{});
+          TimeVal{});
   }
 }
 

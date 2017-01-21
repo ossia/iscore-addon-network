@@ -143,7 +143,6 @@ namespace Network
     void sessionChanged();
 
   private:
-    void setupGroupPlugin(GroupMetadata* grp);
 
     EditionPolicy* m_policy{};
     ExecutionPolicy* m_exec{};

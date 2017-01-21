@@ -351,7 +351,7 @@ void SharedScenarioPolicy::operator()(Engine::Execution::ConstraintComponent& cs
       if(!syncmode || syncmode->isEmpty())
         syncmode = get_metadata<QString>(constraint, "syncmode");
       if(!syncmode || syncmode->isEmpty())
-        syncmode = "shared";
+        syncmode = QStringLiteral("shared");
 
       if(*syncmode == "shared")
       {

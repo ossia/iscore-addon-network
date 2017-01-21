@@ -6,7 +6,7 @@ namespace Execution
 {
 class ConstraintComponent;
 class TimeNodeComponent;
-class Context;
+struct Context;
 class ProcessComponent;
 }
 }
