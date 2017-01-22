@@ -39,7 +39,7 @@ struct ExpressionAsyncInGroup
   }
 };
 
-struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
+struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -55,8 +55,8 @@ struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
     // When the trigger enters evaluation
     ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session] (Id<Client> orig) {
       e.shared_expr->it = ossia::expressions::add_callback(
-                        *e.shared_expr->expr,
-                        [=,&session] (bool b) {
+                            *e.shared_expr->expr,
+                            [=,&session] (bool b) {
         if(b)
         {
           session.emitMessage(
@@ -65,6 +65,7 @@ struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
         }
       });
     });
+
 
     // When the trigger finishes evaluation
     ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
@@ -86,7 +87,7 @@ struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
 };
 
 
-struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
+struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -140,7 +141,7 @@ struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
 };
 
 
-struct MixedAsyncUnorderedOutOfGroup
+struct SharedAsyncUnorderedOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -165,7 +166,7 @@ struct MixedAsyncUnorderedOutOfGroup
 };
 
 
-struct MixedAsyncOrderedOutOfGroup
+struct SharedAsyncOrderedOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -311,12 +312,11 @@ void SharedScenarioPolicy::operator()(
       switch(sync)
       {
         case SyncMode::AsyncOrdered:
+          SharedAsyncOrderedInGroup{}(ctx, comp, path);
           break;
         case SyncMode::AsyncUnordered:
-        {
-          MixedAsyncUnorderedInGroup{}(ctx, comp, path);
+          SharedAsyncUnorderedInGroup{}(ctx, comp, path);
           break;
-        }
         case SyncMode::SyncOrdered:
           break;
         case SyncMode::SyncUnordered:
@@ -329,9 +329,10 @@ void SharedScenarioPolicy::operator()(
       switch(sync)
       {
         case SyncMode::AsyncOrdered:
+          SharedAsyncOrderedOutOfGroup{}(ctx, comp, path);
           break;
         case SyncMode::AsyncUnordered:
-          MixedAsyncUnorderedOutOfGroup{}(ctx, comp, path);
+          SharedAsyncUnorderedOutOfGroup{}(ctx, comp, path);
           break;
         case SyncMode::SyncOrdered:
           break;

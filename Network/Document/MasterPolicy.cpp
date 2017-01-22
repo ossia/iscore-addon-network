@@ -202,6 +202,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_entered,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
+    s.broadcastToOthers(m.clientId, m);
+
     // TODO there should be a consensus on this point.
     auto it = doc.trigger_evaluation_entered.find(p);
     if(it != doc.trigger_evaluation_entered.end())
@@ -210,8 +212,6 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       if(it.value())
         it.value()(m.clientId);
     }
-
-    s.broadcastToOthers(m.clientId, m);
   });
 
   s.mapper().addHandler_(mapi.trigger_left,
