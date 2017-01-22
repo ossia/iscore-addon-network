@@ -53,12 +53,18 @@ class Session : public IdentifiedObject<Session>
             return m;
         }
 
+        //! Does not include self
         void broadcastToAllClients(NetworkMessage m);
+
+        //! Includes self
+        void broadcastToAll(NetworkMessage m);
+
         void broadcastToOthers(Id<Client> sender, NetworkMessage m);
 
         void sendMessage(Id<Client> target, NetworkMessage m);
 
-    signals:
+        void broadcastToClients(const std::vector<Id<Client> >& clts, NetworkMessage m);
+signals:
         void clientAdded(RemoteClient*);
         void clientsChanged();
 

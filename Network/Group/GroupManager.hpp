@@ -8,7 +8,7 @@ class QObject;
 namespace Network
 {
 class Group;
-
+class Client;
 class GroupManager : public IdentifiedObject<GroupManager>
 {
         Q_OBJECT
@@ -29,6 +29,11 @@ class GroupManager : public IdentifiedObject<GroupManager>
         Group* findGroup(const QString& str) const;
         Group* group(const Id<Group>& id) const;
         Id<Group> defaultGroup() const;
+
+
+        //! Number of clients in all the groups
+        std::size_t clientsCount(const std::vector<Id<Group>>& grps);
+        std::vector<Id<Client>> clients(const std::vector<Id<Group>>& grps);
 
     signals:
         void groupAdded(Id<Group>);

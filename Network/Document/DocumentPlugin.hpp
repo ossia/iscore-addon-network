@@ -10,6 +10,8 @@
 #include <core/document/Document.hpp>
 #include <ossia/editor/expression/expression.hpp>
 #include <Engine/Executor/TimeNodeComponent.hpp>
+#include <Network/Group/Group.hpp>
+#include <Network/Group/GroupManager.hpp>
 
 #include <QObject>
 #include <vector>
@@ -25,6 +27,7 @@ class Document;
 }
 namespace Network
 {
+class Group;
 class NetworkDocumentPlugin;
 }
 UUID_METADATA(
@@ -39,9 +42,15 @@ namespace Network
 
 struct NetworkExpressionData
 {
+  NetworkExpressionData(Engine::Execution::TimeNodeComponent& c): component{c} {}
   Engine::Execution::TimeNodeComponent& component;
 
+  //! Will fill itself with received messages
   iscore::hash_map<Id<Client>, optional<bool>> values;
+  tsl::hopscotch_set<Id<Client>> previousCompleted;
+
+  Id<Group> thisGroup;
+  std::vector<Id<Group>> prevGroups, nextGroups;
   ExpressionPolicy pol;
   SyncMode sync;
   // Trigger : they all have to be set, and true
@@ -50,6 +59,20 @@ struct NetworkExpressionData
   // Expression observation has to be done on the network.
   // Saved in the network components ? For now in the document plugin?
 
+  bool ready(std::size_t count_ready, std::size_t num_clients)
+  {
+    switch(pol)
+    {
+      case ExpressionPolicy::OnFirst:
+        return count_ready == 1;
+      case ExpressionPolicy::OnAll:
+        return count_ready >= num_clients; // todo what happens if someone disconnects before sending.
+      case ExpressionPolicy::OnMajority:
+        return count_ready > (num_clients / 2);
+      default:
+        return false;
+    }
+  }
 };
 
 class Session;
@@ -107,7 +130,7 @@ class NetworkDocumentPlugin final :
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_triggered;
-  iscore::hash_map<Path<Scenario::TimeNodeModel>, NetworkExpressionData> trigger_expression_true;
+  iscore::hash_map<Path<Scenario::TimeNodeModel>, NetworkExpressionData> network_expressions;
 
 signals:
   void sessionChanged();

@@ -197,8 +197,9 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     const iscore::DocumentContext& c)
 {
   s.mapper().addHandler_("/trigger_entered",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
+    // TODO there should be a consensus on this point.
     auto it = doc.trigger_evaluation_entered.find(p);
     if(it != doc.trigger_evaluation_entered.end())
     {
@@ -211,14 +212,16 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_("/trigger_left",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
+    // TODO there should be a consensus on this point.
     qDebug() << m.address << p;
   });
 
   s.mapper().addHandler_("/trigger_finished",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
+    // TODO there should be a consensus on this point.
     auto it = doc.trigger_evaluation_finished.find(p);
     if(it != doc.trigger_evaluation_finished.end())
     {
@@ -230,61 +233,103 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_("/trigger_expression_true",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
-    auto it = doc.trigger_expression_true.find(p);
-    if(it != doc.trigger_expression_true.end())
+    auto it = doc.network_expressions.find(p);
+    if(it != doc.network_expressions.end())
     {
-      // TODO it has to be filled at the beginning with the possible values !!
       NetworkExpressionData& e = it.value();
-      auto expr_it = e.values.find(m.clientId);
-      if(expr_it != e.values.end())
+      Group* grp = doc.groupManager().group(e.thisGroup);
+      if(!grp)
+        return;
+
+      if(!grp->hasClient(m.clientId))
+        return;
+
+      optional<bool>& opt = e.values[m.clientId];
+      if(bool(opt)) // Checks if the optional is initialized
+        return;
+
+      opt = true; // Initialize and set it to true
+
+      const auto count_ready = ossia::count_if(
+            e.values,
+            [] (const auto& p) { return bool(p.second) && *p.second; });
+
+      if(e.ready(count_ready, grp->clients().size()))
       {
-        optional<bool>& opt = expr_it.value();
-        if(bool(opt)) // Checks if the optional is initialized
-          return;
-        else
+        // Trigger the others :
+
+        // Note : there is no problem for the ordered mode if we have A--|--A
+        // because the i-score algorithm keeps this order. The 'Unordered' will still be ordered in
+        // this case (but instantaneous). However we don't have a "global" order, only a "local" order.
+        // We want a global order... this means splitting the time_node execution.
+
+        switch(e.sync)
         {
-          opt = true; // Initialize and set it to true
-
-          auto count_ready = ossia::count_if(
-                e.values,
-                [] (const auto& p) { return bool(p.second) && *p.second; });
-
-          bool sendTrigger = false;
-          switch(e.pol)
+          case SyncMode::AsyncOrdered:
           {
-            case ExpressionPolicy::OnFirst:
-              sendTrigger = (count_ready == 1);
-              break;
-            case ExpressionPolicy::OnAll:
-              sendTrigger = (count_ready == e.values.size());
-              break;
-            case ExpressionPolicy::OnMajority:
-            {
-              sendTrigger = (count_ready > (e.values.size() / 2));
-              break;
-            }
-          }
+            // Trigger all the clients before the time node.
+            auto clients = doc.groupManager().clients(e.prevGroups);
+            s.broadcastToClients(
+                  clients,
+                  s.makeMessage("/triggered", p, true));
 
-          if(sendTrigger)
+            break;
+          }
+          case SyncMode::AsyncUnordered:
           {
-            auto it = doc.trigger_triggered.find(p);
-            if(it != doc.trigger_triggered.end())
-            {
-              if(it.value())
-                it.value()(m.clientId);
-            }
+            // Everyone should trigger instantaneously.
+            s.broadcastToAll(s.makeMessage("/triggered", p, true));
 
-            s.broadcastToAllClients(s.makeMessage("/triggered", p, true));
+            break;
           }
+          case SyncMode::SyncOrdered:
+          {
+            break;
+          }
+          case SyncMode::SyncUnordered:
+            break;
         }
+
       }
+
+      // TODO reset the trigger for when we are looping
+
     }
   });
 
+  s.mapper().addHandler_("/trigger_previous_completed",
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+  {
+    auto it = doc.network_expressions.find(p);
+    if(it != doc.network_expressions.end())
+    {
+      NetworkExpressionData& e = it.value();
+      Group* grp = doc.groupManager().group(e.thisGroup);
+      if(!grp)
+        return;
+
+      if(!grp->hasClient(m.clientId))
+        return;
+
+      // Add the client to the list if meaningful
+      auto it = e.previousCompleted.find(m.clientId);
+      if(it == e.previousCompleted.end())
+      {
+        e.previousCompleted.insert(m.clientId);
+
+        if(e.previousCompleted.size() >= doc.groupManager().clientsCount(e.prevGroups))
+        {
+          s.broadcastToClients(doc.groupManager().clients(e.nextGroups), s.makeMessage("/triggered", p, true));
+        }
+      }
+    }
+
+  });
+
   s.mapper().addHandler_("/triggered",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_triggered.find(p);
     if(it != doc.trigger_triggered.end())
@@ -305,7 +350,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     const iscore::DocumentContext& c)
 {
   s.mapper().addHandler_("/trigger_entered",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
     auto it = doc.trigger_evaluation_entered.find(p);
     if(it != doc.trigger_evaluation_entered.end())
@@ -316,12 +361,12 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
   });
 
   s.mapper().addHandler_("/trigger_left",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
   });
 
   s.mapper().addHandler_("/trigger_finished",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_evaluation_finished.find(p);
     if(it != doc.trigger_evaluation_finished.end())
@@ -332,7 +377,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
   });
 
   s.mapper().addHandler_("/triggered",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_triggered.find(p);
     if(it != doc.trigger_triggered.end())

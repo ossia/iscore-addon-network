@@ -77,10 +77,23 @@ NetworkMessage Session::makeMessage(const QByteArray& address)
   return m;
 }
 
+void Session::broadcastToClients(const std::vector<Id<Client>>& clts, NetworkMessage m)
+{
+  for(auto& id : clts)
+  {
+    sendMessage(id, std::move(m));
+  }
+}
 void Session::broadcastToAllClients(NetworkMessage m)
 {
   for(RemoteClient* client : remoteClients())
     client->sendMessage(m);
+}
+
+void Session::broadcastToAll(NetworkMessage m)
+{
+  broadcastToAllClients(m);
+  mapper().map(m);
 }
 
 void Session::broadcastToOthers(Id<Client> sender, NetworkMessage m)

@@ -53,8 +53,38 @@ Id<Group> GroupManager::defaultGroup() const
     return m_groups[0]->id();
 }
 
+std::size_t GroupManager::clientsCount(const std::vector<Id<Group> >& grps)
+{
+  return std::accumulate(
+        grps.begin(),
+        grps.end(), 0, [=] (const auto& lhs, const auto& rhs) {
+    return lhs + this->group(rhs)->clients().size();
+  });
+}
+
+std::vector<Id<Client> > GroupManager::clients(const std::vector<Id<Group> >& grps)
+{
+  //! TODO cache this and update it each time the clients change instead.
+  std::vector<Id<Client>> theClients;
+
+  for(auto& id : grps)
+  {
+    if(auto grp = this->group(id))
+    {
+      for(auto& clt : grp->clients())
+      {
+        auto it = ossia::find(theClients, clt);
+        if(it == theClients.end())
+          theClients.push_back(clt);
+      }
+    }
+  }
+
+  return theClients;
+}
+
 const std::vector<Group*>& GroupManager::groups() const
 {
-    return m_groups;
+  return m_groups;
 }
 }
