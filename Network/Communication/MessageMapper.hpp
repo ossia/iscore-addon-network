@@ -27,13 +27,13 @@ template<typename... Args> struct dummy {} ;
 class MessageMapper
 {
   template<typename Fun, typename... Args>
-  auto addHandler_impl_sub(QDataStream& s, Fun& f, dummy<>, Args&&... args)
+  static auto addHandler_impl_sub(QDataStream& s, Fun& f, dummy<>, Args&&... args)
   {
     f(std::forward<Args>(args)...);
   }
 
   template<typename Fun, typename Arg, typename... Args, typename... Args2>
-  auto addHandler_impl_sub(QDataStream& s, Fun& f, dummy<Arg, Args...>, Args2&&... args)
+  static auto addHandler_impl_sub(QDataStream& s, Fun& f, dummy<Arg, Args...>, Args2&&... args)
   {
     Arg a;
     s >> a;
@@ -41,7 +41,7 @@ class MessageMapper
   }
 
   template<typename Fun, typename... Args>
-  auto addHandler_impl(Fun& f, void (Fun::*) (NetworkMessage, Args...) const)
+  static auto addHandler_impl(Fun& f, void (Fun::*) (NetworkMessage, Args...) const)
   {
     return [fun=std::move(f)] (NetworkMessage m) {
       QDataStream s{m.data};
@@ -51,7 +51,7 @@ class MessageMapper
   }
 
   template<typename Fun, typename... Args>
-  auto addHandler_impl(Fun f, void (Fun::*) (NetworkMessage, Args...))
+  static auto addHandler_impl(Fun f, void (Fun::*) (NetworkMessage, Args...))
   {
     return [fun=std::move(f)] (NetworkMessage m) {
       QDataStream s{m.data};

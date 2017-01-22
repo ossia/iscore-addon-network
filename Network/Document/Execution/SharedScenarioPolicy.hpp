@@ -20,7 +20,11 @@ struct SharedScenarioPolicy
   //! for everyone...
   void operator()(Engine::Execution::TimeNodeComponent& comp, const Group& parent_group);
 
-  void setupMaster(Engine::Execution::TimeNodeComponent& comp, const Group& parent_group, SyncMode sync);
+  void setupMaster(
+      Engine::Execution::TimeNodeComponent& comp,
+      Path<Scenario::TimeNodeModel> p,
+      const Group& parent_group,
+      SyncMode sync);
 };
 
 }

@@ -270,7 +270,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
           case SyncMode::AsyncOrdered:
           {
             // Trigger all the clients before the time node.
-            auto clients = doc.groupManager().clients(e.prevGroups);
+            const auto& clients = doc.groupManager().clients(e.prevGroups);
             s.broadcastToClients(
                   clients,
                   s.makeMessage("/triggered", p, true));
@@ -321,7 +321,10 @@ MasterExecutionPolicy::MasterExecutionPolicy(
 
         if(e.previousCompleted.size() >= doc.groupManager().clientsCount(e.prevGroups))
         {
-          s.broadcastToClients(doc.groupManager().clients(e.nextGroups), s.makeMessage("/triggered", p, true));
+          // If we're in a synchronized scenario :
+          s.broadcastToAll(s.makeMessage("/triggered", p, true));
+          // Mixed :
+          // s.broadcastToClients(doc.groupManager().clients(e.nextGroups), s.makeMessage("/triggered", p, true));
         }
       }
     }

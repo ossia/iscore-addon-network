@@ -31,7 +31,8 @@ struct ExpressionAsyncInGroup
 
     comp.OSSIATimeNode()->setExpression(
           std::make_unique<ossia::expression>(
-            ossia::expressions::expression_generic{e.async_expr})
+            ossia::expressions::expression_generic{
+              std::unique_ptr<ossia::expressions::expression_generic_base>(e.async_expr)})
           );
 
     return e;
@@ -66,7 +67,7 @@ struct AsyncUnorderedInGroup : public ExpressionAsyncInGroup
 
     // When the trigger finishes evaluation
     ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
-      if(base_expr->it)
+      if(e.shared_expr->it)
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
 
@@ -75,7 +76,7 @@ struct AsyncUnorderedInGroup : public ExpressionAsyncInGroup
 
     // When the trigger can be triggered
     ctx.doc.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
-      if(base_expr->it)
+      if(e.shared_expr->it)
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
 
@@ -111,8 +112,8 @@ struct AsyncOrderedInGroup : public ExpressionAsyncInGroup
     });
 
     // When the trigger finishes evaluation
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
-      if(base_expr->it)
+    ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool b) {
+      if(e.shared_expr->it)
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
 
@@ -123,8 +124,8 @@ struct AsyncOrderedInGroup : public ExpressionAsyncInGroup
     });
 
     // When the trigger can be triggered
-    ctx.doc.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
-      if(base_expr->it)
+    ctx.doc.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
+      if(e.shared_expr->it)
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
 
@@ -155,17 +156,17 @@ struct AsyncUnorderedOutOfGroup
       expr_ptr->ping(); // TODO how to transmit the max bound information ??
     });
 
-    ossia::expressions::expression_generic genexp;
-    genexp.expr = std::move(expr);
-
-    comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+    comp.OSSIATimeNode()->setExpression(
+          std::make_unique<ossia::expression>(
+            ossia::expressions::expression_generic{
+              std::move(expr)}));
   }
 };
 
 
 
 void SharedScenarioPolicy::operator()(
-    Engine::Execution::ProcessComponent& comp,
+    Engine::Execution::ProcessComponent& c,
     Scenario::ScenarioInterface& ip,
     const Group& cur)
 {
@@ -307,7 +308,7 @@ void SharedScenarioPolicy::operator()(
       }
     }
 
-    setupMaster(comp, tn_group, sync);
+    setupMaster(comp, path, tn_group, sync);
   }
   else
   {
@@ -321,6 +322,7 @@ void SharedScenarioPolicy::operator()(
 
 void SharedScenarioPolicy::setupMaster(
     Engine::Execution::TimeNodeComponent& comp,
+    Path<Scenario::TimeNodeModel> p,
     const Group& tn_group,
     SyncMode sync)
 {
@@ -332,9 +334,9 @@ void SharedScenarioPolicy::setupMaster(
     exp.sync = sync;
     exp.pol = ExpressionPolicy::OnFirst; // TODO another
 
-    auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.parent());
+    auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.iscoreTimeNode().parent());
 
-    auto constraint_group = [scenar] (const Id<Scenario::ConstraintModel>& cst_id)
+    auto constraint_group = [&] (const Id<Scenario::ConstraintModel>& cst_id)
     {
       auto& cst = scenar->constraint(cst_id);
       auto& grp = getGroup(ctx.gm, tn_group, cst);
@@ -354,7 +356,7 @@ void SharedScenarioPolicy::setupMaster(
       ossia::transform(csts, std::back_inserter(exp.nextGroups), constraint_group);
     }
 
-    ctx.doc.network_expressions.emplace(path, std::move(exp));
+    ctx.doc.network_expressions.emplace(std::move(p), std::move(exp));
   }
 
 }
