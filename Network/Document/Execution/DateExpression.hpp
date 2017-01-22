@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <ossia/editor/expression/expression.hpp>
+#include <iscore/tools/std/Optional.hpp>
 #include <chrono>
 namespace Network
 {
@@ -48,6 +49,13 @@ class AsyncExpression :
 private:
     std::atomic_bool m_ping{};
     std::function<void()> m_cb;
+};
+
+struct expression_with_callback
+{
+  expression_with_callback(ossia::expression* e): expr{e} { }
+  ossia::expression* expr{};
+  optional<ossia::expressions::expression_callback_iterator> it;
 };
 
 }

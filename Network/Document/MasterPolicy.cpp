@@ -199,12 +199,12 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_("/trigger_entered",
                           [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
-    qDebug() << m.address << p;
     auto it = doc.trigger_evaluation_entered.find(p);
     if(it != doc.trigger_evaluation_entered.end())
     {
+      // TODO also start evaluating expressions.
       if(it.value())
-        it.value()();
+        it.value()(m.clientId);
     }
 
     s.broadcastToOthers(m.clientId, m);
@@ -219,12 +219,11 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_("/trigger_finished",
                           [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
-    qDebug() << m.address << p;
     auto it = doc.trigger_evaluation_finished.find(p);
     if(it != doc.trigger_evaluation_finished.end())
     {
       if(it.value())
-        it.value()(val);
+        it.value()(m.clientId, val);
     }
 
     s.broadcastToOthers(m.clientId, m);
@@ -233,26 +232,65 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_("/trigger_expression_true",
                           [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
-    qDebug() << m.address << p;
-    auto it = doc.trigger_triggered.find(p);
-    if(it != doc.trigger_triggered.end())
+    auto it = doc.trigger_expression_true.find(p);
+    if(it != doc.trigger_expression_true.end())
     {
-      if(it.value())
-        it.value()();
-    }
+      // TODO it has to be filled at the beginning with the possible values !!
+      NetworkExpressionData& e = it.value();
+      auto expr_it = e.values.find(m.clientId);
+      if(expr_it != e.values.end())
+      {
+        optional<bool>& opt = expr_it.value();
+        if(bool(opt)) // Checks if the optional is initialized
+          return;
+        else
+        {
+          opt = true; // Initialize and set it to true
 
-    s.broadcastToOthers(m.clientId, m);
+          auto count_ready = ossia::count_if(
+                e.values,
+                [] (const auto& p) { return bool(p.second) && *p.second; });
+
+          bool sendTrigger = false;
+          switch(e.pol)
+          {
+            case ExpressionPolicy::OnFirst:
+              sendTrigger = (count_ready == 1);
+              break;
+            case ExpressionPolicy::OnAll:
+              sendTrigger = (count_ready == e.values.size());
+              break;
+            case ExpressionPolicy::OnMajority:
+            {
+              sendTrigger = (count_ready > (e.values.size() / 2));
+              break;
+            }
+          }
+
+          if(sendTrigger)
+          {
+            auto it = doc.trigger_triggered.find(p);
+            if(it != doc.trigger_triggered.end())
+            {
+              if(it.value())
+                it.value()(m.clientId);
+            }
+
+            s.broadcastToAllClients(s.makeMessage("/triggered", p, true));
+          }
+        }
+      }
+    }
   });
 
   s.mapper().addHandler_("/triggered",
                           [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
-    qDebug() << m.address << p;
     auto it = doc.trigger_triggered.find(p);
     if(it != doc.trigger_triggered.end())
     {
       if(it.value())
-        it.value()();
+        it.value()(m.clientId);
     }
 
     s.broadcastToOthers(m.clientId, m);
@@ -269,60 +307,38 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
   s.mapper().addHandler_("/trigger_entered",
                           [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
-    qDebug() << m.address << p;
     auto it = doc.trigger_evaluation_entered.find(p);
     if(it != doc.trigger_evaluation_entered.end())
     {
       if(it.value())
-        it.value()();
+        it.value()(m.clientId);
     }
   });
 
   s.mapper().addHandler_("/trigger_left",
                           [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
-    qDebug() << m.address << p;
   });
 
   s.mapper().addHandler_("/trigger_finished",
                           [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
-    qDebug() << m.address << p;
     auto it = doc.trigger_evaluation_finished.find(p);
     if(it != doc.trigger_evaluation_finished.end())
     {
       if(it.value())
-        it.value()(val);
-    }
-  });
-
-  s.mapper().addHandler_("/trigger_expression_true",
-                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
-  {
-    qDebug() << m.address << p;
-    auto it = doc.trigger_triggered.find(p);
-    if(it != doc.trigger_triggered.end())
-    {
-      if(it.value())
-        it.value()();
+        it.value()(m.clientId, val);
     }
   });
 
   s.mapper().addHandler_("/triggered",
                           [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
-    qDebug() << m.address << p;
-
-    qDebug() << doc.trigger_triggered.size();
-    for(auto element : doc.trigger_triggered)
-    {
-      qDebug() << "In table: " << element.first;
-    }
     auto it = doc.trigger_triggered.find(p);
     if(it != doc.trigger_triggered.end())
     {
       if(it.value())
-        it.value()();
+        it.value()(m.clientId);
     }
   });
 

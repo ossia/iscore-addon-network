@@ -1,70 +1,24 @@
 #pragma once
+#include <Network/Client/Client.hpp>
+#include <Network/Document/Execution/SyncMode.hpp>
+#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+
 #include <iscore/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
+#include <iscore/serialization/DataStreamVisitor.hpp>
+#include <iscore/serialization/JSONVisitor.hpp>
+#include <iscore/actions/Action.hpp>
+#include <core/document/Document.hpp>
+#include <ossia/editor/expression/expression.hpp>
+#include <Engine/Executor/TimeNodeComponent.hpp>
+
 #include <QObject>
 #include <vector>
-
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <ossia/editor/expression/expression.hpp>
-
-#include <iscore/serialization/JSONVisitor.hpp>
-#include <core/document/Document.hpp>
-#include <iscore/actions/Action.hpp>
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 #include <functional>
+
 class DataStream;
 class JSONObject;
 class QWidget;
 struct VisitorVariant;
-
-namespace boost
-{
-template<>
-struct hash<QString>
-{
-  std::size_t operator()(const QString& path) const
-  {
-    return qHash(path);
-  }
-};
-template<>
-struct hash<ObjectIdentifier>
-{
-  std::size_t operator()(const ObjectIdentifier& path) const
-  {
-    std::size_t seed = 0;
-    boost::hash_combine(seed, path.objectName());
-    boost::hash_combine(seed, path.id());
-    return seed;
-  }
-};
-
-}
-
-namespace std
-{
-
-template<>
-struct hash<ObjectPath>
-{
-  std::size_t operator()(const ObjectPath& path) const
-  {
-    std::size_t seed = 0;
-    for(const auto& e : path.vec())
-    {
-      boost::hash_combine(seed, e);
-    }
-    return seed;
-  }
-};
-template <typename tag>
-struct hash<Path<tag>>
-{
-  std::size_t operator()(const Path<tag>& path) const
-  {
-    return std::hash<ObjectPath>{}(path.unsafePath());
-  }
-};
-}
 namespace iscore
 {
 class Document;
@@ -83,83 +37,98 @@ ISCORE_DECLARE_ACTION(NetworkPlay, "&Play (Network)", Network, QKeySequence::Unk
 namespace Network
 {
 
-  class Session;
-  class GroupManager;
-  class GroupMetadata;
-  class EditionPolicy : public QObject
-  {
-  public:
-    using QObject::QObject;
-    virtual Session* session() const = 0;
-    virtual void play() = 0;
-  };
+struct NetworkExpressionData
+{
+  Engine::Execution::TimeNodeComponent& component;
 
-  class ExecutionPolicy : public QObject
-  {
-  public:
-    using QObject::QObject;
-  };
+  iscore::hash_map<Id<Client>, optional<bool>> values;
+  ExpressionPolicy pol;
+  SyncMode sync;
+  // Trigger : they all have to be set, and true
+  // Event : when they are all set, the truth value of each is taken.
 
-  class NetworkDocumentPlugin final :
-      public iscore::SerializableDocumentPlugin
-  {
-    Q_OBJECT
+  // Expression observation has to be done on the network.
+  // Saved in the network components ? For now in the document plugin?
 
-    ISCORE_SERIALIZE_FRIENDS
-    SERIALIZABLE_MODEL_METADATA_IMPL(NetworkDocumentPlugin)
+};
+
+class Session;
+class GroupManager;
+class GroupMetadata;
+class EditionPolicy : public QObject
+{
+public:
+  using QObject::QObject;
+  virtual Session* session() const = 0;
+  virtual void play() = 0;
+};
+
+class ExecutionPolicy : public QObject
+{
+public:
+  using QObject::QObject;
+};
+
+class NetworkDocumentPlugin final :
+    public iscore::SerializableDocumentPlugin
+{
+  Q_OBJECT
+
+  ISCORE_SERIALIZE_FRIENDS
+  SERIALIZABLE_MODEL_METADATA_IMPL(NetworkDocumentPlugin)
   public:
     NetworkDocumentPlugin(
-          const iscore::DocumentContext& ctx,
-          EditionPolicy* policy,
-          Id<iscore::DocumentPlugin> id,
-          QObject* parent);
+      const iscore::DocumentContext& ctx,
+      EditionPolicy* policy,
+      Id<iscore::DocumentPlugin> id,
+      QObject* parent);
 
-    // Loading has to be in two steps since the plugin policy is different from the client
-    // and server.
-    template<typename Impl>
-    NetworkDocumentPlugin(
-          const iscore::DocumentContext& ctx,
-          Impl& vis,
-          QObject* parent):
-      iscore::SerializableDocumentPlugin{ctx, vis, parent}
-    {
-      vis.writeTo(*this);
-    }
-
-    void setPolicy(EditionPolicy*);
-    void setExecPolicy(ExecutionPolicy* e) { m_exec = e; e->setParent(this); }
-
-    GroupManager& groupManager() const
-    { return *m_groups; }
-
-    EditionPolicy &policy() const
-    { return *m_policy; }
-
-    iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void()>> trigger_evaluation_entered;
-    iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(bool)>> trigger_evaluation_finished;
-    iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void()>> trigger_triggered;
-
-  signals:
-    void sessionChanged();
-
-  private:
-
-    EditionPolicy* m_policy{};
-    ExecutionPolicy* m_exec{};
-    GroupManager* m_groups{};
-
-  };
-
-  class DocumentPluginFactory :
-      public iscore::DocumentPluginFactory
+  // Loading has to be in two steps since the plugin policy is different from the client
+  // and server.
+  template<typename Impl>
+  NetworkDocumentPlugin(
+      const iscore::DocumentContext& ctx,
+      Impl& vis,
+      QObject* parent):
+    iscore::SerializableDocumentPlugin{ctx, vis, parent}
   {
-    ISCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
+    vis.writeTo(*this);
+  }
 
-        public:
-      iscore::DocumentPlugin* load(
-        const VisitorVariant& var,
-        iscore::DocumentContext& doc,
-        QObject* parent) override;
-  };
+  void setPolicy(EditionPolicy*);
+  void setExecPolicy(ExecutionPolicy* e) { m_exec = e; e->setParent(this); }
+
+  GroupManager& groupManager() const
+  { return *m_groups; }
+
+  EditionPolicy &policy() const
+  { return *m_policy; }
+
+  iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
+  iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
+  iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_triggered;
+  iscore::hash_map<Path<Scenario::TimeNodeModel>, NetworkExpressionData> trigger_expression_true;
+
+signals:
+  void sessionChanged();
+
+private:
+  EditionPolicy* m_policy{};
+  ExecutionPolicy* m_exec{};
+  GroupManager* m_groups{};
+
+};
+
+class DocumentPluginFactory :
+    public iscore::DocumentPluginFactory
+{
+  ISCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
+
+  public:
+    iscore::DocumentPlugin* load(
+      const VisitorVariant& var,
+      iscore::DocumentContext& doc,
+      QObject* parent) override;
+};
 }
 
