@@ -3,6 +3,7 @@
 #include <iscore/tools/Todo.hpp>
 #include <iscore/tools/std/HashMap.hpp>
 #include <Network/Session/Session.hpp>
+#include <Network/Document/Execution/SyncMode.hpp>
 #include <chrono>
 namespace Network
 {
@@ -38,7 +39,7 @@ struct Timekeeper final : public QObject
   void ping_all()
   {
     auto t = clk::now().time_since_epoch();
-    m_session.broadcastToAllClients(m_session.makeMessage("/ping"));
+    m_session.broadcastToAllClients(m_session.makeMessage(MessagesAPI::instance().ping));
 
     auto b = m_timestamps.begin();
     auto e = m_timestamps.end();

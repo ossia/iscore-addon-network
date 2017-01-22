@@ -26,6 +26,40 @@ struct VisitorVariant;
 
 namespace Network
 {
+MessagesAPI::MessagesAPI():
+  command_new{QByteArrayLiteral("/command/new")},
+  command_undo{QByteArrayLiteral("/command/undo")},
+  command_redo{QByteArrayLiteral("/command/redo")},
+  command_index{QByteArrayLiteral("/command/index")},
+  lock{QByteArrayLiteral("/lock")},
+  unlock{QByteArrayLiteral("/unlock")},
+
+  ping{QByteArrayLiteral("/ping")},
+  pong{QByteArrayLiteral("/pong")},
+  play{QByteArrayLiteral("/play")},
+
+  session_portinfo{QByteArrayLiteral("/session/portinfo")},
+  session_askNewId{QByteArrayLiteral("/session/askNewId")},
+  session_idOffer{QByteArrayLiteral("/session/idOffer")},
+  session_join{QByteArrayLiteral("/session/join")},
+  session_document{QByteArrayLiteral("/session/document")},
+
+  trigger_expression_true{QByteArrayLiteral("/trigger/expression_true")},
+  trigger_previous_completed{QByteArrayLiteral("/trigger/previous_completed")},
+  trigger_entered{QByteArrayLiteral("/trigger/entered")},
+  trigger_left{QByteArrayLiteral("/trigger/left")},
+  trigger_finished{QByteArrayLiteral("/trigger/finished")},
+  trigger_triggered{QByteArrayLiteral("/trigger/triggered")}
+{
+
+}
+
+const MessagesAPI& MessagesAPI::instance()
+{
+  static const MessagesAPI api;
+  return api;
+}
+
 NetworkDocumentPlugin::NetworkDocumentPlugin(
     const iscore::DocumentContext& ctx,
     EditionPolicy *policy,

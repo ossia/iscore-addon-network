@@ -37,10 +37,9 @@ struct ExpressionAsyncInGroup
 
     return e;
   }
-
 };
 
-struct AsyncUnorderedInGroup : public ExpressionAsyncInGroup
+struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -60,7 +59,9 @@ struct AsyncUnorderedInGroup : public ExpressionAsyncInGroup
                         [=,&session] (bool b) {
         if(b)
         {
-          session.emitMessage(master, session.makeMessage("/trigger_expression_true", path));
+          session.emitMessage(
+                master,
+                session.makeMessage(ctx.mapi.trigger_expression_true, path));
         }
       });
     });
@@ -68,8 +69,7 @@ struct AsyncUnorderedInGroup : public ExpressionAsyncInGroup
     // When the trigger finishes evaluation
     ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
       if(e.shared_expr->it)
-        ossia::expressions::remove_callback(
-              *e.shared_expr->expr, *e.shared_expr->it);
+        ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
 
       e.async_expr->ping(); // TODO how to transmit the max bound information ??
     });
@@ -86,7 +86,7 @@ struct AsyncUnorderedInGroup : public ExpressionAsyncInGroup
 };
 
 
-struct AsyncOrderedInGroup : public ExpressionAsyncInGroup
+struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -106,7 +106,9 @@ struct AsyncOrderedInGroup : public ExpressionAsyncInGroup
                         [=,&session] (bool b) {
         if(b)
         {
-          session.emitMessage(master, session.makeMessage("/trigger_expression_true", path));
+          session.emitMessage(
+                master,
+                session.makeMessage(ctx.mapi.trigger_expression_true, path));
         }
       });
     });
@@ -114,13 +116,12 @@ struct AsyncOrderedInGroup : public ExpressionAsyncInGroup
     // When the trigger finishes evaluation
     ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool b) {
       if(e.shared_expr->it)
-        ossia::expressions::remove_callback(
-              *e.shared_expr->expr, *e.shared_expr->it);
+        ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
 
       e.async_expr->ping(); // TODO how to transmit the max bound information ??
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers
-      session.emitMessage(master, session.makeMessage("/trigger_previous_completed", path));
+      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
     });
 
     // When the trigger can be triggered
@@ -132,14 +133,14 @@ struct AsyncOrderedInGroup : public ExpressionAsyncInGroup
       e.async_expr->ping();
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers
-      session.emitMessage(master, session.makeMessage("/trigger_previous_completed", path));
+      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
     });
 
   }
 };
 
 
-struct AsyncUnorderedOutOfGroup
+struct MixedAsyncUnorderedOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -162,6 +163,37 @@ struct AsyncUnorderedOutOfGroup
               std::move(expr)}));
   }
 };
+
+
+struct MixedAsyncOrderedOutOfGroup
+{
+  void operator()(
+      NetworkPrunerContext& ctx,
+      Engine::Execution::TimeNodeComponent& comp,
+      const Path<Scenario::TimeNodeModel>& path)
+  {
+    auto expr = std::make_unique<AsyncExpression>();
+    auto expr_ptr = expr.get();
+    auto& session = ctx.session;
+    auto master = ctx.master;
+
+    ctx.doc.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
+      expr_ptr->ping();
+      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
+    });
+    ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool) {
+      expr_ptr->ping(); // TODO how to transmit the max bound information ??
+      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
+    });
+
+    comp.OSSIATimeNode()->setExpression(
+          std::make_unique<ossia::expression>(
+            ossia::expressions::expression_generic{
+              std::move(expr)}));
+  }
+};
+
+
 
 
 
@@ -257,17 +289,17 @@ void SharedScenarioPolicy::operator()(
     auto master = ctx.master;
     // Each trigger sends its own data, the master will choose the relevant info
     comp.OSSIATimeNode()->enteredEvaluation.add_callback([=,&session,&master] {
-      session.emitMessage(master, session.makeMessage("/trigger_entered", path));
+      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_entered, path));
     });
     comp.OSSIATimeNode()->leftEvaluation.add_callback([=,&session] {
-      session.emitMessage(master, session.makeMessage("/trigger_left", path));
+      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_left, path));
     });
     comp.OSSIATimeNode()->finishedEvaluation.add_callback([=,&session] (bool b) {
       // b : max bound reached
-      session.emitMessage(master, session.makeMessage("/trigger_finished", path, b));
+      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_finished, path, b));
     });
     comp.OSSIATimeNode()->triggered.add_callback([=,&session] {
-      session.emitMessage(master, session.makeMessage("/triggered", path));
+      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_triggered, path));
     });
 
     // If this group has this expression
@@ -282,7 +314,7 @@ void SharedScenarioPolicy::operator()(
           break;
         case SyncMode::AsyncUnordered:
         {
-          AsyncUnorderedInGroup{}(ctx, comp, path);
+          MixedAsyncUnorderedInGroup{}(ctx, comp, path);
           break;
         }
         case SyncMode::SyncOrdered:
@@ -299,7 +331,7 @@ void SharedScenarioPolicy::operator()(
         case SyncMode::AsyncOrdered:
           break;
         case SyncMode::AsyncUnordered:
-          AsyncUnorderedOutOfGroup{}(ctx, comp, path);
+          MixedAsyncUnorderedOutOfGroup{}(ctx, comp, path);
           break;
         case SyncMode::SyncOrdered:
           break;

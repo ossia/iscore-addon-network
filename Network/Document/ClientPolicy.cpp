@@ -35,41 +35,44 @@ ClientEditionPolicy::ClientEditionPolicy(
 {
   auto& stack = c.document.commandStack();
   auto& locker = c.document.locker();
+  auto& mapi = MessagesAPI::instance();
   /////////////////////////////////////////////////////////////////////////////
   /// To the master
   /////////////////////////////////////////////////////////////////////////////
   con(stack, &iscore::CommandStack::localCommand,
-      this, [=] (iscore::Command* cmd)
+      this, [&] (iscore::Command* cmd)
   {
     m_session->master().sendMessage(
-          m_session->makeMessage("/command/new", iscore::CommandData{*cmd}));
+          m_session->makeMessage(mapi.command_new, iscore::CommandData{*cmd}));
   });
 
   // Undo-redo
   con(stack, &iscore::CommandStack::localUndo,
       this, [&] ()
-  { m_session->master().sendMessage(m_session->makeMessage("/command/undo")); });
+  { m_session->master().sendMessage(m_session->makeMessage(mapi.command_undo)); });
   con(stack, &iscore::CommandStack::localRedo,
       this, [&] ()
-  { m_session->master().sendMessage(m_session->makeMessage("/command/redo")); });
+  { m_session->master().sendMessage(m_session->makeMessage(mapi.command_redo)); });
   con(stack, &iscore::CommandStack::localIndexChanged,
       this, [&] (int32_t idx)
-  { m_session->master().sendMessage(m_session->makeMessage("/command/index", idx)); });
+  { m_session->master().sendMessage(m_session->makeMessage(mapi.command_index, idx)); });
 
   // TODO : messages : peut-être utiliser des tuples en tant que structures ?
   // Cela permettrait de spécifier les types proprement ?
   // Lock-unlock
   con(locker, &iscore::ObjectLocker::lock,
       this, [&] (QByteArray arr)
-  { qDebug() << "client send lock"; m_session->master().sendMessage(m_session->makeMessage("/lock", arr)); });
+  { qDebug() << "client send lock";
+    m_session->master().sendMessage(m_session->makeMessage(mapi.lock, arr)); });
   con(locker, &iscore::ObjectLocker::unlock,
       this, [&] (QByteArray arr)
-  { qDebug() << "client send unlock"; m_session->master().sendMessage(m_session->makeMessage("/unlock", arr)); });
+  { qDebug() << "client send unlock";
+    m_session->master().sendMessage(m_session->makeMessage(mapi.unlock, arr)); });
 
   auto& play_act = c.app.actions.action<Actions::NetworkPlay>();
   connect(play_act.action(), &QAction::triggered,
           this, [&] {
-    m_session->master().sendMessage(m_session->makeMessage("/play"));
+    m_session->master().sendMessage(m_session->makeMessage(mapi.play));
   });
 
 
@@ -78,7 +81,7 @@ ClientEditionPolicy::ClientEditionPolicy(
   /////////////////////////////////////////////////////////////////////////////
   // - command comes from the master
   //   -> apply it to the computer only
-  s->mapper().addHandler("/command/new",
+  s->mapper().addHandler(mapi.command_new,
                          [&] (NetworkMessage m)
   {
     iscore::CommandData cmd;
@@ -89,13 +92,13 @@ ClientEditionPolicy::ClientEditionPolicy(
           m_ctx.app.instantiateUndoCommand(cmd));
   });
 
-  s->mapper().addHandler("/command/undo", [&] (NetworkMessage)
+  s->mapper().addHandler(mapi.command_undo, [&] (NetworkMessage)
   { m_ctx.document.commandStack().undoQuiet(); });
 
-  s->mapper().addHandler("/command/redo", [&] (NetworkMessage)
+  s->mapper().addHandler(mapi.command_redo, [&] (NetworkMessage)
   { m_ctx.document.commandStack().redoQuiet(); });
 
-  s->mapper().addHandler("/command/index", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_index, [&] (NetworkMessage m)
   {
     QDataStream stream{m.data};
     int32_t idx;
@@ -103,7 +106,7 @@ ClientEditionPolicy::ClientEditionPolicy(
     m_ctx.document.commandStack().setIndexQuiet(idx);
   });
 
-  s->mapper().addHandler("/lock", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.lock, [&] (NetworkMessage m)
   {
     QDataStream stream{m.data};
     QByteArray data;
@@ -111,7 +114,7 @@ ClientEditionPolicy::ClientEditionPolicy(
     m_ctx.document.locker().on_lock(data);
   });
 
-  s->mapper().addHandler("/unlock", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.unlock, [&] (NetworkMessage m)
   {
     QDataStream stream{m.data};
     QByteArray data;
@@ -119,24 +122,24 @@ ClientEditionPolicy::ClientEditionPolicy(
     m_ctx.document.locker().on_unlock(data);
   });
 
-  s->mapper().addHandler("/play", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.play, [&] (NetworkMessage m)
   {
     play();
   });
 
-  s->mapper().addHandler("/ping", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.ping, [&] (NetworkMessage m)
   {
     qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    m_session->sendMessage(m.clientId, m_session->makeMessage("/pong", t));
+    m_session->sendMessage(m.clientId, m_session->makeMessage(mapi.pong, t));
   });
 
-  s->mapper().addHandler("/pong", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.pong, [&] (NetworkMessage m)
   {
     m_keep.on_pong(m);
   });
 
 
-  s->mapper().addHandler("/session/portinfo", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.session_portinfo, [&] (NetworkMessage m)
   {
     QString ip;
     int port;
@@ -178,6 +181,6 @@ void ClientEditionPolicy::play()
 
 void ClientEditionPolicy::connectToOtherClient(QString ip, int port)
 {
-
+  ISCORE_TODO;
 }
 }

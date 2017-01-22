@@ -14,6 +14,8 @@ struct NetworkPrunerContext
   GroupManager& gm;
   const Id<Client> self;
   const Id<Client> master;
+
+  const MessagesAPI& mapi = MessagesAPI::instance();
 };
 
 

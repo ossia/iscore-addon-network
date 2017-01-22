@@ -41,43 +41,44 @@ MasterEditionPolicy::MasterEditionPolicy(
   m_keep{*s}
 {
   auto& stack = c.document.commandStack();
+  auto& mapi = MessagesAPI::instance();
 
   /////////////////////////////////////////////////////////////////////////////
   /// From the master to the clients
   /////////////////////////////////////////////////////////////////////////////
   con(stack, &iscore::CommandStack::localCommand,
-      this, [=] (iscore::Command* cmd)
+      this, [&] (iscore::Command* cmd)
   {
     m_session->broadcastToAllClients(
-          m_session->makeMessage("/command/new",iscore::CommandData{*cmd}));
+          m_session->makeMessage(mapi.command_new,iscore::CommandData{*cmd}));
   });
 
   // Undo-redo
   con(stack, &iscore::CommandStack::localUndo,
       this, [&] ()
-  { m_session->broadcastToAllClients(m_session->makeMessage("/command/undo")); });
+  { m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_undo)); });
   con(stack, &iscore::CommandStack::localRedo,
       this, [&] ()
-  { m_session->broadcastToAllClients(m_session->makeMessage("/command/redo")); });
+  { m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_redo)); });
   con(stack, &iscore::CommandStack::localIndexChanged,
       this, [&] (int32_t idx)
   {
-    m_session->broadcastToAllClients(m_session->makeMessage("/command/index", idx));
+    m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_index, idx));
   });
 
   // Lock - unlock
   con(c.objectLocker, &iscore::ObjectLocker::lock,
       this, [&] (QByteArray arr)
-  { m_session->broadcastToAllClients(m_session->makeMessage("/lock", arr)); });
+  { m_session->broadcastToAllClients(m_session->makeMessage(mapi.lock, arr)); });
   con(c.objectLocker, &iscore::ObjectLocker::unlock,
       this, [&] (QByteArray arr)
-  { m_session->broadcastToAllClients(m_session->makeMessage("/unlock", arr)); });
+  { m_session->broadcastToAllClients(m_session->makeMessage(mapi.unlock, arr)); });
 
   // Play
   auto& play_act = c.app.actions.action<Actions::NetworkPlay>();
   connect(play_act.action(), &QAction::triggered,
           this, [&] {
-    m_session->broadcastToAllClients(m_session->makeMessage("/play"));
+    m_session->broadcastToAllClients(m_session->makeMessage(mapi.play));
     play();
   });
 
@@ -85,7 +86,7 @@ MasterEditionPolicy::MasterEditionPolicy(
   /////////////////////////////////////////////////////////////////////////////
   /// From a client to the master and the other clients
   /////////////////////////////////////////////////////////////////////////////
-  s->mapper().addHandler("/command/new", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_new, [&] (NetworkMessage m)
   {
     iscore::CommandData cmd;
     DataStreamWriter writer{m.data};
@@ -99,18 +100,18 @@ MasterEditionPolicy::MasterEditionPolicy(
   });
 
   // Undo-redo
-  s->mapper().addHandler("/command/undo", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_undo, [&] (NetworkMessage m)
   {
     stack.undoQuiet();
     m_session->broadcastToOthers(m.clientId, m);
   });
-  s->mapper().addHandler("/command/redo", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_redo, [&] (NetworkMessage m)
   {
     stack.redoQuiet();
     m_session->broadcastToOthers(m.clientId, m);
   });
 
-  s->mapper().addHandler("/command/index", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_index, [&] (NetworkMessage m)
   {
     QDataStream stream{m.data};
     int32_t idx;
@@ -121,7 +122,7 @@ MasterEditionPolicy::MasterEditionPolicy(
 
 
   // Lock-unlock
-  s->mapper().addHandler("/lock", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.lock, [&] (NetworkMessage m)
   {
     QDataStream stream{m.data};
     QByteArray data;
@@ -130,7 +131,7 @@ MasterEditionPolicy::MasterEditionPolicy(
     m_session->broadcastToOthers(m.clientId, m);
   });
 
-  s->mapper().addHandler("/unlock", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.unlock, [&] (NetworkMessage m)
   {
     QDataStream stream{m.data};
     QByteArray data;
@@ -139,25 +140,26 @@ MasterEditionPolicy::MasterEditionPolicy(
     m_session->broadcastToOthers(m.clientId, m);
   });
 
-  s->mapper().addHandler("/play", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.play, [&] (NetworkMessage m)
   {
-    m_session->broadcastToAllClients(m_session->makeMessage("/play"));
+    m_session->broadcastToAllClients(m_session->makeMessage(mapi.play));
     play();
   });
 
-  s->mapper().addHandler("/ping", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.ping, [&] (NetworkMessage m)
   {
-    qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    m_session->sendMessage(m.clientId, m_session->makeMessage("/pong", t));
+    qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(
+          std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    m_session->sendMessage(m.clientId, m_session->makeMessage(mapi.pong, t));
   });
 
-  s->mapper().addHandler("/pong", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.pong, [&] (NetworkMessage m)
   {
     m_keep.on_pong(m);
   });
 
 
-  s->mapper().addHandler("/session/portinfo", [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.session_portinfo, [&] (NetworkMessage m)
   {
     QString s;
     int p;
@@ -196,7 +198,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     NetworkDocumentPlugin& doc,
     const iscore::DocumentContext& c)
 {
-  s.mapper().addHandler_("/trigger_entered",
+  auto& mapi = MessagesAPI::instance();
+  s.mapper().addHandler_(mapi.trigger_entered,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
     // TODO there should be a consensus on this point.
@@ -211,14 +214,14 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
   });
 
-  s.mapper().addHandler_("/trigger_left",
+  s.mapper().addHandler_(mapi.trigger_left,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
     // TODO there should be a consensus on this point.
     qDebug() << m.address << p;
   });
 
-  s.mapper().addHandler_("/trigger_finished",
+  s.mapper().addHandler_(mapi.trigger_finished,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     // TODO there should be a consensus on this point.
@@ -232,7 +235,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
   });
 
-  s.mapper().addHandler_("/trigger_expression_true",
+  s.mapper().addHandler_(mapi.trigger_expression_true,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
     auto it = doc.network_expressions.find(p);
@@ -273,14 +276,14 @@ MasterExecutionPolicy::MasterExecutionPolicy(
             const auto& clients = doc.groupManager().clients(e.prevGroups);
             s.broadcastToClients(
                   clients,
-                  s.makeMessage("/triggered", p, true));
+                  s.makeMessage(mapi.trigger_triggered, p, true));
 
             break;
           }
           case SyncMode::AsyncUnordered:
           {
             // Everyone should trigger instantaneously.
-            s.broadcastToAll(s.makeMessage("/triggered", p, true));
+            s.broadcastToAll(s.makeMessage(mapi.trigger_triggered, p, true));
 
             break;
           }
@@ -299,7 +302,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     }
   });
 
-  s.mapper().addHandler_("/trigger_previous_completed",
+  s.mapper().addHandler_(mapi.trigger_previous_completed,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
     auto it = doc.network_expressions.find(p);
@@ -322,16 +325,16 @@ MasterExecutionPolicy::MasterExecutionPolicy(
         if(e.previousCompleted.size() >= doc.groupManager().clientsCount(e.prevGroups))
         {
           // If we're in a synchronized scenario :
-          s.broadcastToAll(s.makeMessage("/triggered", p, true));
+          s.broadcastToAll(s.makeMessage(mapi.trigger_triggered, p, true));
           // Mixed :
-          // s.broadcastToClients(doc.groupManager().clients(e.nextGroups), s.makeMessage("/triggered", p, true));
+          // s.broadcastToClients(doc.groupManager().clients(e.nextGroups), s.makeMessage(mapi.trigger_triggered, p, true));
         }
       }
     }
 
   });
 
-  s.mapper().addHandler_("/triggered",
+  s.mapper().addHandler_(mapi.trigger_triggered,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_triggered.find(p);
@@ -352,7 +355,8 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     NetworkDocumentPlugin& doc,
     const iscore::DocumentContext& c)
 {
-  s.mapper().addHandler_("/trigger_entered",
+  auto& mapi = MessagesAPI::instance();
+  s.mapper().addHandler_(mapi.trigger_entered,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
     auto it = doc.trigger_evaluation_entered.find(p);
@@ -363,12 +367,12 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     }
   });
 
-  s.mapper().addHandler_("/trigger_left",
+  s.mapper().addHandler_(mapi.trigger_left,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
   {
   });
 
-  s.mapper().addHandler_("/trigger_finished",
+  s.mapper().addHandler_(mapi.trigger_finished,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_evaluation_finished.find(p);
@@ -379,7 +383,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     }
   });
 
-  s.mapper().addHandler_("/triggered",
+  s.mapper().addHandler_(mapi.trigger_triggered,
                          [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_triggered.find(p);
