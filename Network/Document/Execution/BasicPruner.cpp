@@ -29,6 +29,7 @@ void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Gro
   ctx.doc.trigger_evaluation_entered.clear();
   ctx.doc.trigger_evaluation_finished.clear();
   ctx.doc.trigger_triggered.clear();
+  ctx.doc.network_expressions.clear();
   SharedScenarioPolicy{ctx}(cst, cur);
 }
 

@@ -51,17 +51,18 @@ struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
     // Then set specific callbacks for outside events
     auto& session = ctx.session;
     auto master = ctx.master;
+    auto& mapi = ctx.mapi;
 
     // When the trigger enters evaluation
-    ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session] (Id<Client> orig) {
+    ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session,&mapi] (Id<Client> orig) {
       e.shared_expr->it = ossia::expressions::add_callback(
                             *e.shared_expr->expr,
-                            [=,&session] (bool b) {
+                            [=,&session,&mapi] (bool b) {
         if(b)
         {
           session.emitMessage(
                 master,
-                session.makeMessage(ctx.mapi.trigger_expression_true, path));
+                session.makeMessage(mapi.trigger_expression_true, path));
         }
       });
     });
@@ -98,10 +99,11 @@ struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
 
     // Then set specific callbacks for outside events
     auto& session = ctx.session;
+    auto& mapi = ctx.mapi;
     auto master = ctx.master;
 
     // When the trigger enters evaluation
-    ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session] (Id<Client> orig) {
+    ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session,&mapi] (Id<Client> orig) {
       e.shared_expr->it = ossia::expressions::add_callback(
                         *e.shared_expr->expr,
                         [=,&session] (bool b) {
@@ -109,7 +111,7 @@ struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
         {
           session.emitMessage(
                 master,
-                session.makeMessage(ctx.mapi.trigger_expression_true, path));
+                session.makeMessage(mapi.trigger_expression_true, path));
         }
       });
     });
@@ -122,7 +124,7 @@ struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
       e.async_expr->ping(); // TODO how to transmit the max bound information ??
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers
-      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
+      session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
 
     // When the trigger can be triggered
@@ -134,7 +136,7 @@ struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
       e.async_expr->ping();
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers
-      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
+      session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
 
   }
@@ -176,15 +178,16 @@ struct SharedAsyncOrderedOutOfGroup
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
     auto& session = ctx.session;
+    auto& mapi = ctx.mapi;
     auto master = ctx.master;
 
-    ctx.doc.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
+    ctx.doc.trigger_triggered.emplace(path, [=,&session,&mapi] (Id<Client> orig) {
       expr_ptr->ping();
-      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
+      session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool) {
+    ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session,&mapi] (Id<Client> orig, bool) {
       expr_ptr->ping(); // TODO how to transmit the max bound information ??
-      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
+      session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
 
     comp.OSSIATimeNode()->setExpression(
@@ -278,6 +281,7 @@ void SharedScenarioPolicy::operator()(
     Engine::Execution::TimeNodeComponent& comp,
     const Group& parent_group)
 {
+  auto& mapi = ctx.mapi;
   // First fetch the required variables.
   const Group& tn_group = getGroup(ctx.gm, parent_group, comp.iscoreTimeNode());
 
@@ -289,18 +293,18 @@ void SharedScenarioPolicy::operator()(
     auto& session = ctx.session;
     auto master = ctx.master;
     // Each trigger sends its own data, the master will choose the relevant info
-    comp.OSSIATimeNode()->enteredEvaluation.add_callback([=,&session,&master] {
-      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_entered, path));
+    comp.OSSIATimeNode()->enteredEvaluation.add_callback([path,&mapi,&session,&master] {
+      session.emitMessage(master, session.makeMessage(mapi.trigger_entered, path));
     });
     comp.OSSIATimeNode()->leftEvaluation.add_callback([=,&session] {
-      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_left, path));
+      session.emitMessage(master, session.makeMessage(mapi.trigger_left, path));
     });
     comp.OSSIATimeNode()->finishedEvaluation.add_callback([=,&session] (bool b) {
       // b : max bound reached
-      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_finished, path, b));
+      session.emitMessage(master, session.makeMessage(mapi.trigger_finished, path, b));
     });
     comp.OSSIATimeNode()->triggered.add_callback([=,&session] {
-      session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_triggered, path));
+      session.emitMessage(master, session.makeMessage(mapi.trigger_triggered, path));
     });
 
     // If this group has this expression
