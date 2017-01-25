@@ -99,6 +99,8 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
 
       auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
       auto execpol = new MasterExecutionPolicy(*serv, *realplug, doc->context());
+
+      qApp->setStyleSheet("");
       realplug->setExecPolicy(execpol);
       doc->model().addPluginModel(realplug);
 
