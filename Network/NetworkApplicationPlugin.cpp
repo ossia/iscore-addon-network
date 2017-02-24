@@ -48,7 +48,7 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(const iscore::GUIApplicationC
 {
 }
 
-void NetworkApplicationPlugin::setupClientConnection(QString ip, int port)
+void NetworkApplicationPlugin::setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>)
 {
   m_sessionBuilder = std::make_unique<ClientSessionBuilder>(
         context,
@@ -119,7 +119,7 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
     if(dial.exec())
     {
       // Default is 127.0.0.1 : 9090
-      setupClientConnection(dial.ip(), dial.port());
+      setupClientConnection(QString{}, dial.ip(), dial.port(), {});
     }
   });
 

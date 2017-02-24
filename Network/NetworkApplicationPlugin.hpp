@@ -33,7 +33,7 @@ class NetworkApplicationPlugin :
 
 //        zmq::context_t zmq{1};
     public slots:
-        void setupClientConnection(QString ip, int port);
+        void setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
 
     private:
         GUIElements makeGUIElements() override;
