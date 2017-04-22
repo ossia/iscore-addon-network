@@ -117,14 +117,6 @@ set(SRCS
     "${CMAKE_CURRENT_SOURCE_DIR}/iscore_addon_network.cpp"
 )
 
-if(ISCORE_ZEROCONF)
-    message("Will use ZeroConf")
-    if(WIN32)
-        include_directories(/f/kdnssd/usr/include)
-        include_directories("f:/kdnssd/usr/include")
-    endif()
-endif()
-
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
 iscore_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
 
@@ -139,13 +131,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     Qt5::Network
 #                                    libzmq-static
                                     )
-if(ISCORE_ZEROCONF)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_ZEROCONF)
-    target_link_libraries(${PROJECT_NAME} PUBLIC KF5::DNSSD)
 
-    if(NOT APPLE AND NOT WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC dns_sd)
-    endif()
-endif()
+target_compile_definitions(${PROJECT_NAME} PRIVATE USE_ZEROCONF)
 
 setup_iscore_plugin(${PROJECT_NAME})

@@ -29,7 +29,7 @@ struct ExpressionAsyncInGroup
     e.shared_expr = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
     e.async_expr = new AsyncExpression;
 
-    comp.OSSIATimeNode()->setExpression(
+    comp.OSSIATimeNode()->set_expression(
           std::make_unique<ossia::expression>(
             ossia::expressions::expression_generic{
               std::unique_ptr<ossia::expressions::expression_generic_base>(e.async_expr)})
@@ -160,7 +160,7 @@ struct SharedAsyncUnorderedOutOfGroup
       expr_ptr->ping(); // TODO how to transmit the max bound information ??
     });
 
-    comp.OSSIATimeNode()->setExpression(
+    comp.OSSIATimeNode()->set_expression(
           std::make_unique<ossia::expression>(
             ossia::expressions::expression_generic{
               std::move(expr)}));
@@ -190,7 +190,7 @@ struct SharedAsyncOrderedOutOfGroup
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
 
-    comp.OSSIATimeNode()->setExpression(
+    comp.OSSIATimeNode()->set_expression(
           std::make_unique<ossia::expression>(
             ossia::expressions::expression_generic{
               std::move(expr)}));
@@ -293,13 +293,13 @@ void SharedScenarioPolicy::operator()(
     auto& session = ctx.session;
     auto master = ctx.master;
     // Each trigger sends its own data, the master will choose the relevant info
-    comp.OSSIATimeNode()->enteredEvaluation.add_callback([path,&mapi,&session,&master] {
+    comp.OSSIATimeNode()->entered_evaluation.add_callback([path,&mapi,&session,&master] {
       session.emitMessage(master, session.makeMessage(mapi.trigger_entered, path));
     });
-    comp.OSSIATimeNode()->leftEvaluation.add_callback([=,&session] {
+    comp.OSSIATimeNode()->left_evaluation.add_callback([=,&session] {
       session.emitMessage(master, session.makeMessage(mapi.trigger_left, path));
     });
-    comp.OSSIATimeNode()->finishedEvaluation.add_callback([=,&session] (bool b) {
+    comp.OSSIATimeNode()->finished_evaluation.add_callback([=,&session] (bool b) {
       // b : max bound reached
       session.emitMessage(master, session.makeMessage(mapi.trigger_finished, path, b));
     });

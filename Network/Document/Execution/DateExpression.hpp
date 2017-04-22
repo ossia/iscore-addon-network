@@ -16,8 +16,8 @@ class DateExpression :
 
     void update() override;
     bool evaluate() const override;
-    void onFirstCallbackAdded(ossia::expressions::expression_generic& self) override;
-    void onRemovingLastCallback(ossia::expressions::expression_generic& self) override;
+    void on_first_callback_added(ossia::expressions::expression_generic& self) override;
+    void on_removing_last_callback(ossia::expressions::expression_generic& self) override;
 
 signals:
     void subexpressionReady();
@@ -43,8 +43,8 @@ class AsyncExpression :
 
     void update() override;
     bool evaluate() const override;
-    void onFirstCallbackAdded(ossia::expressions::expression_generic& self) override;
-    void onRemovingLastCallback(ossia::expressions::expression_generic& self) override;
+    void on_first_callback_added(ossia::expressions::expression_generic& self) override;
+    void on_removing_last_callback(ossia::expressions::expression_generic& self) override;
 
 private:
     std::atomic_bool m_ping{};

@@ -32,7 +32,7 @@ bool DateExpression::evaluate() const
       : true;
 }
 
-void DateExpression::onFirstCallbackAdded(
+void DateExpression::on_first_callback_added(
     ossia::expressions::expression_generic& self)
 {
   // start first expression observation
@@ -48,7 +48,7 @@ void DateExpression::onFirstCallbackAdded(
 
 }
 
-void DateExpression::onRemovingLastCallback(
+void DateExpression::on_removing_last_callback(
     ossia::expressions::expression_generic& self)
 {
   if(m_expression)
@@ -93,13 +93,13 @@ bool AsyncExpression::evaluate() const
   return m_ping;
 }
 
-void AsyncExpression::onFirstCallbackAdded(
+void AsyncExpression::on_first_callback_added(
     ossia::expressions::expression_generic& self)
 {
   m_cb = [&] { self.send(m_ping); };
 }
 
-void AsyncExpression::onRemovingLastCallback(
+void AsyncExpression::on_removing_last_callback(
     ossia::expressions::expression_generic& self)
 {
   m_cb = {};

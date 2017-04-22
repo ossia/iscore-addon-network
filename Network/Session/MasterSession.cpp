@@ -29,13 +29,14 @@ MasterSession::MasterSession(iscore::Document* doc, LocalClient* theclient, Id<S
     con(localClient(), SIGNAL(createNewClient(QTcpSocket*)),
             this, SLOT(on_createNewClient(QTcpSocket*)));
 
-
+/* TODO Servus
 #ifdef USE_ZEROCONF
     auto service = new KDNSSD::PublicService("Session i-score",
                                              "_iscore._tcp",
                                              localClient().localPort());
     service->publishAsync();
 #endif
+*/
 }
 
 void MasterSession::on_createNewClient(QTcpSocket* sock)

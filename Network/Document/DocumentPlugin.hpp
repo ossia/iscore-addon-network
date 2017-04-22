@@ -12,7 +12,7 @@
 #include <Engine/Executor/TimeNodeComponent.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
-
+#include <hopscotch_set.h>
 #include <QObject>
 #include <vector>
 #include <functional>
