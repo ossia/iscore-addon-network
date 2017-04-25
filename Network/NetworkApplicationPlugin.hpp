@@ -6,10 +6,7 @@
 #include <memory>
 //#include <zmq.hpp>
 namespace iscore {
-
-class Document;
 class MenubarManager;
-
 }  // namespace iscore
 struct VisitorVariant;
 

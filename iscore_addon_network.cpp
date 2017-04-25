@@ -27,7 +27,7 @@ iscore_addon_network::~iscore_addon_network()
 
 // Interfaces implementations :
 iscore::GUIApplicationPlugin*
-iscore_addon_network::make_applicationPlugin(
+iscore_addon_network::make_guiApplicationPlugin(
         const iscore::GUIApplicationContext& app)
 {
     return new Network::NetworkApplicationPlugin{app};

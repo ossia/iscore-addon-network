@@ -57,8 +57,6 @@ ClientEditionPolicy::ClientEditionPolicy(
       this, [&] (int32_t idx)
   { m_session->master().sendMessage(m_session->makeMessage(mapi.command_index, idx)); });
 
-  // TODO : messages : peut-être utiliser des tuples en tant que structures ?
-  // Cela permettrait de spécifier les types proprement ?
   // Lock-unlock
   con(locker, &iscore::ObjectLocker::lock,
       this, [&] (QByteArray arr)
@@ -170,7 +168,7 @@ void ClientEditionPolicy::play()
   auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
-    auto& plug = iscore::AppContext().applicationPlugin<Engine::ApplicationPlugin>();
+    auto& plug = iscore::AppContext().guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.on_play(
           sm->baseConstraint(),
           true,

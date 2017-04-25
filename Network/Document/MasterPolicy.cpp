@@ -184,7 +184,7 @@ void MasterEditionPolicy::play()
   auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
-    auto& plug = m_ctx.app.applicationPlugin<Engine::ApplicationPlugin>();
+    auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.on_play(
           sm->baseConstraint(),
           true,

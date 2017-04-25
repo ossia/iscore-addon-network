@@ -20,15 +20,15 @@ class PanelFactory;
 class iscore_addon_network :
         public QObject,
         public iscore::Plugin_QtInterface,
-        public iscore::GUIApplicationPlugin_QtInterface,
+        public iscore::ApplicationPlugin_QtInterface,
         public iscore::CommandFactory_QtInterface,
         public iscore::FactoryInterface_QtInterface
 {
         Q_OBJECT
-        Q_PLUGIN_METADATA(IID GUIApplicationPlugin_QtInterface_iid)
+        Q_PLUGIN_METADATA(IID ApplicationPlugin_QtInterface_iid)
         Q_INTERFACES(
                 iscore::Plugin_QtInterface
-                iscore::GUIApplicationPlugin_QtInterface
+                iscore::ApplicationPlugin_QtInterface
                 iscore::CommandFactory_QtInterface
                 iscore::FactoryInterface_QtInterface)
   ISCORE_PLUGIN_METADATA(1, "33508c6d-46a1-4449-bfff-57246d579621")
@@ -42,7 +42,7 @@ class iscore_addon_network :
                 const iscore::ApplicationContext& ctx,
                 const iscore::InterfaceKey& factoryName) const override;
 
-        iscore::GUIApplicationPlugin* make_applicationPlugin(
+        iscore::GUIApplicationPlugin* make_guiApplicationPlugin(
                 const iscore::GUIApplicationContext& app) override;
 
         std::pair<const CommandGroupKey, CommandGeneratorMap> make_commands() override;

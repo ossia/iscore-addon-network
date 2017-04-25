@@ -4,11 +4,6 @@
 #include <Network/Document/Timekeeper.hpp>
 
 #include "DocumentPlugin.hpp"
-
-namespace iscore {
-class Document;
-}  // namespace iscore
-
 // MOVEME
 namespace Network
 {

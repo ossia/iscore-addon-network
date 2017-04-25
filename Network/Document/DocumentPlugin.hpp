@@ -21,10 +21,6 @@ class DataStream;
 class JSONObject;
 class QWidget;
 struct VisitorVariant;
-namespace iscore
-{
-class Document;
-}
 namespace Network
 {
 class Group;

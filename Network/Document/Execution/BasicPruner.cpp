@@ -74,7 +74,7 @@ void BasicPruner::operator()(const Engine::Execution::Context& exec_ctx)
 {
   // We mute all the processes that are not in a group
   // of this client.
-  auto& root = exec_ctx.sys.baseScenario()->baseConstraint();
+  auto& root = exec_ctx.scenario.baseConstraint();
 
   // Let's assume for now that we start in the "all" group...
   recurse(root, *ctx.gm.group(ctx.gm.defaultGroup()));
