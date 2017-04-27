@@ -3,6 +3,7 @@
 #include <QMap>
 #include <QString>
 #include <functional>
+#include <QDataStream>
 #include <iscore/tools/std/HashMap.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
 
