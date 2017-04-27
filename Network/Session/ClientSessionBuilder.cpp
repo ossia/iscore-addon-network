@@ -102,7 +102,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     // in case somebody does undo, so that the computer who joined later can still
     // undo, too.
 
-    iscore::Document* doc = m_context.documents.loadDocument(
+    iscore::Document* doc = m_context.docManager.loadDocument(
           m_context,
           m_documentData,
           *m_context.interfaces<iscore::DocumentDelegateList>().begin()); // TODO id instead
