@@ -78,6 +78,11 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   groupManager().addGroup(allGroup);
 }
 
+NetworkDocumentPlugin::~NetworkDocumentPlugin()
+{
+
+}
+
 void NetworkDocumentPlugin::setPolicy(EditionPolicy * pol)
 {
   delete m_policy;
@@ -94,6 +99,16 @@ iscore::DocumentPlugin*DocumentPluginFactory::load(
 {
   return deserialize_dyn(var, [&] (auto&& deserializer)
   { return new NetworkDocumentPlugin{doc, deserializer, parent}; });
+}
+
+ExecutionPolicy::~ExecutionPolicy()
+{
+
+}
+
+EditionPolicy::~EditionPolicy()
+{
+
 }
 
 }

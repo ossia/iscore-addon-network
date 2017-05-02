@@ -10,7 +10,7 @@ class MenubarManager;
 }  // namespace iscore
 struct VisitorVariant;
 
-#ifdef USE_ZEROCONF
+#ifdef OSSIA_DNSSD
 class ZeroconfBrowser;
 #endif
 
@@ -31,13 +31,15 @@ class NetworkApplicationPlugin :
 //        zmq::context_t zmq{1};
     public slots:
         void setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
+        void setupPlayerConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
 
     private:
         GUIElements makeGUIElements() override;
         std::unique_ptr<ClientSessionBuilder> m_sessionBuilder;
 
-#ifdef USE_ZEROCONF
-        ZeroconfBrowser* m_zeroconfBrowser{};
+#ifdef OSSIA_DNSSD
+        ZeroconfBrowser* m_serverBrowser{};
+        ZeroconfBrowser* m_playerBrowser{};
 #endif
 };
 }

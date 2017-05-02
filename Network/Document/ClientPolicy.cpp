@@ -25,7 +25,6 @@
 
 namespace Network
 {
-
 ClientEditionPolicy::ClientEditionPolicy(
     ClientSession* s,
     const iscore::DocumentContext& c):
@@ -66,12 +65,6 @@ ClientEditionPolicy::ClientEditionPolicy(
       this, [&] (QByteArray arr)
   { qDebug() << "client send unlock";
     m_session->master().sendMessage(m_session->makeMessage(mapi.unlock, arr)); });
-
-  auto& play_act = c.app.actions.action<Actions::NetworkPlay>();
-  connect(play_act.action(), &QAction::triggered,
-          this, [&] {
-    m_session->master().sendMessage(m_session->makeMessage(mapi.play));
-  });
 
 
   /////////////////////////////////////////////////////////////////////////////
@@ -162,9 +155,26 @@ ClientEditionPolicy::ClientEditionPolicy(
   });
 }
 
-void ClientEditionPolicy::play()
+void ClientEditionPolicy::connectToOtherClient(QString ip, int port)
 {
+  ISCORE_TODO;
+}
 
+GUIClientEditionPolicy::GUIClientEditionPolicy(
+    ClientSession* s,
+    const iscore::DocumentContext& c):
+  ClientEditionPolicy{s, c}
+{
+  auto& mapi = MessagesAPI::instance();
+  auto& play_act = c.app.actions.action<Actions::NetworkPlay>();
+  connect(play_act.action(), &QAction::triggered,
+          this, [&] {
+    m_session->master().sendMessage(m_session->makeMessage(mapi.play));
+  });
+}
+
+void GUIClientEditionPolicy::play()
+{
   auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
@@ -177,8 +187,28 @@ void ClientEditionPolicy::play()
   }
 }
 
-void ClientEditionPolicy::connectToOtherClient(QString ip, int port)
+PlayerClientEditionPolicy::PlayerClientEditionPolicy(
+    ClientSession* s,
+    const iscore::DocumentContext& c):
+  ClientEditionPolicy{s, c}
 {
-  ISCORE_TODO;
 }
+
+void PlayerClientEditionPolicy::play()
+{
+  if(onPlay)
+    onPlay();
+  /*
+  auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  if(sm)
+  {
+    auto& plug = iscore::GUIAppContext().guiApplicationPlugin<Engine::ApplicationPlugin>();
+    plug.on_play(
+          sm->baseConstraint(),
+          true,
+          BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
+    TimeVal{});
+  }*/
+}
+
 }

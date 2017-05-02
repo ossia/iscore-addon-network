@@ -5,14 +5,12 @@
 #include <Network/Document/MasterPolicy.hpp>
 
 #include "ClientSession.hpp"
-#include "ClientSessionBuilder.hpp"
+#include "PlayerSessionBuilder.hpp"
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Communication/NetworkSocket.hpp>
 #include <iscore/command/Command.hpp>
 #include <iscore/plugins/customfactory/StringFactoryKey.hpp>
 #include <iscore/model/Identifier.hpp>
-#include <core/presenter/Presenter.hpp>
-#include <core/presenter/DocumentManager.hpp>
 #include <core/document/Document.hpp>
 #include <core/command/CommandStackSerialization.hpp>
 #include <Network/Client/LocalClient.hpp>
@@ -24,18 +22,18 @@
 #include <iscore/application/ApplicationContext.hpp>
 namespace Network
 {
-ClientSessionBuilder::ClientSessionBuilder(
-    const iscore::GUIApplicationContext& ctx,
+PlayerSessionBuilder::PlayerSessionBuilder(
+    const iscore::ApplicationContext& ctx,
     QString ip,
     int port):
   m_context{ctx}
 {
   m_mastersocket = new NetworkSocket(ip, port, nullptr);
   connect(m_mastersocket, &NetworkSocket::messageReceived,
-          this, &ClientSessionBuilder::on_messageReceived);
+          this, &PlayerSessionBuilder::on_messageReceived);
 }
 
-void ClientSessionBuilder::initiateConnection()
+void PlayerSessionBuilder::initiateConnection()
 {
   // Todo only call this if the socket is ready.
   NetworkMessage askId;
@@ -48,22 +46,22 @@ void ClientSessionBuilder::initiateConnection()
   m_mastersocket->sendMessage(askId);
 }
 
-ClientSession*ClientSessionBuilder::builtSession() const
+ClientSession*PlayerSessionBuilder::builtSession() const
 {
   return m_session;
 }
 
-QByteArray ClientSessionBuilder::documentData() const
+QByteArray PlayerSessionBuilder::documentData() const
 {
   return m_documentData;
 }
 
-const std::vector<iscore::CommandData>& ClientSessionBuilder::commandStackData() const
+const std::vector<iscore::CommandData>& PlayerSessionBuilder::commandStackData() const
 {
   return m_commandStack;
 }
 
-void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
+void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
 {
   auto& mapi = MessagesAPI::instance();
   if(m.address == mapi.session_idOffer)
@@ -96,16 +94,17 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     DataStreamWriter writer{m.data};
     writer.m_stream >> m_documentData;
 
-    // The SessionBuilder should have a saved document and saved command list.
-    // However there is a difference with what happens when there is a crash :
-    // Here the document is sent as it is in its current state. The CommandList only serves
-    // in case somebody does undo, so that the computer who joined later can still
-    // undo, too.
+    if(!documentLoader)
+    {
+        qDebug() << "Cannot load document";
+        delete m_session;
+        m_session = nullptr;
 
-    iscore::Document* doc = m_context.docManager.loadDocument(
-          m_context,
-          m_documentData,
-          *m_context.interfaces<iscore::DocumentDelegateList>().begin()); // TODO id instead
+        emit sessionFailed();
+        return;
+    }
+
+    iscore::Document* doc = documentLoader(m_documentData);
 
     if(!doc)
     {
@@ -121,11 +120,11 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
           m_context.components,
           writer,
           doc->commandStack(),
-          [] (auto) { }); // No redo.
-
+          [] (auto) { });
+// No redo.
     auto& ctx = doc->context();
     auto& np = ctx.plugin<NetworkDocumentPlugin>();
-    np.setPolicy(new GUIClientEditionPolicy{m_session, ctx});
+    np.setPolicy(new PlayerClientEditionPolicy{m_session, ctx});
     auto execpol = new SlaveExecutionPolicy(*m_session, np, doc->context());
     np.setExecPolicy(execpol);
 

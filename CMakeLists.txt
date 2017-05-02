@@ -49,7 +49,9 @@ set(HDRS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpDialog.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpWidget.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/NetworkApplicationPlugin.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/PlayerPlugin.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSessionBuilder.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/PlayerSessionBuilder.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSession.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/MasterSession.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/RemoteClientBuilder.hpp"
@@ -105,7 +107,9 @@ set(SRCS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpDialog.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpWidget.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/NetworkApplicationPlugin.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/PlayerPlugin.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSessionBuilder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/PlayerSessionBuilder.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSession.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/MasterSession.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/RemoteClientBuilder.cpp"
@@ -119,6 +123,12 @@ set(SRCS
 
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
 iscore_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
+target_sources(ossia PRIVATE $<TARGET_OBJECTS:Servus>)
+get_target_property(SERVUS_LINK_LIBRARIES Servus INTERFACE_LINK_LIBRARIES)
+get_target_property(SERVUS_COMPILE_DEFINITIONS Servus INTERFACE_COMPILE_DEFINITIONS)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${SERVUS_LINK_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${OSSIA_3RDPARTY_FOLDER}/Servus)
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${SERVUS_COMPILE_DEFINITIONS})
 
 #target_include_directories(${PROJECT_NAME} PRIVATE "${OSSIA_3RDPARY_DIRECTORY}/libzmq/include")
 target_link_libraries(${PROJECT_NAME} PUBLIC
@@ -132,6 +142,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 #                                    libzmq-static
                                     )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE USE_ZEROCONF)
+target_compile_definitions(${PROJECT_NAME} PRIVATE OSSIA_DNSSD)
 
 setup_iscore_plugin(${PROJECT_NAME})

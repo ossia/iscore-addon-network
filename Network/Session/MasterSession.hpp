@@ -10,15 +10,6 @@ class QTcpSocket;
 namespace iscore {
 class Document;
 }
-
-#ifdef USE_ZEROCONF
-namespace KDNSSD
-{
-    class PublicService;
-}
-#endif
-
-
 namespace Network
 {
 class Client;
@@ -49,7 +40,7 @@ class MasterSession : public Session
         iscore::Document* m_document{};
         QList<RemoteClientBuilder*> m_clientBuilders;
 
-#ifdef USE_ZEROCONF
+#ifdef falseOSSIA_DNSSD
         KDNSSD::PublicService* m_service{};
 #endif
 

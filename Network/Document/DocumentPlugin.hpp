@@ -12,6 +12,7 @@
 #include <Engine/Executor/TimeNodeComponent.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
+#include <iscore_addon_network_export.h>
 #include <hopscotch_set.h>
 #include <QObject>
 #include <vector>
@@ -74,21 +75,23 @@ struct NetworkExpressionData
 class Session;
 class GroupManager;
 class GroupMetadata;
-class EditionPolicy : public QObject
+class ISCORE_ADDON_NETWORK_EXPORT EditionPolicy : public QObject
 {
 public:
   using QObject::QObject;
+  virtual ~EditionPolicy();
   virtual Session* session() const = 0;
   virtual void play() = 0;
 };
 
-class ExecutionPolicy : public QObject
+class ISCORE_ADDON_NETWORK_EXPORT ExecutionPolicy : public QObject
 {
 public:
   using QObject::QObject;
+  virtual ~ExecutionPolicy();
 };
 
-class NetworkDocumentPlugin final :
+class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
     public iscore::SerializableDocumentPlugin
 {
   Q_OBJECT
@@ -101,6 +104,8 @@ class NetworkDocumentPlugin final :
       EditionPolicy* policy,
       Id<iscore::DocumentPlugin> id,
       QObject* parent);
+
+  virtual ~NetworkDocumentPlugin();
 
   // Loading has to be in two steps since the plugin policy is different from the client
   // and server.

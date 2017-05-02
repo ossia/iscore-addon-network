@@ -29,7 +29,7 @@
 #include <Network/Session/MasterSession.hpp>
 #include <iscore/actions/ActionManager.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
-#if defined(USE_ZEROCONF)
+#if defined(OSSIA_DNSSD)
 #include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
 #endif
 
@@ -70,20 +70,61 @@ void NetworkApplicationPlugin::setupClientConnection(QString name, QString ip, i
   m_sessionBuilder->initiateConnection();
 }
 
+void NetworkApplicationPlugin::setupPlayerConnection(
+    QString name,
+    QString ip,
+    int port,
+    QMap<QString, QByteArray>)
+{
+  auto cur = currentDocument();
+  if(!cur)
+    return;
+
+  NetworkDocumentPlugin* plug = cur->context().findPlugin<NetworkDocumentPlugin>();
+  if(!plug)
+    return;
+
+  auto session = plug->policy().session();
+  auto ms = dynamic_cast<MasterSession*>(session);
+  if(!ms)
+    return;
+
+  auto s = new QTcpSocket;
+
+  s->connectToHost(ip, port);
+  connect(s, &QTcpSocket::connected,
+          this, [=] {
+    s->write(QString::number(ms->localClient().localPort()).toUtf8());
+    //s->deleteLater();
+  });
+  /*
+  connect(s, &QTcpSocket::error,
+          this, [=] (auto) {
+    s->deleteLater();
+  });
+  */
+}
+
 iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
 {
-#ifdef USE_ZEROCONF
-  m_zeroconfBrowser = new ZeroconfBrowser{"_iscore._tcp", qApp->activeWindow()};
-  connect(m_zeroconfBrowser, &ZeroconfBrowser::sessionSelected,
-          this, &NetworkApplicationPlugin::setupClientConnection);
-#endif
-
   using namespace iscore;
   QMenu* fileMenu = context.menus.get().at(iscore::Menus::File()).menu();
 
-  // TODO do this better.
-#ifdef USE_ZEROCONF
-  fileMenu->addAction(m_zeroconfBrowser->makeAction());
+#ifdef OSSIA_DNSSD
+  m_serverBrowser = new ZeroconfBrowser{"_iscore._tcp", qApp->activeWindow()};
+  connect(m_serverBrowser, &ZeroconfBrowser::sessionSelected,
+          this, &NetworkApplicationPlugin::setupClientConnection);
+  auto serveract = m_serverBrowser->makeAction();
+  serveract->setText("Browse for server");
+
+  m_playerBrowser = new ZeroconfBrowser{"_iscore_player._tcp", qApp->activeWindow()};
+  connect(m_playerBrowser, &ZeroconfBrowser::sessionSelected,
+          this, &NetworkApplicationPlugin::setupPlayerConnection);
+  auto playeract = m_playerBrowser->makeAction();
+  playeract->setText("Browse for players");
+
+  fileMenu->addAction(serveract);
+  fileMenu->addAction(playeract);
 #endif
 
   QAction* makeServer = new QAction {tr("Make Server"), this};

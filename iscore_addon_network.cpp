@@ -11,6 +11,7 @@
 #include <iscore/plugins/customfactory/FactorySetup.hpp>
 
 #include <iscore/command/CommandGeneratorMap.hpp>
+#include <Network/PlayerPlugin.hpp>
 #include <unordered_map>
 namespace iscore {
 
@@ -26,11 +27,18 @@ iscore_addon_network::~iscore_addon_network()
 }
 
 // Interfaces implementations :
+iscore::ApplicationPlugin*
+iscore_addon_network::make_applicationPlugin(
+        const iscore::ApplicationContext& app)
+{
+    return new Network::PlayerPlugin{app};
+}
+
 iscore::GUIApplicationPlugin*
 iscore_addon_network::make_guiApplicationPlugin(
-        const iscore::GUIApplicationContext& app)
+    const iscore::GUIApplicationContext& app)
 {
-    return new Network::NetworkApplicationPlugin{app};
+  return new Network::NetworkApplicationPlugin{app};
 }
 
 std::vector<std::unique_ptr<iscore::InterfaceBase>>

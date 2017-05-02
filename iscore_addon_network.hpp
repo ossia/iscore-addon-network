@@ -42,6 +42,8 @@ class iscore_addon_network :
                 const iscore::ApplicationContext& ctx,
                 const iscore::InterfaceKey& factoryName) const override;
 
+        iscore::ApplicationPlugin* make_applicationPlugin(
+            const iscore::ApplicationContext& app) override;
         iscore::GUIApplicationPlugin* make_guiApplicationPlugin(
                 const iscore::GUIApplicationContext& app) override;
 
