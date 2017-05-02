@@ -8,12 +8,14 @@
 class QObject;
 namespace Network
 {
-class NetworkSettingsPresenter;
-class NetworkSettingsView : public iscore::SettingsDelegateView
+namespace Settings
+{
+class Presenter;
+class View : public iscore::SettingsDelegateView
 {
         Q_OBJECT
     public:
-        explicit NetworkSettingsView(QObject* parent);
+        explicit View();
 
         void setMasterPort(int val);
         void setClientPort(int val);
@@ -33,4 +35,5 @@ class NetworkSettingsView : public iscore::SettingsDelegateView
         QSpinBox* m_clientPort {new QSpinBox{m_widget}};
         QLineEdit* m_clientName {new QLineEdit{m_widget}};
 };
+}
 }

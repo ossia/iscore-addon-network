@@ -7,6 +7,7 @@
 #include <iscore/plugins/qt_interfaces/GUIApplicationPlugin_QtInterface.hpp>
 #include <iscore_addon_network_commands_files.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
+#include <Network/Settings/NetworkSettings.hpp>
 
 #include <iscore/plugins/customfactory/FactorySetup.hpp>
 
@@ -49,9 +50,12 @@ iscore_addon_network::factories(
     return instantiate_factories<
             iscore::ApplicationContext,
         FW<iscore::DocumentPluginFactory,
-             Network::DocumentPluginFactory>,
+            Network::DocumentPluginFactory>,
         FW<iscore::PanelDelegateFactory,
-            Network::PanelDelegateFactory>
+            Network::PanelDelegateFactory>,
+        FW<iscore::SettingsDelegateFactory,
+            Network::Settings::Factory>
+
     >(ctx, key);
 }
 

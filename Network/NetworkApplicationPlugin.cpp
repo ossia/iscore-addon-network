@@ -32,7 +32,7 @@
 #if defined(OSSIA_DNSSD)
 #include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
 #endif
-
+#include <QMessageBox>
 #include "IpDialog.hpp"
 
 
@@ -85,6 +85,7 @@ void NetworkApplicationPlugin::setupPlayerConnection(
     return;
 
   auto session = plug->policy().session();
+  qDebug() << "session:" << session;
   auto ms = dynamic_cast<MasterSession*>(session);
   if(!ms)
     return;
@@ -92,8 +93,10 @@ void NetworkApplicationPlugin::setupPlayerConnection(
   auto s = new QTcpSocket;
 
   s->connectToHost(ip, port);
+  qDebug() << "connecting" << ip << port;
   connect(s, &QTcpSocket::connected,
           this, [=] {
+    qDebug("sent connection message");
     s->write(QString::number(ms->localClient().localPort()).toUtf8());
     //s->deleteLater();
   });
@@ -141,6 +144,7 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
       auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
       auto execpol = new MasterExecutionPolicy(*serv, *realplug, doc->context());
 
+      std::cerr << "Creation: Document is " << doc << std::endl;
       qApp->setStyleSheet("");
       realplug->setExecPolicy(execpol);
       doc->model().addPluginModel(realplug);

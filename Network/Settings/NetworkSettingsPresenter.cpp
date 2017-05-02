@@ -8,63 +8,62 @@
 #include <iscore/command/Command.hpp>
 #include <iscore/plugins/settingsdelegate/SettingsDelegatePresenter.hpp>
 #include <iscore/tools/Todo.hpp>
-namespace iscore {
-class SettingsDelegateModel;
-class SettingsDelegateView;
-class SettingsPresenter;
-}  // namespace iscore
+
 
 namespace Network
 {
-NetworkSettingsPresenter::NetworkSettingsPresenter(
-        NetworkSettingsModel& m,
-        NetworkSettingsView& v,
-        QObject* parent) :
-    SettingsDelegatePresenter {m, v, parent}
+namespace Settings
 {
-    auto& net_model = static_cast<NetworkSettingsModel&>(m_model);
-    con(net_model, &NetworkSettingsModel::MasterPortChanged,
-        this,	   &NetworkSettingsPresenter::updateMasterPort);
-    con(net_model, &NetworkSettingsModel::ClientPortChanged,
-        this,	   &NetworkSettingsPresenter::updateClientPort);
-    con(net_model, &NetworkSettingsModel::ClientNameChanged,
-        this,	   &NetworkSettingsPresenter::updateClientName);
+Presenter::Presenter(
+    Model& m,
+    View& v,
+    QObject* parent) :
+  SettingsDelegatePresenter {m, v, parent}
+{
+  auto& net_model = static_cast<Model&>(m_model);
+  con(net_model, &Model::MasterPortChanged,
+      this,	   &Presenter::updateMasterPort);
+  con(net_model, &Model::ClientPortChanged,
+      this,	   &Presenter::updateClientPort);
+  con(net_model, &Model::ClientNameChanged,
+      this,	   &Presenter::updateClientName);
 
-    con(v, &NetworkSettingsView::masterPortChanged,
-        this, [&] (auto param) {
-            m_disp.submitCommand<SetNetworkSettingsModelMasterPort>(this->model(this), param);
-    });
-    con(v, &NetworkSettingsView::clientPortChanged,
-        this, [&] (auto param) {
-            m_disp.submitCommand<SetNetworkSettingsModelClientPort>(this->model(this), param);
-    });
-    con(v, &NetworkSettingsView::clientNameChanged,
-        this, [&] (auto param) {
-            m_disp.submitCommand<SetNetworkSettingsModelClientName>(this->model(this), param);
-    });
+  con(v, &View::masterPortChanged,
+      this, [&] (auto param) {
+    m_disp.submitCommand<SetModelMasterPort>(this->model(this), param);
+  });
+  con(v, &View::clientPortChanged,
+      this, [&] (auto param) {
+    m_disp.submitCommand<SetModelClientPort>(this->model(this), param);
+  });
+  con(v, &View::clientNameChanged,
+      this, [&] (auto param) {
+    m_disp.submitCommand<SetModelClientName>(this->model(this), param);
+  });
 
-    updateMasterPort();
-    updateClientPort();
-    updateClientName();
+  updateMasterPort();
+  updateClientPort();
+  updateClientName();
 }
 
 
 // Partie modèle -> vue
-void NetworkSettingsPresenter::updateMasterPort()
+void Presenter::updateMasterPort()
 {
-    view(this).setMasterPort(model(this).getMasterPort());
+  view(this).setMasterPort(model(this).getMasterPort());
 }
-void NetworkSettingsPresenter::updateClientPort()
+void Presenter::updateClientPort()
 {
-    view(this).setClientPort(model(this).getClientPort());
+  view(this).setClientPort(model(this).getClientPort());
 }
-void NetworkSettingsPresenter::updateClientName()
+void Presenter::updateClientName()
 {
-    view(this).setClientName(model(this).getClientName());
+  view(this).setClientName(model(this).getClientName());
 }
 
-QIcon NetworkSettingsPresenter::settingsIcon()
+QIcon Presenter::settingsIcon()
 {
-    return QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon);
+  return QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon);
+}
 }
 }

@@ -15,6 +15,8 @@ public:
   PlayerPlugin(const iscore::ApplicationContext& ctx);
   ~PlayerPlugin();
 
+  void initialize() override;
+
   std::function<iscore::Document*(const QByteArray&)> documentLoader;
   std::function<void()> onDocumentLoaded;
 private:

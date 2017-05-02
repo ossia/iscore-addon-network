@@ -4,31 +4,25 @@
 
 #include <QString>
 
-namespace iscore {
-class Command;
-class SettingsDelegateModel;
-class SettingsDelegateView;
-class SettingsPresenter;
-}  // namespace iscore
-
 namespace Network
 {
 class ClientNameChangedCommand;
 class ClientPortChangedCommand;
 class MasterPortChangedCommand;
-class NetworkSettingsModel;
-class NetworkSettingsView;
-
-class NetworkSettingsPresenter :
+namespace Settings
+{
+class Model;
+class View;
+class Presenter :
         public iscore::SettingsDelegatePresenter
 {
         Q_OBJECT
     public:
-        using model_type = NetworkSettingsModel;
-        using view_type = NetworkSettingsView;
-        NetworkSettingsPresenter(
-                NetworkSettingsModel& m,
-                NetworkSettingsView& v,
+        using model_type = Model;
+        using view_type = View;
+        Presenter(
+                Model& m,
+                View& v,
                 QObject* parent);
 
     private:
@@ -43,4 +37,5 @@ class NetworkSettingsPresenter :
         void updateClientPort();
         void updateClientName();
 };
+}
 }

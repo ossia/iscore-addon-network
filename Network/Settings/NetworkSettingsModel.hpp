@@ -6,39 +6,33 @@ namespace iscore
 {
     class SettingsDelegatePresenter;
 }
-// TODO update me
-#define SETTINGS_CLIENTPORT "iscore_plugin_network/ClientPort"
-#define SETTINGS_MASTERPORT "iscore_plugin_network/MasterPort"
-#define SETTINGS_CLIENTNAME "iscore_plugin_network/ClientName"
-
 namespace Network
 {
-class NetworkSettingsModel : public iscore::SettingsDelegateModel
+namespace Settings
+{
+class Model : public iscore::SettingsDelegateModel
 {
         Q_OBJECT
+        Q_PROPERTY(QString ClientName READ getClientName WRITE setClientName NOTIFY ClientNameChanged FINAL)
+        Q_PROPERTY(int ClientPort READ getClientPort WRITE setClientPort NOTIFY ClientPortChanged FINAL)
+        Q_PROPERTY(int MasterPort READ getMasterPort WRITE setMasterPort NOTIFY MasterPortChanged FINAL)
     public:
-        NetworkSettingsModel();
+        Model(QSettings& set, const iscore::ApplicationContext& ctx);
 
-        void setClientName(QString txt);
-        QString getClientName() const;
-        void setClientPort(int val);
-        int getClientPort() const;
-        void setMasterPort(int val);
-        int getMasterPort() const;
-
-    signals:
-        void ClientNameChanged();
-        void ClientPortChanged();
-        void MasterPortChanged();
+        ISCORE_SETTINGS_PARAMETER_HPP(QString, ClientName)
+        ISCORE_SETTINGS_PARAMETER_HPP(int, ClientPort)
+        ISCORE_SETTINGS_PARAMETER_HPP(int, MasterPort)
 
     private:
-        int masterPort{};
-        int clientPort{};
-        QString clientName;
+        QString m_ClientName;
+        int m_ClientPort{};
+        int m_MasterPort{};
+
 };
 
-ISCORE_SETTINGS_PARAMETER(NetworkSettingsModel, ClientName)
-ISCORE_SETTINGS_PARAMETER(NetworkSettingsModel, ClientPort)
-ISCORE_SETTINGS_PARAMETER(NetworkSettingsModel, MasterPort)
+ISCORE_SETTINGS_PARAMETER(Model, ClientName)
+ISCORE_SETTINGS_PARAMETER(Model, ClientPort)
+ISCORE_SETTINGS_PARAMETER(Model, MasterPort)
 
+}
 }

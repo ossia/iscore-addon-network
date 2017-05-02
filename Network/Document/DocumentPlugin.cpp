@@ -37,6 +37,7 @@ MessagesAPI::MessagesAPI():
   ping{QByteArrayLiteral("/ping")},
   pong{QByteArrayLiteral("/pong")},
   play{QByteArrayLiteral("/play")},
+  stop{QByteArrayLiteral("/stop")},
 
   session_portinfo{QByteArrayLiteral("/session/portinfo")},
   session_askNewId{QByteArrayLiteral("/session/askNewId")},

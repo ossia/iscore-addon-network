@@ -15,6 +15,7 @@
 #include <QInputDialog>
 #include <QVBoxLayout>
 
+#include <QGridLayout>
 namespace Network
 {
 PanelDelegate::PanelDelegate(const iscore::GUIApplicationContext& ctx):
@@ -66,6 +67,52 @@ void PanelDelegate::on_modelChanged(
 
 
 }
+class ClientListWidget: public QWidget
+{
+  Session& m_session;
+  QVector<QWidget*> m_clients;
+public:
+  ClientListWidget(const Session& s, QWidget* p)
+    : QWidget{p}
+    , m_session{const_cast<Session&>(s)}
+  {
+    recompute();
+    connect(&s, &Session::clientAdded, this, [=] { recompute(); });
+  }
+
+  void recompute()
+  {
+    qDeleteAll(m_clients);
+    m_clients.clear();
+    delete this->layout();
+
+    auto lay = new QGridLayout;
+    this->setLayout(lay);
+
+    int i = 0;
+    for(auto& c : m_session.remoteClients())
+    {
+      auto name = new QLabel(c->name());
+      auto play = new QPushButton(tr("Play"));
+      auto stop = new QPushButton(tr("Stop"));
+
+      connect(play, &QPushButton::clicked, this, [=] {
+        auto& mapi = MessagesAPI::instance();
+        m_session.sendMessage(c->id(), m_session.makeMessage(mapi.play));
+      });
+      connect(stop, &QPushButton::clicked, this, [=] {
+        auto& mapi = MessagesAPI::instance();
+        m_session.sendMessage(c->id(), m_session.makeMessage(mapi.stop));
+      });
+      lay->addWidget(name, i, 0);
+      lay->addWidget(play, i, 1);
+      lay->addWidget(stop, i, 2);
+
+      i++;
+    }
+  }
+
+};
 
 void PanelDelegate::setView(
     const GroupManager& mgr,
@@ -106,6 +153,7 @@ void PanelDelegate::setView(
   m_subWidget->layout()->addWidget(button);
 
   // Group table
+  m_subWidget->layout()->addWidget(new ClientListWidget{*session, m_widget});
   m_subWidget->layout()->addWidget(new GroupTableWidget{mgr, session, m_widget});
 }
 

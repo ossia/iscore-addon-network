@@ -6,68 +6,29 @@
 
 namespace Network
 {
-NetworkSettingsModel::NetworkSettingsModel() :
-    iscore::SettingsDelegateModel {}
+namespace Settings
 {
-    this->setObjectName("NetworkSettingsModel");
-/*
-    QSettings s;
+namespace Parameters
+{
+const iscore::sp<ModelClientNameParameter> ClientName{
+  QStringLiteral("Network/ClientName"), "i-score"};
+const iscore::sp<ModelClientPortParameter> ClientPort{
+    QStringLiteral("Network/ClientPort"), 7777};
+const iscore::sp<ModelMasterPortParameter> MasterPort{
+    QStringLiteral("Network/MasterPort"), 8888};
 
-    if(!s.contains(SETTINGS_CLIENTPORT))
-    {
-        setFirstTimeSettings();
-    }
-
-    setClientPort(s.value(SETTINGS_CLIENTPORT).toInt());
-    setMasterPort(s.value(SETTINGS_MASTERPORT).toInt());
-    setClientName(s.value(SETTINGS_CLIENTNAME).toString());
-    */
+static auto list()
+{
+  return std::tie(ClientName, ClientPort, MasterPort);
+}
+}
+Model::Model(QSettings& set, const iscore::ApplicationContext& ctx)
+{
+  iscore::setupDefaultSettings(set, Parameters::list(), *this);
 }
 
-void NetworkSettingsModel::setClientName(QString txt)
-{
-    clientName = txt;
-    QSettings s;
-    s.setValue(SETTINGS_CLIENTNAME, txt);
-    emit ClientNameChanged();
+ISCORE_SETTINGS_PARAMETER_CPP(QString, Model, ClientName)
+ISCORE_SETTINGS_PARAMETER_CPP(int, Model, ClientPort)
+ISCORE_SETTINGS_PARAMETER_CPP(int, Model, MasterPort)
 }
-
-QString NetworkSettingsModel::getClientName() const
-{
-    return clientName;
-}
-
-void NetworkSettingsModel::setClientPort(int val)
-{
-    clientPort = val;
-    QSettings s;
-    s.setValue(SETTINGS_CLIENTPORT, val);
-    emit ClientPortChanged();
-}
-
-int NetworkSettingsModel::getClientPort() const
-{
-    return clientPort;
-}
-
-void NetworkSettingsModel::setMasterPort(int val)
-{
-    masterPort = val;
-    QSettings s;
-    s.setValue(SETTINGS_MASTERPORT, val);
-    emit MasterPortChanged();
-}
-
-int NetworkSettingsModel::getMasterPort() const
-{
-    return masterPort;
-}
-/*
-void NetworkSettingsModel::setFirstTimeSettings()
-{
-    QSettings s;
-    s.setValue(SETTINGS_CLIENTNAME, "i-score client");
-    s.setValue(SETTINGS_CLIENTPORT, 7888);
-    s.setValue(SETTINGS_MASTERPORT, 5678);
-}*/
 }

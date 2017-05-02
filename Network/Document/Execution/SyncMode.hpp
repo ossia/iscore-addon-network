@@ -30,6 +30,7 @@ struct MessagesAPI
   const QByteArray ping;
   const QByteArray pong;
   const QByteArray play;
+  const QByteArray stop;
 
   const QByteArray session_portinfo;
   const QByteArray session_askNewId;

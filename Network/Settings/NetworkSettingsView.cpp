@@ -9,8 +9,10 @@ class QObject;
 
 namespace Network
 {
-NetworkSettingsView::NetworkSettingsView(QObject* parent) :
-    iscore::SettingsDelegateView {parent}
+
+namespace Settings
+{
+View::View()
 {
     auto layout = new QGridLayout(m_widget);
     m_widget->setLayout(layout);
@@ -30,7 +32,7 @@ NetworkSettingsView::NetworkSettingsView(QObject* parent) :
     layout->addWidget(m_clientName, 2, 1);
 
     connect(m_clientName,	&QLineEdit::textChanged,
-            this,			&NetworkSettingsView::clientNameChanged);
+            this,			&View::clientNameChanged);
 
     // http://stackoverflow.com/questions/16794695/qt5-overloaded-signals-and-slots
     connect(m_masterPort,	SIGNAL(valueChanged(int)),
@@ -39,21 +41,21 @@ NetworkSettingsView::NetworkSettingsView(QObject* parent) :
             this,			SLOT(clientPortChanged(int)));
 }
 
-void NetworkSettingsView::setClientName(QString text)
+void View::setClientName(QString text)
 {
     if(text != m_clientName->text())
     {
         m_clientName->setText(text);
     }
 }
-void NetworkSettingsView::setMasterPort(int val)
+void View::setMasterPort(int val)
 {
     if(val != m_masterPort->value())
     {
         m_masterPort->setValue(val);
     }
 }
-void NetworkSettingsView::setClientPort(int val)
+void View::setClientPort(int val)
 {
     if(val != m_clientPort->value())
     {
@@ -61,9 +63,10 @@ void NetworkSettingsView::setClientPort(int val)
     }
 }
 
-QWidget* NetworkSettingsView::getWidget()
+QWidget* View::getWidget()
 {
     return m_widget;
 }
 
+}
 }
