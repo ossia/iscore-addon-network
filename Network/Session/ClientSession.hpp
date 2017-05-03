@@ -1,7 +1,5 @@
 #pragma once
-#include "Session.hpp"
-
-class QObject;
+#include <Network/Session/Session.hpp>
 #include <iscore/model/Identifier.hpp>
 
 namespace Network

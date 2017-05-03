@@ -1,5 +1,5 @@
 #pragma once
-#include "Client.hpp"
+#include <Network/Client/Client.hpp>
 #include <Network/Communication/NetworkSocket.hpp>
 namespace Network
 {

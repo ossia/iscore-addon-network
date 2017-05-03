@@ -33,7 +33,10 @@ struct Timekeeper final : public QObject
         this, [=] (auto client) {
       m_timestamps.insert({client->id(), ClientTimes{}});
     });
-    // TODO clientRemoved
+    con(m_session, &Session::clientRemoved,
+        this, [=] (auto client) {
+      m_timestamps.erase(client->id());
+    });
   }
 
   void ping_all()

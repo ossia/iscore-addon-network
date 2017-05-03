@@ -1,5 +1,5 @@
 #pragma once
-#include "DocumentPlugin.hpp"
+#include <Network/Document/DocumentPlugin.hpp>
 
 class QObject;
 
@@ -20,6 +20,7 @@ class PlaceholderEditionPolicy : public EditionPolicy
         { return m_session; }
 
         void play() override { }
+        void stop() override { }
         Session* m_session{};
 };
 }

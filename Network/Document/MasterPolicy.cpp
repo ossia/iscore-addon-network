@@ -28,6 +28,7 @@
 #include <Network/Session/MasterSession.hpp>
 #include <iscore/model/path/PathSerialization.hpp>
 
+#include <Scenario/Application/ScenarioActions.hpp>
 namespace Network
 {
 
@@ -193,6 +194,12 @@ void MasterEditionPolicy::play()
   }
 }
 
+void MasterEditionPolicy::stop()
+{
+  auto act = m_ctx.app.actions.action<Actions::Stop>().action();
+  act->trigger();
+}
+
 MasterExecutionPolicy::MasterExecutionPolicy(
     Session& s,
     NetworkDocumentPlugin& doc,
@@ -200,7 +207,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
 {
   auto& mapi = MessagesAPI::instance();
   s.mapper().addHandler_(mapi.trigger_entered,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
     s.broadcastToOthers(m.clientId, m);
 
@@ -215,14 +222,14 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_left,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
     // TODO there should be a consensus on this point.
     qDebug() << m.address << p;
   });
 
   s.mapper().addHandler_(mapi.trigger_finished,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     // TODO there should be a consensus on this point.
     auto it = doc.trigger_evaluation_finished.find(p);
@@ -236,7 +243,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_expression_true,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
     auto it = doc.network_expressions.find(p);
     if(it != doc.network_expressions.end())
@@ -303,7 +310,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_previous_completed,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
     auto it = doc.network_expressions.find(p);
     if(it != doc.network_expressions.end())
@@ -335,7 +342,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_triggered,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_triggered.find(p);
     if(it != doc.trigger_triggered.end())
@@ -357,7 +364,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
 {
   auto& mapi = MessagesAPI::instance();
   s.mapper().addHandler_(mapi.trigger_entered,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
     auto it = doc.trigger_evaluation_entered.find(p);
     if(it != doc.trigger_evaluation_entered.end())
@@ -368,12 +375,12 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_left,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
   });
 
   s.mapper().addHandler_(mapi.trigger_finished,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_evaluation_finished.find(p);
     if(it != doc.trigger_evaluation_finished.end())
@@ -384,7 +391,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_triggered,
-                         [&] (NetworkMessage m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     auto it = doc.trigger_triggered.find(p);
     if(it != doc.trigger_triggered.end())

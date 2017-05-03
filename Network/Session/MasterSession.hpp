@@ -1,12 +1,13 @@
 #pragma once
+#include <Network/Session/Session.hpp>
+#include <iscore/model/Identifier.hpp>
 #include <QList>
 
-#include "Session.hpp"
 
 class QObject;
 class QTcpSocket;
-#include <iscore/model/Identifier.hpp>
 
+namespace servus { class Servus; }
 namespace iscore {
 class Document;
 }
@@ -25,6 +26,7 @@ class MasterSession : public Session
                       LocalClient* theclient,
                       Id<Session> id,
                       QObject* parent = nullptr);
+        ~MasterSession();
 
         iscore::Document* document() const
         { return m_document; }
@@ -40,8 +42,8 @@ class MasterSession : public Session
         iscore::Document* m_document{};
         QList<RemoteClientBuilder*> m_clientBuilders;
 
-#ifdef falseOSSIA_DNSSD
-        KDNSSD::PublicService* m_service{};
+#ifdef OSSIA_DNSSD
+        std::unique_ptr<servus::Servus> m_dnssd;
 #endif
 
 };

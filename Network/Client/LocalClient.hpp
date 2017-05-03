@@ -1,5 +1,5 @@
 #pragma once
-#include "Client.hpp"
+#include <Network/Client/Client.hpp>
 #include <Network/Communication/NetworkServer.hpp>
 #include <QTcpSocket>
 // Has a TCP server to receive incoming connections from other clients.

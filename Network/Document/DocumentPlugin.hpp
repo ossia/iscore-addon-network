@@ -82,6 +82,7 @@ public:
   virtual ~EditionPolicy();
   virtual Session* session() const = 0;
   virtual void play() = 0;
+  virtual void stop() = 0;
 };
 
 class ISCORE_ADDON_NETWORK_EXPORT ExecutionPolicy : public QObject

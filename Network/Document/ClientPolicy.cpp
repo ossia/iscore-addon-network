@@ -19,6 +19,7 @@
 #include <iscore/serialization/DataStreamVisitor.hpp>
 #include <iscore/tools/Todo.hpp>
 #include <iscore/actions/ActionManager.hpp>
+#include <Scenario/Application/ScenarioActions.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/ClientSession.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
@@ -73,7 +74,7 @@ ClientEditionPolicy::ClientEditionPolicy(
   // - command comes from the master
   //   -> apply it to the computer only
   s->mapper().addHandler(mapi.command_new,
-                         [&] (NetworkMessage m)
+                         [&] (const NetworkMessage& m)
   {
     iscore::CommandData cmd;
     DataStreamWriter writer{m.data};
@@ -83,13 +84,13 @@ ClientEditionPolicy::ClientEditionPolicy(
           m_ctx.app.instantiateUndoCommand(cmd));
   });
 
-  s->mapper().addHandler(mapi.command_undo, [&] (NetworkMessage)
+  s->mapper().addHandler(mapi.command_undo, [&] (const NetworkMessage&)
   { m_ctx.document.commandStack().undoQuiet(); });
 
-  s->mapper().addHandler(mapi.command_redo, [&] (NetworkMessage)
+  s->mapper().addHandler(mapi.command_redo, [&] (const NetworkMessage&)
   { m_ctx.document.commandStack().redoQuiet(); });
 
-  s->mapper().addHandler(mapi.command_index, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_index, [&] (const NetworkMessage& m)
   {
     QDataStream stream{m.data};
     int32_t idx;
@@ -97,7 +98,7 @@ ClientEditionPolicy::ClientEditionPolicy(
     m_ctx.document.commandStack().setIndexQuiet(idx);
   });
 
-  s->mapper().addHandler(mapi.lock, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.lock, [&] (const NetworkMessage& m)
   {
     QDataStream stream{m.data};
     QByteArray data;
@@ -105,7 +106,7 @@ ClientEditionPolicy::ClientEditionPolicy(
     m_ctx.document.locker().on_lock(data);
   });
 
-  s->mapper().addHandler(mapi.unlock, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.unlock, [&] (const NetworkMessage& m)
   {
     QDataStream stream{m.data};
     QByteArray data;
@@ -113,28 +114,28 @@ ClientEditionPolicy::ClientEditionPolicy(
     m_ctx.document.locker().on_unlock(data);
   });
 
-  s->mapper().addHandler(mapi.play, [&] (NetworkMessage m)
-  {
-    play();
-  });
+  s->mapper().addHandler(mapi.play, [&] (const NetworkMessage& m)
+  { play(); });
+  s->mapper().addHandler(mapi.stop, [&] (const NetworkMessage& m)
+  { stop(); });
 
-  s->mapper().addHandler(mapi.ping, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.ping, [&] (const NetworkMessage& m)
   {
     qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     m_session->sendMessage(m.clientId, m_session->makeMessage(mapi.pong, t));
   });
 
-  s->mapper().addHandler(mapi.pong, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.pong, [&] (const NetworkMessage& m)
   {
     m_keep.on_pong(m);
   });
 
 
-  s->mapper().addHandler(mapi.session_portinfo, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.session_portinfo, [&] (const NetworkMessage& m)
   {
     QString ip;
     int port;
-    QDataStream stream{&m.data, QIODevice::ReadOnly};
+    QDataStream stream{m.data};
     stream >> ip >> port;
 
     auto clt = m_session->findClient(m.clientId);
@@ -187,6 +188,13 @@ void GUIClientEditionPolicy::play()
   }
 }
 
+void GUIClientEditionPolicy::stop()
+{
+  auto act = m_ctx.app.actions.action<Actions::Stop>().action();
+  act->trigger();
+}
+
+
 PlayerClientEditionPolicy::PlayerClientEditionPolicy(
     ClientSession* s,
     const iscore::DocumentContext& c):
@@ -209,6 +217,12 @@ void PlayerClientEditionPolicy::play()
           BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
     TimeVal{});
   }*/
+}
+
+void PlayerClientEditionPolicy::stop()
+{
+  if(onStop)
+    onStop();
 }
 
 }

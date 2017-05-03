@@ -11,9 +11,6 @@
 #include <iscore/model/IdentifiedObject.hpp>
 #include <iscore/model/Identifier.hpp>
 
-class QObject;
-
-
 namespace Network
 {
 class MessageMapper;
@@ -27,7 +24,6 @@ class Session : public IdentifiedObject<Session>
                 QObject* parent = nullptr);
         ~Session();
 
-
         MessageValidator& validator() const;
         MessageMapper& mapper() const;
 
@@ -37,6 +33,7 @@ class Session : public IdentifiedObject<Session>
         const QList<RemoteClient*>& remoteClients() const;
         RemoteClient* findClient(Id<Client> target);
         void addClient(RemoteClient* clt);
+        void removeClient(RemoteClient* clt);
 
         NetworkMessage makeMessage(const QByteArray& address);
 
@@ -58,14 +55,14 @@ class Session : public IdentifiedObject<Session>
 
         //! Includes self
         void broadcastToAll(NetworkMessage m);
-
         void broadcastToOthers(Id<Client> sender, NetworkMessage m);
 
         void sendMessage(Id<Client> target, NetworkMessage m);
-
         void broadcastToClients(const std::vector<Id<Client> >& clts, NetworkMessage m);
-signals:
+
+    signals:
         void clientAdded(RemoteClient*);
+        void clientRemoved(RemoteClient*);
         void clientsChanged();
 
         void emitMessage(Id<Client> target, NetworkMessage m);

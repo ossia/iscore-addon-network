@@ -42,9 +42,9 @@ class MessageMapper
   }
 
   template<typename Fun, typename... Args>
-  static auto addHandler_impl(Fun& f, void (Fun::*) (NetworkMessage, Args...) const)
+  static auto addHandler_impl(Fun& f, void (Fun::*) (const NetworkMessage&, Args...) const)
   {
-    return [fun=std::move(f)] (NetworkMessage m) {
+    return [fun=std::move(f)] (const NetworkMessage& m) {
       QDataStream s{m.data};
 
       addHandler_impl_sub(s, fun, dummy<Args...>{}, m);
@@ -52,9 +52,9 @@ class MessageMapper
   }
 
   template<typename Fun, typename... Args>
-  static auto addHandler_impl(Fun f, void (Fun::*) (NetworkMessage, Args...))
+  static auto addHandler_impl(Fun f, void (Fun::*) (const NetworkMessage&, Args...))
   {
-    return [fun=std::move(f)] (NetworkMessage m) {
+    return [fun=std::move(f)] (const NetworkMessage& m) {
       QDataStream s{m.data};
 
       addHandler_impl_sub(s, fun, dummy<Args...>{}, m);
@@ -68,11 +68,11 @@ public:
     m_handlers[data] = addHandler_impl(f, &Fun::operator());
   }
 
-  void addHandler(QByteArray addr, std::function<void(NetworkMessage)> fun);
-  void map(NetworkMessage m);
+  void addHandler(QByteArray addr, std::function<void(const NetworkMessage&)> fun);
+  void map(const NetworkMessage& m);
 
   bool contains(const QByteArray& b) const;
 private:
-  iscore::hash_map<QByteArray, std::function<void(NetworkMessage)>> m_handlers;
+  iscore::hash_map<QByteArray, std::function<void(const NetworkMessage&)>> m_handlers;
 };
 }

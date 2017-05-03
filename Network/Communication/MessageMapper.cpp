@@ -5,13 +5,13 @@
 
 namespace Network
 {
-void MessageMapper::addHandler(QByteArray addr, std::function<void(NetworkMessage)> fun)
+void MessageMapper::addHandler(QByteArray addr, std::function<void(const NetworkMessage&)> fun)
 {
     ISCORE_ASSERT(!contains(addr));
     m_handlers[addr] = fun;
 }
 
-void MessageMapper::map(NetworkMessage m)
+void MessageMapper::map(const NetworkMessage& m)
 {
     auto it = m_handlers.find(m.address);
     if(it != m_handlers.end())

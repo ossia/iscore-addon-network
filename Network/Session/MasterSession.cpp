@@ -15,45 +15,46 @@
 #include <Network/Session/RemoteClientBuilder.hpp>
 #include <Network/Session/Session.hpp>
 #include <QHostAddress>
-class QObject;
-class QTcpSocket;
-
-
+#include <servus/servus.h>
 namespace Network
 {
 class Client;
 MasterSession::MasterSession(iscore::Document* doc, LocalClient* theclient, Id<Session> id, QObject* parent):
-    Session{theclient, id, parent},
-    m_document{doc}
+  Session{theclient, id, parent},
+  m_document{doc}
 {
-    con(localClient(), SIGNAL(createNewClient(QTcpSocket*)),
-            this, SLOT(on_createNewClient(QTcpSocket*)));
+  con(localClient(), &LocalClient::createNewClient,
+      this, &MasterSession::on_createNewClient);
 
-/* TODO Servus
-#ifdef USE_ZEROCONF
-    auto service = new KDNSSD::PublicService("Session i-score",
-                                             "_iscore._tcp",
-                                             localClient().localPort());
-    service->publishAsync();
+#if defined(OSSIA_DNSSD)
+    m_dnssd = std::make_unique<servus::Servus>("_iscore._tcp");
+    m_dnssd->announce(localClient().localPort(), "i-score master");
 #endif
-*/
+}
+
+MasterSession::~MasterSession()
+{
+
 }
 
 void MasterSession::on_createNewClient(QTcpSocket* sock)
 {
-    RemoteClientBuilder* builder = new RemoteClientBuilder(*this, sock);
-    connect(builder, &RemoteClientBuilder::clientReady,
-            this, &MasterSession::on_clientReady);
-    m_clientBuilders.append(builder);
+  RemoteClientBuilder* builder = new RemoteClientBuilder(*this, sock);
+  connect(builder, &RemoteClientBuilder::clientReady,
+          this, &MasterSession::on_clientReady);
+  m_clientBuilders.append(builder);
 }
 
 void MasterSession::on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt)
 {
-    m_clientBuilders.removeOne(bldr);
-    delete bldr;
+  m_clientBuilders.removeOne(bldr);
+  delete bldr;
 
-    connect(clt, &RemoteClient::messageReceived,
-            this, &Session::validateMessage, Qt::QueuedConnection);
-    addClient(clt);
+  connect(clt, &RemoteClient::messageReceived,
+          this, &Session::validateMessage, Qt::QueuedConnection);
+  con(clt->socket().socket(), &QTcpSocket::disconnected,
+      this, [=] { removeClient(clt); });
+
+  addClient(clt);
 }
 }

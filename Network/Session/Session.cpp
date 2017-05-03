@@ -67,6 +67,14 @@ void Session::addClient(RemoteClient* clt)
   emit clientsChanged();
 }
 
+void Session::removeClient(RemoteClient* clt)
+{
+  m_remoteClients.removeAll(clt);
+  this->clientRemoved(clt);
+  emit clientsChanged();
+  clt->deleteLater();
+}
+
 NetworkMessage Session::makeMessage(const QByteArray& address)
 {
   NetworkMessage m;

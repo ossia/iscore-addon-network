@@ -1,7 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QString>
-#include "NetworkMessage.hpp"
+#include <Network/Communication/NetworkMessage.hpp>
 class QTcpSocket;
 
 namespace Network

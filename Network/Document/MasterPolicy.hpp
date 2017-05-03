@@ -1,7 +1,6 @@
 #pragma once
 #include <Network/Session/MasterSession.hpp>
-
-#include "DocumentPlugin.hpp"
+#include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Timekeeper.hpp>
 
 namespace iscore {
@@ -20,6 +19,7 @@ class MasterEditionPolicy : public EditionPolicy
         MasterSession* session() const override
         { return m_session; }
         void play() override;
+        void stop() override;
 
     private:
         MasterSession* m_session{};

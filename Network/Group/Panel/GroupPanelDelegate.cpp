@@ -9,6 +9,8 @@
 #include <Network/Session/Session.hpp>
 
 #include <iscore/document/DocumentInterface.hpp>
+#include <iscore/widgets/ClearLayout.hpp>
+#include <iscore/widgets/MarginLess.hpp>
 
 #include <QLabel>
 #include <QPushButton>
@@ -78,15 +80,16 @@ public:
   {
     recompute();
     connect(&s, &Session::clientAdded, this, [=] { recompute(); });
+    connect(&s, &Session::clientRemoved, this, [=] { recompute(); });
   }
 
   void recompute()
   {
-    qDeleteAll(m_clients);
+    iscore::clearLayout(this->layout());
     m_clients.clear();
     delete this->layout();
 
-    auto lay = new QGridLayout;
+    auto lay = new iscore::MarginLess<QGridLayout>;
     this->setLayout(lay);
 
     int i = 0;

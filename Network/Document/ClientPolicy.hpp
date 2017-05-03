@@ -34,6 +34,7 @@ public:
       const iscore::DocumentContext& c);
 
   void play() override;
+  void stop() override;
 };
 
 class ISCORE_ADDON_NETWORK_EXPORT PlayerClientEditionPolicy : public ClientEditionPolicy
@@ -44,6 +45,8 @@ public:
       const iscore::DocumentContext& c);
 
   void play() override;
+  void stop() override;
   std::function<void()> onPlay;
+  std::function<void()> onStop;
 };
 }
