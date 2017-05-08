@@ -3,57 +3,66 @@
 #include <QDataStream>
 #include <QDebug>
 #include <QIODevice>
-#include <QTcpSocket>
+#include <QtWebSockets/QWebSocket>
 
 #include "NetworkSocket.hpp"
 #include <Network/Communication/NetworkMessage.hpp>
 namespace Network
 {
-NetworkSocket::NetworkSocket(QTcpSocket* sock,
+NetworkSocket::NetworkSocket(QWebSocket* sock,
                              QObject* parent):
-    QObject{parent},
-    m_socket{sock}
+  QObject{parent},
+  m_socket{sock}
 {
-    init();
+  init();
 }
 
 NetworkSocket::NetworkSocket(QString ip,
                              int port,
                              QObject* parent) :
-    QObject{parent},
-    m_socket{new QTcpSocket{this}}
+  QObject{parent},
+  m_socket{new QWebSocket{QString{}, {}, this}}
 {
-    init();
+  init();
 
-    m_socket->connectToHost(ip, port);
-    if(!m_socket->waitForConnected(5000))
-    {
-        qDebug() << "Error: " << m_socket->errorString();
-    }
+  if(ip.startsWith("::ffff:"))
+     ip.remove("::ffff:");
+  m_socket->open("ws://" + ip + ":" + QString::number(port));
+
 }
 
 void NetworkSocket::sendMessage(const NetworkMessage &mess)
 {
-    QByteArray b;
-    QDataStream writer(&b, QIODevice::WriteOnly);
-    writer << mess;
-    m_socket->write(b);
+  QByteArray b;
+  QDataStream writer(&b, QIODevice::WriteOnly);
+  writer << mess;
+  m_socket->sendBinaryMessage(b);
 }
 
 void NetworkSocket::init()
 {
-    connect(m_socket, &QAbstractSocket::disconnected, this, [] () { qDebug("Disconnected"); });
-    connect(m_socket, &QIODevice::readyRead, this, [=] ()
-    {
-        QByteArray b = m_socket->readAll();
+  connect(m_socket, qOverload<QAbstractSocket::SocketError>(&QWebSocket::error),
+          this, [=] () {
+    qDebug() << "Error: " << m_socket->errorString();
+  });
+  connect(m_socket, &QWebSocket::connected,
+          this, [=] () {
+    qDebug() << "WS Connected";
+    emit connected();
+  });
+  connect(m_socket, &QWebSocket::disconnected, this, [] () {
+    qDebug("Disconnected");
+  });
 
-        QDataStream reader(b);
-        NetworkMessage m;
-        reader >> m;
+  connect(m_socket, &QWebSocket::binaryMessageReceived, this, [=] (const QByteArray& b)
+  {
+    QDataStream reader(b);
+    NetworkMessage m;
+    reader >> m;
 
-        emit messageReceived(m);
-    });
+    emit messageReceived(m);
+  });
 
-    m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+  // m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 }
 }

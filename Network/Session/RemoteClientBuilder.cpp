@@ -26,12 +26,12 @@ namespace Network
 {
 class Client;
 
-RemoteClientBuilder::RemoteClientBuilder(MasterSession& session, QTcpSocket* sock):
+RemoteClientBuilder::RemoteClientBuilder(MasterSession& session, QWebSocket* sock):
   m_session{session}
 {
   m_socket = new NetworkSocket(sock, nullptr);
-  connect(m_socket, SIGNAL(messageReceived(NetworkMessage)),
-          this, SLOT(on_messageReceived(NetworkMessage)));
+  connect(m_socket, &NetworkSocket::messageReceived,
+          this, &RemoteClientBuilder::on_messageReceived);
 }
 
 void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
@@ -66,9 +66,11 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
     doc.address = mapi.session_document;
 
     // Data is the serialized command stack, and the document models.
+    {
     DataStreamReader vr{&doc.data};
     vr.m_stream << QJsonDocument(m_session.document()->saveAsJson()).toBinaryData();
     vr.readFrom(m_session.document()->commandStack());
+    }
 
     m_socket->sendMessage(doc);
 

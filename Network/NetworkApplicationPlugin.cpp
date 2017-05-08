@@ -32,7 +32,9 @@
 #include <iscore/actions/ActionManager.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
 #include <QMessageBox>
+#include <QTcpSocket>
 #include "IpDialog.hpp"
+
 
 #if defined(OSSIA_DNSSD)
 #include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
@@ -68,8 +70,11 @@ void NetworkApplicationPlugin::setupClientConnection(QString name, QString ip, i
           this, [&] () {
     m_sessionBuilder.reset();
   });
+  connect(m_sessionBuilder.get(), &ClientSessionBuilder::connected,
+          this, [&] () {
+    m_sessionBuilder->initiateConnection();
+  });
 
-  m_sessionBuilder->initiateConnection();
 }
 
 void NetworkApplicationPlugin::setupPlayerConnection(

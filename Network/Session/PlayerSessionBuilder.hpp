@@ -41,6 +41,7 @@ class PlayerSessionBuilder final : public QObject
         void on_messageReceived(const NetworkMessage& m);
 
     signals:
+        void connected();
         void sessionReady();
         void sessionFailed();
 

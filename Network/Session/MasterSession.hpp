@@ -5,7 +5,7 @@
 
 
 class QObject;
-class QTcpSocket;
+class QWebSocket;
 
 namespace servus { class Servus; }
 namespace iscore {
@@ -35,7 +35,7 @@ class MasterSession : public Session
         { return this->localClient(); }
 
     public slots:
-        void on_createNewClient(QTcpSocket* sock);
+        void on_createNewClient(QWebSocket* sock);
         void on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt);
 
     private:

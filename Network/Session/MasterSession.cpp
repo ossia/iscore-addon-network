@@ -37,7 +37,7 @@ MasterSession::~MasterSession()
 
 }
 
-void MasterSession::on_createNewClient(QTcpSocket* sock)
+void MasterSession::on_createNewClient(QWebSocket* sock)
 {
   RemoteClientBuilder* builder = new RemoteClientBuilder(*this, sock);
   connect(builder, &RemoteClientBuilder::clientReady,
@@ -52,7 +52,7 @@ void MasterSession::on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt)
 
   connect(clt, &RemoteClient::messageReceived,
           this, &Session::validateMessage, Qt::QueuedConnection);
-  con(clt->socket().socket(), &QTcpSocket::disconnected,
+  con(clt->socket().socket(), &QWebSocket::disconnected,
       this, [=] { removeClient(clt); });
 
   addClient(clt);

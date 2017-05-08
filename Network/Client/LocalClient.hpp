@@ -1,7 +1,7 @@
 #pragma once
 #include <Network/Client/Client.hpp>
 #include <Network/Communication/NetworkServer.hpp>
-#include <QTcpSocket>
+#include <QWebSocket>
 // Has a TCP server to receive incoming connections from other clients.
 namespace Network
 {
@@ -33,7 +33,7 @@ class LocalClient : public Client
         NetworkServer& server() const { return *m_server; }
 
     signals:
-        void createNewClient(QTcpSocket*);
+        void createNewClient(QWebSocket*);
 
     private:
         NetworkServer* m_server{};

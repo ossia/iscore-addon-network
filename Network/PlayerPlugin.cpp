@@ -61,7 +61,10 @@ void PlayerPlugin::setupServer()
         m_sessionBuilder.reset();
       });
 
-      m_sessionBuilder->initiateConnection();
+      connect(m_sessionBuilder.get(), &PlayerSessionBuilder::connected,
+              this, [&] {
+        m_sessionBuilder->initiateConnection();
+      });
     });
   });
 

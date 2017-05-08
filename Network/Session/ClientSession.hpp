@@ -22,7 +22,7 @@ class ClientSession final : public Session
 
 
     private:
-        void on_createNewClient(QTcpSocket*);
+        void on_createNewClient(QWebSocket*);
         RemoteClient& m_master;
 };
 }

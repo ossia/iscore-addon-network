@@ -5,7 +5,7 @@
 
 #include <iscore/model/Identifier.hpp>
 
-class QTcpSocket;
+class QWebSocket;
 
 namespace Network
 {
@@ -20,7 +20,7 @@ class RemoteClientBuilder final : public QObject
 {
         Q_OBJECT
     public:
-        RemoteClientBuilder(MasterSession& session, QTcpSocket* sock);
+        RemoteClientBuilder(MasterSession& session, QWebSocket* sock);
 
     signals:
         void clientReady(RemoteClientBuilder* builder, RemoteClient*);

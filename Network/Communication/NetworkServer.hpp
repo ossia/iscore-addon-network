@@ -1,8 +1,8 @@
 #pragma once
 #include <QObject>
 
-class QTcpServer;
-class QTcpSocket;
+class QWebSocketServer;
+class QWebSocket;
 
 namespace Network
 {
@@ -13,15 +13,15 @@ class NetworkServer : public QObject
         NetworkServer(int port, QObject* parent);
         int port() const;
 
-        QTcpServer& server() const { return *m_tcpServer; }
+        QWebSocketServer& server() const { return *m_server; }
 
         QString m_localAddress;
         int m_localPort;
     signals:
-        void newSocket(QTcpSocket* sock);
+        void newSocket(QWebSocket* sock);
 
     private:
-        QTcpServer* m_tcpServer{};
+        QWebSocketServer* m_server{};
 };
 }
 

@@ -3,7 +3,7 @@
 #include <QList>
 #include <QNetworkInterface>
 #include <QString>
-#include <QTcpServer>
+#include <QtWebSockets/QWebSocketServer>
 
 #include "NetworkServer.hpp"
 
@@ -12,10 +12,10 @@ namespace Network
 NetworkServer::NetworkServer(int port, QObject* parent):
     QObject{parent}
 {
-    m_tcpServer = new QTcpServer(this);
+    m_server = new QWebSocketServer("i-score-network", QWebSocketServer::SslMode::NonSecureMode, this);
 
 
-    while(!m_tcpServer->listen(QHostAddress::Any, port))
+    while(!m_server->listen(QHostAddress::Any, port))
     {
         port++;
     }
@@ -39,18 +39,18 @@ NetworkServer::NetworkServer(int port, QObject* parent):
         m_localAddress = QHostAddress(QHostAddress::LocalHost).toString();
     }
 
-    m_localPort = m_tcpServer->serverPort();
+    m_localPort = m_server->serverPort();
     qDebug() << "Server: " << m_localAddress << ":" << m_localPort;
 
-    connect(m_tcpServer, &QTcpServer::newConnection,
+    connect(m_server, &QWebSocketServer::newConnection,
             this, [=] ()
     {
-        emit newSocket(m_tcpServer->nextPendingConnection());
+        emit newSocket(m_server->nextPendingConnection());
     });
 }
 
 int NetworkServer::port() const
 {
-    return m_tcpServer->serverPort();
+    return m_server->serverPort();
 }
 }

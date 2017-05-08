@@ -34,6 +34,8 @@ ClientSessionBuilder::ClientSessionBuilder(
   m_mastersocket = new NetworkSocket(ip, port, nullptr);
   connect(m_mastersocket, &NetworkSocket::messageReceived,
           this, &ClientSessionBuilder::on_messageReceived);
+  connect(m_mastersocket, &NetworkSocket::connected,
+          this, &ClientSessionBuilder::connected);
 }
 
 void ClientSessionBuilder::initiateConnection()

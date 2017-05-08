@@ -4,7 +4,7 @@ project(iscore_addon_network LANGUAGES CXX)
 iscore_common_setup()
 
 # Packages
-find_package(Qt5 5.3 REQUIRED COMPONENTS Core Widgets Network Xml Test)
+find_package(Qt5 5.3 REQUIRED COMPONENTS Core Widgets Network WebSockets Xml Test)
 
 # Files & main target
 set(HDRS
@@ -140,6 +140,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     Qt5::Core
                                     Qt5::Widgets
                                     Qt5::Network
+                                    Qt5::WebSockets
 #                                    libzmq-static
                                     )
 

@@ -32,6 +32,8 @@ PlayerSessionBuilder::PlayerSessionBuilder(
   m_mastersocket = new NetworkSocket(ip, port, nullptr);
   connect(m_mastersocket, &NetworkSocket::messageReceived,
           this, &PlayerSessionBuilder::on_messageReceived);
+  connect(m_mastersocket, &NetworkSocket::connected,
+          this, &PlayerSessionBuilder::connected);
 }
 
 void PlayerSessionBuilder::initiateConnection()

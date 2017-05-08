@@ -27,7 +27,7 @@ ClientSession::ClientSession(RemoteClient& master,
         this, &Session::validateMessage, Qt::QueuedConnection);
 }
 
-void ClientSession::on_createNewClient(QTcpSocket*)
+void ClientSession::on_createNewClient(QWebSocket*)
 {
   qDebug() << "createNewClient";
 }

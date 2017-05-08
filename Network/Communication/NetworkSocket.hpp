@@ -2,7 +2,7 @@
 #include <QObject>
 #include <QString>
 #include <Network/Communication/NetworkMessage.hpp>
-class QTcpSocket;
+class QWebSocket;
 
 namespace Network
 {
@@ -13,18 +13,19 @@ class NetworkSocket : public QObject
 {
         Q_OBJECT
     public:
-        NetworkSocket(QTcpSocket* sock, QObject* parent);
+        NetworkSocket(QWebSocket* sock, QObject* parent);
         NetworkSocket(QString ip, int port, QObject* parent);
 
         void sendMessage(const NetworkMessage&);
 
-        QTcpSocket& socket() const { return *m_socket; }
+        QWebSocket& socket() const { return *m_socket; }
 
     signals:
+        void connected();
         void messageReceived(NetworkMessage);
 
     private:
         void init();
-        QTcpSocket* m_socket{};
+        QWebSocket* m_socket{};
 };
 }
