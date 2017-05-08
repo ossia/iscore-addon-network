@@ -20,6 +20,7 @@ public:
   std::function<iscore::Document*(const QByteArray&)> documentLoader;
   std::function<void()> onDocumentLoaded;
 private:
+  void setupServer();
   QTcpServer m_listenServer;
   std::unique_ptr<PlayerSessionBuilder> m_sessionBuilder;
 

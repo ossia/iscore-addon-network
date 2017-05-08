@@ -28,6 +28,7 @@ PlayerSessionBuilder::PlayerSessionBuilder(
     int port):
   m_context{ctx}
 {
+  qDebug() << "PlayerSessionBuilder(): " << ip << port;
   m_mastersocket = new NetworkSocket(ip, port, nullptr);
   connect(m_mastersocket, &NetworkSocket::messageReceived,
           this, &PlayerSessionBuilder::on_messageReceived);

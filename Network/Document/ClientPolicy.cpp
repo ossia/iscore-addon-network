@@ -23,6 +23,7 @@
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/ClientSession.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
+#include <Network/Group/NetworkActions.hpp>
 
 namespace Network
 {

@@ -33,7 +33,6 @@ UUID_METADATA(
     Network::NetworkDocumentPlugin,
     "58c9e19a-fde3-47d0-a121-35853fec667d")
 
-ISCORE_DECLARE_ACTION(NetworkPlay, "&Play (Network)", Network, QKeySequence::UnknownKey)
 namespace Network
 {
 

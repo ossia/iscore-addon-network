@@ -35,6 +35,7 @@ set(HDRS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/RemoveClientFromGroup.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/RemoveGroup.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Group.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/NetworkActions.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupManager.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadata.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadataWidget.hpp"
@@ -142,6 +143,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 #                                    libzmq-static
                                     )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE OSSIA_DNSSD)
 
 setup_iscore_plugin(${PROJECT_NAME})

@@ -16,10 +16,12 @@ const iscore::sp<ModelClientPortParameter> ClientPort{
     QStringLiteral("Network/ClientPort"), 7777};
 const iscore::sp<ModelMasterPortParameter> MasterPort{
     QStringLiteral("Network/MasterPort"), 8888};
+const iscore::sp<ModelMasterPortParameter> PlayerPort{
+    QStringLiteral("Network/PlayerPort"), 0};
 
 static auto list()
 {
-  return std::tie(ClientName, ClientPort, MasterPort);
+  return std::tie(ClientName, ClientPort, MasterPort, PlayerPort);
 }
 }
 Model::Model(QSettings& set, const iscore::ApplicationContext& ctx)
@@ -30,5 +32,6 @@ Model::Model(QSettings& set, const iscore::ApplicationContext& ctx)
 ISCORE_SETTINGS_PARAMETER_CPP(QString, Model, ClientName)
 ISCORE_SETTINGS_PARAMETER_CPP(int, Model, ClientPort)
 ISCORE_SETTINGS_PARAMETER_CPP(int, Model, MasterPort)
+ISCORE_SETTINGS_PARAMETER_CPP(int, Model, PlayerPort)
 }
 }

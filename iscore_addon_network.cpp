@@ -55,7 +55,6 @@ iscore_addon_network::factories(
             Network::PanelDelegateFactory>,
         FW<iscore::SettingsDelegateFactory,
             Network::Settings::Factory>
-
     >(ctx, key);
 }
 

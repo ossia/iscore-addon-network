@@ -1,3 +1,5 @@
+#include "NetworkApplicationPlugin.hpp"
+#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
 #include <iscore/tools/std/Optional.hpp>
 #include <core/document/Document.hpp>
 #include <QAction>
@@ -12,7 +14,7 @@
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/MasterPolicy.hpp>
-#include "NetworkApplicationPlugin.hpp"
+#include <Network/Group/NetworkActions.hpp>
 #include <Network/Session/ClientSessionBuilder.hpp>
 #include <iscore/tools/IdentifierGeneration.hpp>
 
@@ -29,12 +31,12 @@
 #include <Network/Session/MasterSession.hpp>
 #include <iscore/actions/ActionManager.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
-#if defined(OSSIA_DNSSD)
-#include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
-#endif
 #include <QMessageBox>
 #include "IpDialog.hpp"
 
+#if defined(OSSIA_DNSSD)
+#include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
+#endif
 
 struct VisitorVariant;
 
@@ -85,7 +87,6 @@ void NetworkApplicationPlugin::setupPlayerConnection(
     return;
 
   auto session = plug->policy().session();
-  qDebug() << "session:" << session;
   auto ms = dynamic_cast<MasterSession*>(session);
   if(!ms)
     return;
@@ -93,19 +94,16 @@ void NetworkApplicationPlugin::setupPlayerConnection(
   auto s = new QTcpSocket;
 
   s->connectToHost(ip, port);
-  qDebug() << "connecting" << ip << port;
   connect(s, &QTcpSocket::connected,
           this, [=] {
-    qDebug("sent connection message");
     s->write(QString::number(ms->localClient().localPort()).toUtf8());
     //s->deleteLater();
   });
-  /*
-  connect(s, &QTcpSocket::error,
+  connect(s, qOverload<QAbstractSocket::SocketError>(&QTcpSocket::error),
           this, [=] (auto) {
+    qDebug("Socket error");
     s->deleteLater();
   });
-  */
 }
 
 iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
@@ -144,7 +142,6 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
       auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
       auto execpol = new MasterExecutionPolicy(*serv, *realplug, doc->context());
 
-      std::cerr << "Creation: Document is " << doc << std::endl;
       qApp->setStyleSheet("");
       realplug->setExecPolicy(execpol);
       doc->model().addPluginModel(realplug);
@@ -170,8 +167,9 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
 
   fileMenu->addAction(connectLocal);
 
-
+  // Execution
   QMenu* playMenu = context.menus.get().at(iscore::Menus::Play()).menu();
+
   QAction* playAction = new QAction{tr("Play (network)"), this};
   connect(playAction, &QAction::triggered, this, [&] {
     if(auto doc = currentDocument())
@@ -182,10 +180,22 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
     }
   });
 
+  QAction* stopAction = new QAction{tr("Stop (network)"), this};
+  connect(stopAction, &QAction::triggered, this, [&] {
+    if(auto doc = currentDocument())
+    {
+      auto np = doc->context().findPlugin<NetworkDocumentPlugin>();
+      if(np)
+        np->policy().stop();
+    }
+  });
+
   iscore::GUIElements g;
   g.actions.add<Actions::NetworkPlay>(playAction);
+  g.actions.add<Actions::NetworkStop>(stopAction);
 
   playMenu->addAction(playAction);
+  playMenu->addAction(stopAction);
 
   return g;
 }

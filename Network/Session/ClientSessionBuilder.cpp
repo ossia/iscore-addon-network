@@ -19,6 +19,7 @@
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/ClientPolicy.hpp>
+#include <QJsonDocument>
 #include <QTcpServer>
 #include <iscore/plugins/documentdelegate/DocumentDelegateFactory.hpp>
 #include <iscore/application/ApplicationContext.hpp>
@@ -104,7 +105,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
     iscore::Document* doc = m_context.docManager.loadDocument(
           m_context,
-          m_documentData,
+          QJsonDocument::fromBinaryData(m_documentData).object(),
           *m_context.interfaces<iscore::DocumentDelegateList>().begin()); // TODO id instead
 
     if(!doc)

@@ -1,14 +1,6 @@
 #pragma once
 #include <iscore/plugins/application/GUIApplicationPlugin.hpp>
-#include <QString>
-
-#include <iscore/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
 #include <memory>
-//#include <zmq.hpp>
-namespace iscore {
-class MenubarManager;
-}  // namespace iscore
-struct VisitorVariant;
 
 #ifdef OSSIA_DNSSD
 class ZeroconfBrowser;
@@ -16,7 +8,6 @@ class ZeroconfBrowser;
 
 namespace Network
 {
-
 class ClientSession;
 class ClientSessionBuilder;
 class NetworkApplicationPlugin :
@@ -28,7 +19,6 @@ class NetworkApplicationPlugin :
     public:
         NetworkApplicationPlugin(const iscore::GUIApplicationContext& app);
 
-//        zmq::context_t zmq{1};
     public slots:
         void setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
         void setupPlayerConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
@@ -37,7 +27,7 @@ class NetworkApplicationPlugin :
         GUIElements makeGUIElements() override;
         std::unique_ptr<ClientSessionBuilder> m_sessionBuilder;
 
-#ifdef OSSIA_DNSSD
+#if defined(OSSIA_DNSSD)
         ZeroconfBrowser* m_serverBrowser{};
         ZeroconfBrowser* m_playerBrowser{};
 #endif

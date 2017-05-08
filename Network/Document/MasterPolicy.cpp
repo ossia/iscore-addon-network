@@ -29,6 +29,7 @@
 #include <iscore/model/path/PathSerialization.hpp>
 
 #include <Scenario/Application/ScenarioActions.hpp>
+#include <Network/Group/NetworkActions.hpp>
 namespace Network
 {
 

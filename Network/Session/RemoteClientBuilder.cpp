@@ -6,6 +6,7 @@
 #include <QIODevice>
 #include <QList>
 #include <QPair>
+#include <QJsonDocument>
 #include <sys/types.h>
 
 #include "MasterSession.hpp"
@@ -66,7 +67,7 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
 
     // Data is the serialized command stack, and the document models.
     DataStreamReader vr{&doc.data};
-    vr.m_stream << m_session.document()->saveAsByteArray();
+    vr.m_stream << QJsonDocument(m_session.document()->saveAsJson()).toBinaryData();
     vr.readFrom(m_session.document()->commandStack());
 
     m_socket->sendMessage(doc);

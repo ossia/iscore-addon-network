@@ -5,12 +5,13 @@
 #include <Network/Group/Panel/Widgets/GroupTableWidget.hpp>
 #include <Network/Group/GroupManager.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
-
 #include <Network/Session/Session.hpp>
-
+#include <Network/Group/NetworkActions.hpp>
+#include <iscore/actions/ActionManager.hpp>
 #include <iscore/document/DocumentInterface.hpp>
 #include <iscore/widgets/ClearLayout.hpp>
 #include <iscore/widgets/MarginLess.hpp>
+#include <iscore/widgets/Separator.hpp>
 
 #include <QLabel>
 #include <QPushButton>
@@ -156,7 +157,31 @@ void PanelDelegate::setView(
   m_subWidget->layout()->addWidget(button);
 
   // Group table
+  m_subWidget->layout()->addWidget(new iscore::HSeparator{m_subWidget});
+  auto transport_widg = new QWidget;
+  auto transport_lay = new QHBoxLayout{transport_widg};
+  auto play = new QPushButton{tr("Play")};
+  auto stop = new QPushButton{tr("Stop")};
+
+  connect(play, &QPushButton::clicked,
+          this, [=] {
+    auto act = context().actions.action<Actions::NetworkPlay>().action();
+    act->trigger();
+  });
+  connect(play, &QPushButton::clicked,
+          this, [=] {
+    auto act = context().actions.action<Actions::NetworkStop>().action();
+    act->trigger();
+  });
+
+  transport_lay->addWidget(play);
+  transport_lay->addWidget(stop);
+
+  m_subWidget->layout()->addWidget(transport_widg);
   m_subWidget->layout()->addWidget(new ClientListWidget{*session, m_widget});
+
+  // Clients
+  m_subWidget->layout()->addWidget(new iscore::HSeparator{m_subWidget});
   m_subWidget->layout()->addWidget(new GroupTableWidget{mgr, session, m_widget});
 }
 
