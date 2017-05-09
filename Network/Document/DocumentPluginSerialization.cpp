@@ -30,14 +30,20 @@ template <>
 void JSONObjectReader::read(
         const Network::NetworkDocumentPlugin& elt)
 {
-    readFrom(elt.groupManager());
-    readFrom(elt.policy());
+    obj["Groups"] = toJsonObject(elt.groupManager());
+    obj["Policy"] = toJsonObject(elt.policy());
 }
 
 template <>
 void JSONObjectWriter::write(
         Network::NetworkDocumentPlugin& elt)
 {
-    elt.m_groups = new Network::GroupManager{*this, &elt};
-    elt.m_policy = new Network::PlaceholderEditionPolicy{*this, &elt};
+  {
+    JSONObjectWriter w(obj["Groups"].toObject());
+    elt.m_groups = new Network::GroupManager{w, &elt};
+  }
+  {
+    JSONObjectWriter w(obj["Policy"].toObject());
+    elt.m_policy = new Network::PlaceholderEditionPolicy{w, &elt};
+  }
 }

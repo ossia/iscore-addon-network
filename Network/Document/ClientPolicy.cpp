@@ -207,17 +207,6 @@ void PlayerClientEditionPolicy::play()
 {
   if(onPlay)
     onPlay();
-  /*
-  auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
-  if(sm)
-  {
-    auto& plug = iscore::GUIAppContext().guiApplicationPlugin<Engine::ApplicationPlugin>();
-    plug.on_play(
-          sm->baseConstraint(),
-          true,
-          BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
-    TimeVal{});
-  }*/
 }
 
 void PlayerClientEditionPolicy::stop()

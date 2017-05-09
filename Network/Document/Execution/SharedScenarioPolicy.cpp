@@ -58,6 +58,7 @@ struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
       e.shared_expr->it = ossia::expressions::add_callback(
                             *e.shared_expr->expr,
                             [=,&session,&mapi] (bool b) {
+        qDebug() << "Evaluation entered" << b;
         if(b)
         {
           session.emitMessage(
@@ -70,6 +71,7 @@ struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
 
     // When the trigger finishes evaluation
     ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
+      qDebug() << "Evaluation finished" << b;
       if(e.shared_expr->it)
         ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
 
@@ -78,6 +80,7 @@ struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
 
     // When the trigger can be triggered
     ctx.doc.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
+      qDebug() << "Triggered";
       if(e.shared_expr->it)
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
@@ -231,6 +234,8 @@ void SharedScenarioPolicy::operator()(
     Engine::Execution::ConstraintComponent& cst,
     const Group& cur)
 {
+  const auto& str = Constants::instance();
+
   Scenario::ConstraintModel& constraint = cst.iscoreConstraint();
 
   const Group& cur_group = getGroup(ctx.gm, cur, constraint);
@@ -254,21 +259,21 @@ void SharedScenarioPolicy::operator()(
     if(ip)
     {
 
-      auto syncmode = get_metadata<QString>(process.second->process(), "syncmode");
-      if(!syncmode || syncmode->isEmpty())
-        syncmode = get_metadata<QString>(constraint, "syncmode");
-      if(!syncmode || syncmode->isEmpty())
-        syncmode = QStringLiteral("shared");
+      auto sharemode = get_metadata<QString>(process.second->process(), str.sharemode);
+      if(!sharemode || sharemode->isEmpty())
+        sharemode = get_metadata<QString>(constraint, str.sharemode);
+      if(!sharemode || sharemode->isEmpty())
+        sharemode = str.shared;
 
-      if(*syncmode == "shared")
+      if(*sharemode == str.shared)
       {
         SharedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
       }
-      else if(*syncmode == "mixed")
+      else if(*sharemode == str.mixed)
       {
         MixedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
       }
-      else if(*syncmode == "free")
+      else if(*sharemode == str.free)
       {
         FreeScenarioPolicy{ctx}(*process.second, *ip, cur_group);
       }

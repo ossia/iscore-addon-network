@@ -176,24 +176,7 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
   QMenu* playMenu = context.menus.get().at(iscore::Menus::Play()).menu();
 
   QAction* playAction = new QAction{tr("Play (network)"), this};
-  connect(playAction, &QAction::triggered, this, [&] {
-    if(auto doc = currentDocument())
-    {
-      auto np = doc->context().findPlugin<NetworkDocumentPlugin>();
-      if(np)
-        np->policy().play();
-    }
-  });
-
   QAction* stopAction = new QAction{tr("Stop (network)"), this};
-  connect(stopAction, &QAction::triggered, this, [&] {
-    if(auto doc = currentDocument())
-    {
-      auto np = doc->context().findPlugin<NetworkDocumentPlugin>();
-      if(np)
-        np->policy().stop();
-    }
-  });
 
   iscore::GUIElements g;
   g.actions.add<Actions::NetworkPlay>(playAction);

@@ -11,7 +11,7 @@ class ScenarioInterface;
 }
 namespace Network
 {
-struct BasicPruner
+struct ISCORE_ADDON_NETWORK_EXPORT BasicPruner
 {
   BasicPruner(NetworkDocumentPlugin& d);
 

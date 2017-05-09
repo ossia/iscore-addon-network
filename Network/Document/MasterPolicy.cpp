@@ -83,12 +83,18 @@ MasterEditionPolicy::MasterEditionPolicy(
     m_session->broadcastToAllClients(m_session->makeMessage(mapi.play));
     play();
   });
+  auto& stop_act = c.app.actions.action<Actions::NetworkStop>();
+  connect(stop_act.action(), &QAction::triggered,
+          this, [&] {
+    m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop));
+    stop();
+  });
 
 
   /////////////////////////////////////////////////////////////////////////////
   /// From a client to the master and the other clients
   /////////////////////////////////////////////////////////////////////////////
-  s->mapper().addHandler(mapi.command_new, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_new, [&] (const NetworkMessage& m)
   {
     iscore::CommandData cmd;
     DataStreamWriter writer{m.data};
@@ -102,18 +108,18 @@ MasterEditionPolicy::MasterEditionPolicy(
   });
 
   // Undo-redo
-  s->mapper().addHandler(mapi.command_undo, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_undo, [&] (const NetworkMessage& m)
   {
     stack.undoQuiet();
     m_session->broadcastToOthers(m.clientId, m);
   });
-  s->mapper().addHandler(mapi.command_redo, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_redo, [&] (const NetworkMessage& m)
   {
     stack.redoQuiet();
     m_session->broadcastToOthers(m.clientId, m);
   });
 
-  s->mapper().addHandler(mapi.command_index, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.command_index, [&] (const NetworkMessage& m)
   {
     QDataStream stream{m.data};
     int32_t idx;
@@ -124,7 +130,7 @@ MasterEditionPolicy::MasterEditionPolicy(
 
 
   // Lock-unlock
-  s->mapper().addHandler(mapi.lock, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.lock, [&] (const NetworkMessage& m)
   {
     QDataStream stream{m.data};
     QByteArray data;
@@ -133,7 +139,7 @@ MasterEditionPolicy::MasterEditionPolicy(
     m_session->broadcastToOthers(m.clientId, m);
   });
 
-  s->mapper().addHandler(mapi.unlock, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.unlock, [&] (const NetworkMessage& m)
   {
     QDataStream stream{m.data};
     QByteArray data;
@@ -142,30 +148,34 @@ MasterEditionPolicy::MasterEditionPolicy(
     m_session->broadcastToOthers(m.clientId, m);
   });
 
-  s->mapper().addHandler(mapi.play, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.play, [&] (const NetworkMessage& m)
   {
     m_session->broadcastToAllClients(m_session->makeMessage(mapi.play));
     play();
   });
+  s->mapper().addHandler(mapi.stop, [&] (const NetworkMessage& m)
+  {
+    m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop));
+    stop();
+  });
 
-  s->mapper().addHandler(mapi.ping, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.ping, [&] (const NetworkMessage& m)
   {
     qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(
           std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     m_session->sendMessage(m.clientId, m_session->makeMessage(mapi.pong, t));
   });
 
-  s->mapper().addHandler(mapi.pong, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.pong, [&] (const NetworkMessage& m)
   {
     m_keep.on_pong(m);
   });
 
-
-  s->mapper().addHandler(mapi.session_portinfo, [&] (NetworkMessage m)
+  s->mapper().addHandler(mapi.session_portinfo, [&] (const NetworkMessage& m)
   {
     QString s;
     int p;
-    QDataStream stream{&m.data, QIODevice::ReadOnly};
+    QDataStream stream{m.data};
     stream >> s >> p;
 
     auto clt = m_session->findClient(m.clientId);
@@ -197,8 +207,12 @@ void MasterEditionPolicy::play()
 
 void MasterEditionPolicy::stop()
 {
-  auto act = m_ctx.app.actions.action<Actions::Stop>().action();
-  act->trigger();
+  auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  if(sm)
+  {
+    auto stop_action = m_ctx.app.actions.action<Actions::Stop>().action();
+    stop_action->trigger();
+  }
 }
 
 MasterExecutionPolicy::MasterExecutionPolicy(

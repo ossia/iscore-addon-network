@@ -23,8 +23,10 @@ class PanelDelegate final :
                 iscore::MaybeDocument newm) override;
 
 
-        void setView(const GroupManager& mgr,
-                     const Session* session);
+        void setView(
+            const iscore::DocumentContext& ctx,
+            const GroupManager& mgr,
+            const Session* session);
 
         void setEmptyView();
 

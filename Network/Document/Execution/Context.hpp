@@ -7,6 +7,27 @@
 namespace Network
 {
 
+struct Constants
+{
+    static const Constants& instance() { static const Constants c; return c; }
+    const QString syncmode{QStringLiteral("syncmode")};
+    const QString async{QStringLiteral("async")};
+    const QString sync{QStringLiteral("sync")};
+
+    const QString order{QStringLiteral("order")};
+    const QString ordered{QStringLiteral("true")};
+    const QString unordered{QStringLiteral("false")};
+
+    const QString group{QStringLiteral("group")};
+    const QString parent{QStringLiteral("parent")};
+    const QString all{QStringLiteral("all")};
+
+    const QString sharemode{QStringLiteral("sharemode")};
+    const QString shared{QStringLiteral("shared")};
+    const QString mixed{QStringLiteral("mixed")};
+    const QString free{QStringLiteral("free")};
+};
+
 struct NetworkPrunerContext
 {
   NetworkDocumentPlugin& doc;
@@ -36,25 +57,22 @@ optional<T> get_metadata(Obj& obj, const QString& s)
 template<typename T>
 SyncMode getInfos(const T& obj)
 {
-  auto syncmode = get_metadata<QString>(obj, "syncmode");
+  const auto& str = Constants::instance();
+
+  auto syncmode = get_metadata<QString>(obj, str.syncmode);
   if(!syncmode || syncmode->isEmpty())
-    syncmode = QString("async");
-  auto order = get_metadata<QString>(obj, "order");
+    syncmode = QString(str.async);
+  auto order = get_metadata<QString>(obj, str.order);
   if(!order || order->isEmpty())
-    order = QString("false");
+    order = str.unordered;
 
-  const QString async = QStringLiteral("async");
-  const QString sync = QStringLiteral("async");
-  const QString ordered = QStringLiteral("true");
-  const QString unordered = QStringLiteral("false");
-
-  if(syncmode == async && order == ordered)
+  if(syncmode == str.async && order == str.ordered)
     return SyncMode::AsyncOrdered;
-  else if(syncmode == async && order == unordered)
+  else if(syncmode == str.async && order == str.unordered)
     return SyncMode::AsyncUnordered;
-  else if(syncmode == sync && order == ordered)
+  else if(syncmode == str.sync && order == str.ordered)
     return SyncMode::SyncOrdered;
-  else if(syncmode == sync && order == unordered)
+  else if(syncmode == str.sync && order == str.unordered)
     return SyncMode::SyncUnordered;
 
   return SyncMode::AsyncUnordered;
@@ -63,6 +81,8 @@ SyncMode getInfos(const T& obj)
 template<typename T>
 const Group& getGroup(const GroupManager& gm, const Group& cur, const T& obj)
 {
+  const auto& cst = Constants::instance();
+
   const Group* cur_group = &cur;
 
   /*
@@ -79,16 +99,16 @@ const Group& getGroup(const GroupManager& gm, const Group& cur, const T& obj)
 
   // If no group found through components, maybe through metadata :
   */
-  auto ostr = get_metadata<QString>(obj, "group");
+  auto ostr = get_metadata<QString>(obj, cst.group);
   if(!ostr)
     return *cur_group;
 
   auto& str = *ostr;
-  if(str == "all")
+  if(str == cst.all)
   {
     cur_group = gm.group(gm.defaultGroup());
   }
-  else if(str == "parent" || str.isEmpty())
+  else if(str == cst.parent || str.isEmpty())
   {
     // Default
   }
