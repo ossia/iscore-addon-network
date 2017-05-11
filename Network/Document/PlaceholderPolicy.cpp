@@ -1,20 +1,5 @@
-#include <iscore/tools/std/Optional.hpp>
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/serialization/JSONVisitor.hpp>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QList>
-#include <algorithm>
-
-#include <Network/Document/DocumentPlugin.hpp>
 #include "PlaceholderPolicy.hpp"
-#include <iscore/serialization/JSONValueVisitor.hpp>
-#include <iscore/model/Identifier.hpp>
-#include <Network/Client/LocalClient.hpp>
-#include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/Session.hpp>
-
 
 template <>
 void DataStreamReader::read(

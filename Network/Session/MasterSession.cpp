@@ -19,9 +19,12 @@
 namespace Network
 {
 class Client;
-MasterSession::MasterSession(iscore::Document* doc, LocalClient* theclient, Id<Session> id, QObject* parent):
+MasterSession::MasterSession(
+    const iscore::DocumentContext& doc,
+    LocalClient* theclient,
+    Id<Session> id, QObject* parent):
   Session{theclient, id, parent},
-  m_document{doc}
+  m_ctx{doc}
 {
   con(localClient(), &LocalClient::createNewClient,
       this, &MasterSession::on_createNewClient);
@@ -53,7 +56,9 @@ void MasterSession::on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt)
   connect(clt, &RemoteClient::messageReceived,
           this, &Session::validateMessage, Qt::QueuedConnection);
   con(clt->socket().socket(), &QWebSocket::disconnected,
-      this, [=] { removeClient(clt); });
+      this, [=] {
+    removeClient(clt);
+  });
 
   addClient(clt);
 }

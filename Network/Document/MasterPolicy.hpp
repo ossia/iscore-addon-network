@@ -3,13 +3,8 @@
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Timekeeper.hpp>
 
-namespace iscore {
-struct DocumentContext;
-}  // namespace iscore
-
 namespace Network
 {
-
 class MasterEditionPolicy : public EditionPolicy
 {
     public:
@@ -25,23 +20,5 @@ class MasterEditionPolicy : public EditionPolicy
         MasterSession* m_session{};
         const iscore::DocumentContext& m_ctx;
         Timekeeper m_keep{*m_session};
-};
-
-class MasterExecutionPolicy : public ExecutionPolicy
-{
-public:
-  MasterExecutionPolicy(
-      Session& s,
-      NetworkDocumentPlugin& doc,
-      const iscore::DocumentContext& c);
-};
-
-class SlaveExecutionPolicy : public ExecutionPolicy
-{
-public:
-  SlaveExecutionPolicy(
-      Session& s,
-      NetworkDocumentPlugin& doc,
-      const iscore::DocumentContext& c);
 };
 }

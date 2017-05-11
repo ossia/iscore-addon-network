@@ -1,7 +1,7 @@
+#include "NetworkMessage.hpp"
 #include <QDataStream>
 
 #include <Network/Session/Session.hpp>
-#include "NetworkMessage.hpp"
 #include <Network/Client/LocalClient.hpp>
 #include <iscore/model/Identifier.hpp>
 
@@ -21,7 +21,7 @@ QDataStream& operator>>(QDataStream& s, Network::NetworkMessage& m)
 
 NetworkMessage::NetworkMessage(Network::Session& s, QByteArray&& addr, QByteArray&& data):
     address{addr},
-    sessionId{s.id().val()},
+    sessionId{s.id()},
     clientId{s.localClient().id()},
     data{data}
 {

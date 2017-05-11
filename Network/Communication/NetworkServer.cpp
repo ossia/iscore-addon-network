@@ -14,7 +14,6 @@ NetworkServer::NetworkServer(int port, QObject* parent):
 {
     m_server = new QWebSocketServer("i-score-network", QWebSocketServer::SslMode::NonSecureMode, this);
 
-
     while(!m_server->listen(QHostAddress::Any, port))
     {
         port++;

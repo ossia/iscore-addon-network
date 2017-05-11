@@ -179,6 +179,7 @@ class NetworkMetadataWidget : public QWidget
       lay->addLayout(l2);
       lay->addLayout(l3);
       lay->addLayout(l4);
+      lay->addSpacing(1);
     }
 
 };

@@ -22,14 +22,14 @@ class MasterSession : public Session
 {
            Q_OBJECT
     public:
-        MasterSession(iscore::Document* doc,
+        MasterSession(const iscore::DocumentContext& doc,
                       LocalClient* theclient,
                       Id<Session> id,
                       QObject* parent = nullptr);
         ~MasterSession();
 
-        iscore::Document* document() const
-        { return m_document; }
+        const iscore::DocumentContext& document() const
+        { return m_ctx; }
 
         LocalClient& master() const override
         { return this->localClient(); }
@@ -39,7 +39,7 @@ class MasterSession : public Session
         void on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt);
 
     private:
-        iscore::Document* m_document{};
+        const iscore::DocumentContext& m_ctx;
         QList<RemoteClientBuilder*> m_clientBuilders;
 
 #ifdef OSSIA_DNSSD

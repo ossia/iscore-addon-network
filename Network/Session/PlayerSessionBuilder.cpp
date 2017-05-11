@@ -3,6 +3,7 @@
 #include <QIODevice>
 #include <sys/types.h>
 #include <Network/Document/MasterPolicy.hpp>
+#include <Network/Document/Execution/SlavePolicy.hpp>
 
 #include "ClientSession.hpp"
 #include "PlayerSessionBuilder.hpp"
@@ -126,10 +127,9 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
           [] (auto) { });
 // No redo.
     auto& ctx = doc->context();
-    auto& np = ctx.plugin<NetworkDocumentPlugin>();
-    np.setPolicy(new PlayerClientEditionPolicy{m_session, ctx});
-    auto execpol = new SlaveExecutionPolicy(*m_session, np, doc->context());
-    np.setExecPolicy(execpol);
+    NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
+    np.setEditPolicy(new PlayerClientEditionPolicy{m_session, ctx});
+    np.setExecPolicy(new SlaveExecutionPolicy{*m_session, np, doc->context()});
 
     // Send a message to the server with the ports that we opened :
     auto& local_server = m_session->localClient().server();

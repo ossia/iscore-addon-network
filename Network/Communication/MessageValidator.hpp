@@ -1,4 +1,5 @@
 #pragma once
+#include <iscore/model/Identifier.hpp>
 
 namespace Network
 {
@@ -9,12 +10,12 @@ struct NetworkMessage;
 class MessageValidator
 {
     public:
-        MessageValidator(Session& s, MessageMapper& map);
+        MessageValidator(Id<Session> s, MessageMapper& map);
 
-        bool validate(NetworkMessage m);
+        bool validate(const NetworkMessage& m);
 
     private:
-        Session& m_session;
+        Id<Session> m_session;
         MessageMapper& m_mapper;
 };
 }

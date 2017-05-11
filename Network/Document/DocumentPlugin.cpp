@@ -50,7 +50,8 @@ MessagesAPI::MessagesAPI():
   trigger_entered{QByteArrayLiteral("/trigger/entered")},
   trigger_left{QByteArrayLiteral("/trigger/left")},
   trigger_finished{QByteArrayLiteral("/trigger/finished")},
-  trigger_triggered{QByteArrayLiteral("/trigger/triggered")}
+  trigger_triggered{QByteArrayLiteral("/trigger/triggered")},
+  constraint_speed{QByteArrayLiteral("/constraint/speed")}
 {
 
 }
@@ -84,13 +85,24 @@ NetworkDocumentPlugin::~NetworkDocumentPlugin()
 
 }
 
-void NetworkDocumentPlugin::setPolicy(EditionPolicy * pol)
+void NetworkDocumentPlugin::setEditPolicy(EditionPolicy * pol)
 {
+  ISCORE_ASSERT(pol);
+
   delete m_policy;
+  pol->setParent(this);
   m_policy = pol;
 
-  ISCORE_ASSERT(m_policy);
   emit sessionChanged();
+}
+
+void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
+{
+  ISCORE_ASSERT(pol);
+
+  delete m_exec;
+  pol->setParent(this);
+  m_exec = pol;
 }
 
 iscore::DocumentPlugin*DocumentPluginFactory::load(

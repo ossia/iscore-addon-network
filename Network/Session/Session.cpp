@@ -1,5 +1,4 @@
-#include <Network/Communication/MessageMapper.hpp>
-#include <Network/Communication/MessageValidator.hpp>
+
 #include <iscore/tools/std/Optional.hpp>
 
 #include <Network/Communication/NetworkMessage.hpp>
@@ -13,8 +12,8 @@ namespace Network
 Session::Session(LocalClient* client, Id<Session> id, QObject* parent):
     IdentifiedObject<Session>{id, "Session", parent},
     m_client{client},
-    m_mapper{new MessageMapper},
-    m_validator{new MessageValidator(*this, mapper())}
+    m_mapper{},
+    m_validator{id, m_mapper}
 {
     m_client->setParent(this);
     connect(this, &Session::emitMessage,
@@ -24,18 +23,16 @@ Session::Session(LocalClient* client, Id<Session> id, QObject* parent):
 
 Session::~Session()
 {
-    delete m_mapper;
-    delete m_validator;
 }
 
 MessageValidator&Session::validator() const
 {
-  return *m_validator;
+  return m_validator;
 }
 
 MessageMapper&Session::mapper() const
 {
-  return *m_mapper;
+  return m_mapper;
 }
 
 Client&Session::master() const { throw; }
@@ -69,6 +66,7 @@ void Session::addClient(RemoteClient* clt)
 
 void Session::removeClient(RemoteClient* clt)
 {
+  this->clientRemoving(clt);
   m_remoteClients.removeAll(clt);
   this->clientRemoved(clt);
   emit clientsChanged();
@@ -85,26 +83,26 @@ NetworkMessage Session::makeMessage(const QByteArray& address)
   return m;
 }
 
-void Session::broadcastToClients(const std::vector<Id<Client>>& clts, NetworkMessage m)
+void Session::broadcastToClients(const std::vector<Id<Client>>& clts, const NetworkMessage& m)
 {
   for(auto& id : clts)
   {
-    sendMessage(id, std::move(m));
+    sendMessage(id, m);
   }
 }
-void Session::broadcastToAllClients(NetworkMessage m)
+void Session::broadcastToAllClients(const NetworkMessage& m)
 {
   for(RemoteClient* client : remoteClients())
     client->sendMessage(m);
 }
 
-void Session::broadcastToAll(NetworkMessage m)
+void Session::broadcastToAll(const NetworkMessage& m)
 {
   broadcastToAllClients(m);
   mapper().map(m);
 }
 
-void Session::broadcastToOthers(Id<Client> sender, NetworkMessage m)
+void Session::broadcastToOthers(const Id<Client>& sender, const NetworkMessage& m)
 {
   for(const auto& client : remoteClients())
   {
@@ -113,7 +111,7 @@ void Session::broadcastToOthers(Id<Client> sender, NetworkMessage m)
   }
 }
 
-void Session::sendMessage(Id<Client> target, NetworkMessage m)
+void Session::sendMessage(const Id<Client>& target, const NetworkMessage& m)
 {
   const auto& c = remoteClients();
   auto it = ossia::find(c, target);
@@ -126,7 +124,7 @@ void Session::sendMessage(Id<Client> target, NetworkMessage m)
 }
 
 
-void Session::validateMessage(NetworkMessage m)
+void Session::validateMessage(const NetworkMessage& m)
 {
   if(validator().validate(m))
     mapper().map(m);

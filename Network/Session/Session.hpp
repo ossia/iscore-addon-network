@@ -1,5 +1,7 @@
 #pragma once
 #include <Network/Communication/NetworkMessage.hpp>
+#include <Network/Communication/MessageMapper.hpp>
+#include <Network/Communication/MessageValidator.hpp>
 #include <QDataStream>
 #include <QIODevice>
 #include <QList>
@@ -51,24 +53,25 @@ class Session : public IdentifiedObject<Session>
         }
 
         //! Does not include self
-        void broadcastToAllClients(NetworkMessage m);
+        void broadcastToAllClients(const NetworkMessage& m);
 
         //! Includes self
-        void broadcastToAll(NetworkMessage m);
-        void broadcastToOthers(Id<Client> sender, NetworkMessage m);
+        void broadcastToAll(const NetworkMessage& m);
+        void broadcastToOthers(const Id<Client>& sender, const NetworkMessage& m);
 
-        void sendMessage(Id<Client> target, NetworkMessage m);
-        void broadcastToClients(const std::vector<Id<Client> >& clts, NetworkMessage m);
+        void sendMessage(const Id<Client>& target, const NetworkMessage& m);
+        void broadcastToClients(const std::vector<Id<Client> >& clts, const NetworkMessage& m);
 
     signals:
         void clientAdded(RemoteClient*);
+        void clientRemoving(RemoteClient*);
         void clientRemoved(RemoteClient*);
         void clientsChanged();
 
-        void emitMessage(Id<Client> target, NetworkMessage m);
+        void emitMessage(Id<Client> target, const NetworkMessage& m);
 
     public slots:
-        void validateMessage(NetworkMessage m);
+        void validateMessage(const NetworkMessage& m);
 
     private:
         template<typename Arg>
@@ -84,8 +87,8 @@ class Session : public IdentifiedObject<Session>
         }
 
         LocalClient* m_client{};
-        MessageMapper* m_mapper{};
-        MessageValidator* m_validator{};
+        mutable MessageMapper m_mapper;
+        mutable MessageValidator m_validator;
         QList<RemoteClient*> m_remoteClients;
 };
 }

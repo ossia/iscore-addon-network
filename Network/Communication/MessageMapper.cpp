@@ -8,7 +8,7 @@ namespace Network
 void MessageMapper::addHandler(QByteArray addr, std::function<void(const NetworkMessage&)> fun)
 {
     ISCORE_ASSERT(!contains(addr));
-    m_handlers[addr] = fun;
+    m_handlers[std::move(addr)] = std::move(fun);
 }
 
 void MessageMapper::map(const NetworkMessage& m)
@@ -24,6 +24,4 @@ bool MessageMapper::contains(const QByteArray& b) const
 {
   return m_handlers.find(b) != m_handlers.end();
 }
-
-
 }

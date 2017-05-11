@@ -119,8 +119,8 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
     vis.writeTo(*this);
   }
 
-  void setPolicy(EditionPolicy*);
-  void setExecPolicy(ExecutionPolicy* e) { m_exec = e; e->setParent(this); }
+  void setEditPolicy(EditionPolicy*);
+  void setExecPolicy(ExecutionPolicy* e);
 
   GroupManager& groupManager() const
   { return *m_groups; }

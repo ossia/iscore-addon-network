@@ -1,30 +1,10 @@
+#include <Network/Document/ClientPolicy.hpp>
 #include <Network/Communication/MessageMapper.hpp>
-#include <iscore/document/DocumentContext.hpp>
-#include <QByteArray>
-#include <QDataStream>
-#include <QDebug>
-#include <algorithm>
-#include <iscore/command/CommandData.hpp>
-#include "ClientPolicy.hpp"
-#include <Network/Communication/NetworkMessage.hpp>
-#include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
-#include <Engine/ApplicationPlugin.hpp>
-
-#include <iscore/application/ApplicationContext.hpp>
-#include <core/command/CommandStack.hpp>
-#include <core/document/Document.hpp>
-#include <iscore/command/Command.hpp>
-#include <iscore/locking/ObjectLocker.hpp>
-#include <iscore/plugins/customfactory/StringFactoryKey.hpp>
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/tools/Todo.hpp>
-#include <iscore/actions/ActionManager.hpp>
-#include <Scenario/Application/ScenarioActions.hpp>
-#include <Network/Client/RemoteClient.hpp>
-#include <Network/Session/ClientSession.hpp>
-#include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Group/NetworkActions.hpp>
-
+#include <Network/Document/Execution/BasicPruner.hpp>
+#include <Scenario/Application/ScenarioActions.hpp>
+#include <Engine/ApplicationPlugin.hpp>
+#include <iscore/actions/ActionManager.hpp>
 namespace Network
 {
 ClientEditionPolicy::ClientEditionPolicy(

@@ -13,6 +13,7 @@
 
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
+#include <Network/Document/Execution/MasterPolicy.hpp>
 #include <Network/Document/MasterPolicy.hpp>
 #include <Network/Group/NetworkActions.hpp>
 #include <Network/Session/ClientSessionBuilder.hpp>
@@ -139,17 +140,30 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
   {
     if(auto doc = currentDocument())
     {
-      auto clt = new LocalClient(Id<Client>(0));
-      clt->setName(tr("Master"));
-      auto serv = new MasterSession(currentDocument(), clt, Id<Session>(1234));
-      auto policy = new MasterEditionPolicy{serv, currentDocument()->context()};
+      const auto& ctx = doc->context();
+      NetworkDocumentPlugin* plug = ctx.findPlugin<NetworkDocumentPlugin>();
+      if(plug)
+      {
+        auto clt = new LocalClient(Id<Client>(0)); clt->setName(tr("Master"));
+        auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
+        auto editpol = new MasterEditionPolicy{serv, ctx};
+        auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
+        plug->setEditPolicy(editpol);
+        plug->setExecPolicy(execpol);
+      }
+      else
+      {
+        auto clt = new LocalClient(Id<Client>(0)); clt->setName(tr("Master"));
+        auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
+        auto policy = new MasterEditionPolicy{serv, ctx};
+        auto plug = new NetworkDocumentPlugin{ctx, policy, getStrongId(doc->model().pluginModels()), doc};
+        auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
 
-      auto realplug = new NetworkDocumentPlugin{doc->context(), policy, getStrongId(doc->model().pluginModels()), doc};
-      auto execpol = new MasterExecutionPolicy(*serv, *realplug, doc->context());
+        plug->setExecPolicy(execpol);
+        doc->model().addPluginModel(plug);
+      }
 
       qApp->setStyleSheet("");
-      realplug->setExecPolicy(execpol);
-      doc->model().addPluginModel(realplug);
 
       auto& panel = context.panel<Network::PanelDelegate>();
       panel.networkPluginReady();

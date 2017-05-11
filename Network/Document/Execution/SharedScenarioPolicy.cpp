@@ -74,7 +74,11 @@ struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
     ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
       qDebug() << "Evaluation finished" << b;
       if(e.shared_expr->it)
+      {
         ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
+
+        e.shared_expr->it = ossia::none;
+      }
 
       e.async_expr->ping(); // TODO how to transmit the max bound information ??
     });
@@ -83,8 +87,12 @@ struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
     ctx.doc.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
       qDebug() << "Triggered";
       if(e.shared_expr->it)
+      {
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
+
+        e.shared_expr->it = ossia::none;
+      }
 
       e.async_expr->ping();
     });
@@ -124,8 +132,11 @@ struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
     // When the trigger finishes evaluation
     ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool b) {
       if(e.shared_expr->it)
+      {
         ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
 
+        e.shared_expr->it = ossia::none;
+      }
       e.async_expr->ping(); // TODO how to transmit the max bound information ??
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers
@@ -135,9 +146,12 @@ struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
     // When the trigger can be triggered
     ctx.doc.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
       if(e.shared_expr->it)
+      {
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
 
+        e.shared_expr->it = ossia::none;
+      }
       e.async_expr->ping();
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers

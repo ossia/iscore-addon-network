@@ -3,6 +3,7 @@
 #include <QIODevice>
 #include <sys/types.h>
 #include <Network/Document/MasterPolicy.hpp>
+#include <Network/Document/Execution/SlavePolicy.hpp>
 
 #include "ClientSession.hpp"
 #include "ClientSessionBuilder.hpp"
@@ -127,10 +128,11 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
           [] (auto) { }); // No redo.
 
     auto& ctx = doc->context();
-    auto& np = ctx.plugin<NetworkDocumentPlugin>();
-    np.setPolicy(new GUIClientEditionPolicy{m_session, ctx});
-    auto execpol = new SlaveExecutionPolicy(*m_session, np, doc->context());
-    np.setExecPolicy(execpol);
+    NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
+    for(auto e : np.groupManager().groups())
+      qDebug() << e->name();
+    np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});
+    np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
 
     // Send a message to the server with the ports that we opened :
     auto& local_server = m_session->localClient().server();

@@ -44,5 +44,7 @@ struct MessagesAPI
   const QByteArray trigger_left;
   const QByteArray trigger_finished;
   const QByteArray trigger_triggered;
+
+  const QByteArray constraint_speed;
 };
 }

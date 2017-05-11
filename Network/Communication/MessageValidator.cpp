@@ -1,23 +1,19 @@
-#include <QList>
-
-#include <Network/Session/Session.hpp>
 #include "MessageValidator.hpp"
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
-#include <iscore/model/Identifier.hpp>
 
 namespace Network
 {
-MessageValidator::MessageValidator(Session& s, MessageMapper& map):
+MessageValidator::MessageValidator(Id<Session> s, MessageMapper& map):
     m_session{s},
     m_mapper{map}
 {
 
 }
 
-bool MessageValidator::validate(NetworkMessage m)
+bool MessageValidator::validate(const NetworkMessage& m)
 {
     return  m_mapper.contains(m.address)
-            && m_session.id() == m.sessionId;
+            && m_session == m.sessionId;
 }
 }

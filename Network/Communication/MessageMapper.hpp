@@ -38,7 +38,7 @@ class MessageMapper
   {
     Arg a;
     s >> a;
-    addHandler_impl_sub(s, f, dummy<Args...>{}, std::forward<Args2>(args)..., a);
+    addHandler_impl_sub(s, f, dummy<Args...>{}, std::forward<Args2>(args)..., std::move(a));
   }
 
   template<typename Fun, typename... Args>
