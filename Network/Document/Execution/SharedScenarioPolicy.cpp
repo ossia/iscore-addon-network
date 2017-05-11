@@ -46,6 +46,7 @@ struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
       Engine::Execution::TimeNodeComponent& comp,
       const Path<Scenario::TimeNodeModel>& path)
   {
+    qDebug() << "SharedAsyncUnorderedInGroup";
     ExprData e = setupExpr(comp);
 
     // Then set specific callbacks for outside events
@@ -98,6 +99,7 @@ struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
       Engine::Execution::TimeNodeComponent& comp,
       const Path<Scenario::TimeNodeModel>& path)
   {
+    qDebug() << "SharedAsyncOrderedInGroup";
     ExprData e = setupExpr(comp);
 
     // Then set specific callbacks for outside events
@@ -153,6 +155,7 @@ struct SharedAsyncUnorderedOutOfGroup
       Engine::Execution::TimeNodeComponent& comp,
       const Path<Scenario::TimeNodeModel>& path)
   {
+    qDebug() << "SharedAsyncUnorderedOutOfGroup";
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
 
@@ -178,6 +181,7 @@ struct SharedAsyncOrderedOutOfGroup
       Engine::Execution::TimeNodeComponent& comp,
       const Path<Scenario::TimeNodeModel>& path)
   {
+    qDebug() << "SharedAsyncUnorderedOutOfGroup";
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
     auto& session = ctx.session;
@@ -298,17 +302,21 @@ void SharedScenarioPolicy::operator()(
     auto& session = ctx.session;
     auto master = ctx.master;
     // Each trigger sends its own data, the master will choose the relevant info
-    comp.OSSIATimeNode()->entered_evaluation.add_callback([path,&mapi,&session,&master] {
+    comp.OSSIATimeNode()->entered_evaluation.add_callback([=,&mapi,&session] {
+        qDebug("SharedScenarioPolicy: trigger entered");
       session.emitMessage(master, session.makeMessage(mapi.trigger_entered, path));
     });
-    comp.OSSIATimeNode()->left_evaluation.add_callback([=,&session] {
+    comp.OSSIATimeNode()->left_evaluation.add_callback([=,&mapi,&session] {
+        qDebug("SharedScenarioPolicy: trigger left");
       session.emitMessage(master, session.makeMessage(mapi.trigger_left, path));
     });
-    comp.OSSIATimeNode()->finished_evaluation.add_callback([=,&session] (bool b) {
+    comp.OSSIATimeNode()->finished_evaluation.add_callback([=,&mapi,&session] (bool b) {
+        qDebug("SharedScenarioPolicy: trigger finished");
       // b : max bound reached
       session.emitMessage(master, session.makeMessage(mapi.trigger_finished, path, b));
     });
-    comp.OSSIATimeNode()->triggered.add_callback([=,&session] {
+    comp.OSSIATimeNode()->triggered.add_callback([=,&mapi,&session] {
+        qDebug("SharedScenarioPolicy: trigger triggered");
       session.emitMessage(master, session.makeMessage(mapi.trigger_triggered, path));
     });
 

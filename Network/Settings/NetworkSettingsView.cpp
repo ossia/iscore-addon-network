@@ -33,12 +33,10 @@ View::View()
 
     connect(m_clientName,	&QLineEdit::textChanged,
             this,			&View::clientNameChanged);
-
-    // http://stackoverflow.com/questions/16794695/qt5-overloaded-signals-and-slots
-    connect(m_masterPort,	SIGNAL(valueChanged(int)),
-            this,			SLOT(masterPortChanged(int)));
-    connect(m_clientPort,	SIGNAL(valueChanged(int)),
-            this,			SLOT(clientPortChanged(int)));
+    connect(m_masterPort,	qOverload<int>(&QSpinBox::valueChanged),
+            this,			&View::masterPortChanged);
+    connect(m_clientPort,	qOverload<int>(&QSpinBox::valueChanged),
+            this,			&View::clientPortChanged);
 }
 
 void View::setClientName(QString text)

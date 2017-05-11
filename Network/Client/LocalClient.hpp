@@ -13,7 +13,6 @@ class LocalClient : public Client
             Client{id, parent},
             m_server{new NetworkServer{9090, this}}
         {
-            // todo : envoyer id et name du client.
             connect(m_server, &NetworkServer::newSocket,
                     this, &LocalClient::createNewClient);
         }

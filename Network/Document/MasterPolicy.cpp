@@ -220,10 +220,12 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     NetworkDocumentPlugin& doc,
     const iscore::DocumentContext& c)
 {
+  qDebug("MasterExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
   s.mapper().addHandler_(mapi.trigger_entered,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
+    qDebug() << "<< trigger_entered";
     s.broadcastToOthers(m.clientId, m);
 
     // TODO there should be a consensus on this point.
@@ -239,6 +241,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_left,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
+    qDebug() << "<< trigger_left";
     // TODO there should be a consensus on this point.
     qDebug() << m.address << p;
   });
@@ -246,6 +249,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_finished,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
+    qDebug() << "<< trigger_finished";
     // TODO there should be a consensus on this point.
     auto it = doc.trigger_evaluation_finished.find(p);
     if(it != doc.trigger_evaluation_finished.end())
@@ -260,6 +264,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_expression_true,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
+    qDebug() << "<< trigger_expression_true";
     auto it = doc.network_expressions.find(p);
     if(it != doc.network_expressions.end())
     {
@@ -327,6 +332,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_previous_completed,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
+    qDebug() << "<< trigger_previous_completed";
     auto it = doc.network_expressions.find(p);
     if(it != doc.network_expressions.end())
     {
@@ -359,6 +365,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_triggered,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
+    qDebug() << "<< trigger_triggered";
     auto it = doc.trigger_triggered.find(p);
     if(it != doc.trigger_triggered.end())
     {
@@ -377,6 +384,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     NetworkDocumentPlugin& doc,
     const iscore::DocumentContext& c)
 {
+    qDebug("SlaveExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
   s.mapper().addHandler_(mapi.trigger_entered,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
