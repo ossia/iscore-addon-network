@@ -1,8 +1,9 @@
 #include <Network/Document/Execution/MasterPolicy.hpp>
 #include <Network/Session/Session.hpp>
 #include <Network/Communication/MessageMapper.hpp>
+#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <iscore/model/path/PathSerialization.hpp>
-
 namespace Network
 {
 
@@ -16,7 +17,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_entered,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
-    qDebug() << "<< trigger_entered";
+    qDebug() << "master << trigger_entered";
     s.broadcastToOthers(m.clientId, m);
 
     // TODO there should be a consensus on this point.
@@ -32,7 +33,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_left,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
-    qDebug() << "<< trigger_left";
+    qDebug() << "master << trigger_left";
     // TODO there should be a consensus on this point.
     qDebug() << m.address << p;
   });
@@ -40,7 +41,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_finished,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
-    qDebug() << "<< trigger_finished";
+    qDebug() << "master << trigger_finished";
     // TODO there should be a consensus on this point.
     auto it = doc.trigger_evaluation_finished.find(p);
     if(it != doc.trigger_evaluation_finished.end())
@@ -55,7 +56,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_expression_true,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
-    qDebug() << "<< trigger_expression_true";
+    qDebug() << "master << trigger_expression_true";
     auto it = doc.network_expressions.find(p);
     if(it != doc.network_expressions.end())
     {
@@ -123,7 +124,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_previous_completed,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
-    qDebug() << "<< trigger_previous_completed";
+    qDebug() << "master << trigger_previous_completed";
     auto it = doc.network_expressions.find(p);
     if(it != doc.network_expressions.end())
     {
@@ -156,7 +157,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_triggered,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
-    qDebug() << "<< trigger_triggered";
+    qDebug() << "master << trigger_triggered";
     auto it = doc.trigger_triggered.find(p);
     if(it != doc.trigger_triggered.end())
     {
@@ -167,6 +168,18 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
   });
 
+  s.mapper().addHandler_(mapi.constraint_speed,
+                         [&] (const NetworkMessage& m, Path<Scenario::ConstraintModel> p, double val)
+  {
+    auto it = doc.constraint_speed_changed.find(p);
+    if(it != doc.constraint_speed_changed.end())
+    {
+      if(it.value())
+        it.value()(m.clientId, val);
+    }
+
+    s.broadcastToOthers(m.clientId, m);
+  });
 }
 
 

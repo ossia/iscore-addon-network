@@ -52,5 +52,17 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     }
   });
 
+
+  s.mapper().addHandler_(mapi.constraint_speed,
+                         [&] (const NetworkMessage& m, Path<Scenario::ConstraintModel> p, double val)
+  {
+    auto it = doc.constraint_speed_changed.find(p);
+    if(it != doc.constraint_speed_changed.end())
+    {
+      if(it.value())
+        it.value()(m.clientId, val);
+    }
+  });
+
 }
 }

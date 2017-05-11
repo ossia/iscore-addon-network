@@ -1,6 +1,6 @@
 #pragma once
 #include <Network/Document/Execution/Context.hpp>
-
+namespace Scenario { class ScenarioInterface; }
 namespace Network
 {
 

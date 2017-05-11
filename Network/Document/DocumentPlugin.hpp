@@ -1,7 +1,6 @@
 #pragma once
 #include <Network/Client/Client.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 
 #include <iscore/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
 #include <iscore/serialization/DataStreamVisitor.hpp>
@@ -9,7 +8,6 @@
 #include <iscore/actions/Action.hpp>
 #include <core/document/Document.hpp>
 #include <ossia/editor/expression/expression.hpp>
-#include <Engine/Executor/TimeNodeComponent.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
 #include <iscore_addon_network_export.h>
@@ -22,6 +20,15 @@ class DataStream;
 class JSONObject;
 class QWidget;
 struct VisitorVariant;
+namespace Scenario {
+  class ConstraintModel;
+  class TimeNodeModel;
+}
+namespace Engine {
+  namespace Execution {
+    class TimeNodeComponent;
+  }
+}
 namespace Network
 {
 class Group;
@@ -131,6 +138,7 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_triggered;
+  iscore::hash_map<Path<Scenario::ConstraintModel>, std::function<void(const Id<Client>&, double)>> constraint_speed_changed;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, NetworkExpressionData> network_expressions;
 
 signals:

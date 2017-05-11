@@ -28,6 +28,7 @@ set(HDRS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/Context.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/FreeScenarioPolicy.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SharedScenarioPolicy.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SharedExpressions.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/MixedScenarioPolicy.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/MasterPolicy.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SlavePolicy.hpp"

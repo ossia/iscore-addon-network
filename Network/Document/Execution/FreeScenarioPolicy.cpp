@@ -3,7 +3,6 @@
 
 namespace Network
 {
-
 void FreeScenarioPolicy::operator()(
     Engine::Execution::ProcessComponent& comp,
     Scenario::ScenarioInterface& ip,

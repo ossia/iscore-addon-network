@@ -1,226 +1,8 @@
 #include "SharedScenarioPolicy.hpp"
-#include <Network/Session/Session.hpp>
-#include <Network/Document/Execution/DateExpression.hpp>
-#include <Network/Document/Execution/MixedScenarioPolicy.hpp>
-#include <Network/Document/Execution/FreeScenarioPolicy.hpp>
-#include <Scenario/Document/TimeNode/Trigger/TriggerModel.hpp>
-#include <Engine/Executor/TimeNodeComponent.hpp>
-#include <Engine/Executor/ConstraintComponent.hpp>
-#include <Scenario/Process/ScenarioModel.hpp>
-#include <Scenario/Process/Algorithms/Accessors.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
-#include <ossia/editor/scenario/time_node.hpp>
+#include <Network/Document/Execution/SharedExpressions.hpp>
 
 namespace Network
 {
-
-struct ExpressionAsyncInGroup
-{
-  struct ExprData {
-    std::shared_ptr<expression_with_callback> shared_expr;
-    AsyncExpression* async_expr{};
-  };
-
-  ExprData setupExpr(
-      Engine::Execution::TimeNodeComponent& comp)
-  {
-    // Wrap the expresion
-    ExprData e;
-    e.shared_expr = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
-    e.async_expr = new AsyncExpression;
-
-    comp.OSSIATimeNode()->set_expression(
-          std::make_unique<ossia::expression>(
-            ossia::expressions::expression_generic{
-              std::unique_ptr<ossia::expressions::expression_generic_base>(e.async_expr)})
-          );
-
-    return e;
-  }
-};
-
-struct SharedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
-{
-  void operator()(
-      NetworkPrunerContext& ctx,
-      Engine::Execution::TimeNodeComponent& comp,
-      const Path<Scenario::TimeNodeModel>& path)
-  {
-    qDebug() << "SharedAsyncUnorderedInGroup";
-    ExprData e = setupExpr(comp);
-
-    // Then set specific callbacks for outside events
-    auto& session = ctx.session;
-    auto master = ctx.master;
-    auto& mapi = ctx.mapi;
-
-    // When the trigger enters evaluation
-    ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session,&mapi] (Id<Client> orig) {
-      e.shared_expr->it = ossia::expressions::add_callback(
-                            *e.shared_expr->expr,
-                            [=,&session,&mapi] (bool b) {
-        qDebug() << "Evaluation entered" << b;
-        if(b)
-        {
-          session.emitMessage(
-                master,
-                session.makeMessage(mapi.trigger_expression_true, path));
-        }
-      });
-    });
-
-
-    // When the trigger finishes evaluation
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
-      qDebug() << "Evaluation finished" << b;
-      if(e.shared_expr->it)
-      {
-        ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
-
-        e.shared_expr->it = ossia::none;
-      }
-
-      e.async_expr->ping(); // TODO how to transmit the max bound information ??
-    });
-
-    // When the trigger can be triggered
-    ctx.doc.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
-      qDebug() << "Triggered";
-      if(e.shared_expr->it)
-      {
-        ossia::expressions::remove_callback(
-              *e.shared_expr->expr, *e.shared_expr->it);
-
-        e.shared_expr->it = ossia::none;
-      }
-
-      e.async_expr->ping();
-    });
-  }
-};
-
-
-struct SharedAsyncOrderedInGroup : public ExpressionAsyncInGroup
-{
-  void operator()(
-      NetworkPrunerContext& ctx,
-      Engine::Execution::TimeNodeComponent& comp,
-      const Path<Scenario::TimeNodeModel>& path)
-  {
-    qDebug() << "SharedAsyncOrderedInGroup";
-    ExprData e = setupExpr(comp);
-
-    // Then set specific callbacks for outside events
-    auto& session = ctx.session;
-    auto& mapi = ctx.mapi;
-    auto master = ctx.master;
-
-    // When the trigger enters evaluation
-    ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session,&mapi] (Id<Client> orig) {
-      e.shared_expr->it = ossia::expressions::add_callback(
-                        *e.shared_expr->expr,
-                        [=,&session] (bool b) {
-        if(b)
-        {
-          session.emitMessage(
-                master,
-                session.makeMessage(mapi.trigger_expression_true, path));
-        }
-      });
-    });
-
-    // When the trigger finishes evaluation
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool b) {
-      if(e.shared_expr->it)
-      {
-        ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
-
-        e.shared_expr->it = ossia::none;
-      }
-      e.async_expr->ping(); // TODO how to transmit the max bound information ??
-
-      // Since we're ordered, we inform the master when we're ready to trigger the followers
-      session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
-    });
-
-    // When the trigger can be triggered
-    ctx.doc.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
-      if(e.shared_expr->it)
-      {
-        ossia::expressions::remove_callback(
-              *e.shared_expr->expr, *e.shared_expr->it);
-
-        e.shared_expr->it = ossia::none;
-      }
-      e.async_expr->ping();
-
-      // Since we're ordered, we inform the master when we're ready to trigger the followers
-      session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
-    });
-
-  }
-};
-
-
-struct SharedAsyncUnorderedOutOfGroup
-{
-  void operator()(
-      NetworkPrunerContext& ctx,
-      Engine::Execution::TimeNodeComponent& comp,
-      const Path<Scenario::TimeNodeModel>& path)
-  {
-    qDebug() << "SharedAsyncUnorderedOutOfGroup";
-    auto expr = std::make_unique<AsyncExpression>();
-    auto expr_ptr = expr.get();
-
-    ctx.doc.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
-      expr_ptr->ping();
-    });
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool) {
-      expr_ptr->ping(); // TODO how to transmit the max bound information ??
-    });
-
-    comp.OSSIATimeNode()->set_expression(
-          std::make_unique<ossia::expression>(
-            ossia::expressions::expression_generic{
-              std::move(expr)}));
-  }
-};
-
-
-struct SharedAsyncOrderedOutOfGroup
-{
-  void operator()(
-      NetworkPrunerContext& ctx,
-      Engine::Execution::TimeNodeComponent& comp,
-      const Path<Scenario::TimeNodeModel>& path)
-  {
-    qDebug() << "SharedAsyncUnorderedOutOfGroup";
-    auto expr = std::make_unique<AsyncExpression>();
-    auto expr_ptr = expr.get();
-    auto& session = ctx.session;
-    auto& mapi = ctx.mapi;
-    auto master = ctx.master;
-
-    ctx.doc.trigger_triggered.emplace(path, [=,&session,&mapi] (Id<Client> orig) {
-      expr_ptr->ping();
-      session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
-    });
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session,&mapi] (Id<Client> orig, bool) {
-      expr_ptr->ping(); // TODO how to transmit the max bound information ??
-      session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
-    });
-
-    comp.OSSIATimeNode()->set_expression(
-          std::make_unique<ossia::expression>(
-            ossia::expressions::expression_generic{
-              std::move(expr)}));
-  }
-};
-
-
-
-
 
 void SharedScenarioPolicy::operator()(
     Engine::Execution::ProcessComponent& c,
@@ -258,42 +40,71 @@ void SharedScenarioPolicy::operator()(
 
   const Group& cur_group = getGroup(ctx.gm, cur, constraint);
 
-  bool isMuted = !cur_group.hasClient(ctx.self);
-  // Mute the processes that are not meant to execute there.
-  constraint.setExecutionState(isMuted
-                               ? Scenario::ConstraintExecutionState::Muted
-                               : Scenario::ConstraintExecutionState::Enabled);
-
-  for(const auto& process : cst.processes())
+  // Execution speed
   {
-    auto& proc = process.second->OSSIAProcess();
-    proc.mute(isMuted);
+    auto& session = ctx.session;
+    auto& mapi = ctx.mapi;
+    auto master = ctx.master;
+    Path<Scenario::ConstraintModel> path{cst.iscoreConstraint()};
+    // This -> Master
+    auto block = std::make_shared<bool>(false);
+    QObject::connect(&constraint.duration, &Scenario::ConstraintDurations::executionSpeedChanged,
+                     &cst, [=,&session,&mapi] (double s) {
+      // TODO handle sync / async. Even though sync does not really make sense here...
+      if(!(*block))
+        session.emitMessage(master, session.makeMessage(mapi.constraint_speed, path, s));
+    });
+
+    // Master -> This
+    ctx.doc.constraint_speed_changed.emplace(path, [&,block] (const Id<Client>& orig, double s) {
+      *block = true;
+      constraint.duration.setExecutionSpeed(s);
+      *block = false;
+    });
+  }
+
+  // Muting
+  {
+    const bool isMuted = !cur_group.hasClient(ctx.self);
+    // Mute the processes that are not meant to execute there.
+    constraint.setExecutionState(isMuted
+                                 ? Scenario::ConstraintExecutionState::Muted
+                                 : Scenario::ConstraintExecutionState::Enabled);
+
+    for(const auto& process : cst.processes())
+    {
+      auto& proc = process.second->OSSIAProcess();
+      proc.mute(isMuted);
+    }
   }
 
   // Recursion
-  for(const auto& process : cst.processes())
   {
-    auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process.second->process());
-    if(ip)
+    auto constraint_sharemode = get_metadata<QString>(constraint, str.sharemode);
+    if(!constraint_sharemode || constraint_sharemode->isEmpty())
+      constraint_sharemode = str.shared;
+
+    for(const auto& process : cst.processes())
     {
+      auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process.second->process());
+      if(ip)
+      {
+        auto sharemode = get_metadata<QString>(process.second->process(), str.sharemode);
+        if(!sharemode || sharemode->isEmpty())
+          sharemode = constraint_sharemode;
 
-      auto sharemode = get_metadata<QString>(process.second->process(), str.sharemode);
-      if(!sharemode || sharemode->isEmpty())
-        sharemode = get_metadata<QString>(constraint, str.sharemode);
-      if(!sharemode || sharemode->isEmpty())
-        sharemode = str.shared;
-
-      if(*sharemode == str.shared)
-      {
-        SharedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
-      }
-      else if(*sharemode == str.mixed)
-      {
-        MixedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
-      }
-      else if(*sharemode == str.free)
-      {
-        FreeScenarioPolicy{ctx}(*process.second, *ip, cur_group);
+        if(*sharemode == str.shared)
+        {
+          SharedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
+        }
+        else if(*sharemode == str.mixed)
+        {
+          MixedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
+        }
+        else if(*sharemode == str.free)
+        {
+          FreeScenarioPolicy{ctx}(*process.second, *ip, cur_group);
+        }
       }
     }
   }
