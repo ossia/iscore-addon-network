@@ -9,6 +9,7 @@ namespace Network
 {
 class Group;
 class Client;
+class RemoteClient;
 class GroupManager : public IdentifiedObject<GroupManager>
 {
         Q_OBJECT
@@ -30,6 +31,7 @@ class GroupManager : public IdentifiedObject<GroupManager>
         Group* group(const Id<Group>& id) const;
         Id<Group> defaultGroup() const;
 
+        void cleanup(QList<RemoteClient*>);
 
         //! Number of clients in all the groups
         std::size_t clientsCount(const std::vector<Id<Group>>& grps);

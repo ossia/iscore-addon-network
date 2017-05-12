@@ -1,5 +1,5 @@
 #include <Network/Document/NTP.hpp>
-
+#include <cmath>
 
 namespace Network
 {
@@ -62,10 +62,11 @@ NTP::duration_t NTP::ntp_to_duration(const NTP::ntp_impl& packet)
 {
   using std::chrono::seconds;
   using std::chrono::nanoseconds;
+  using namespace std;
 
   duration_t t{
     seconds{packet.txTm_s - ntp_delta}
-    + nanoseconds{int64_t(packet.txTm_f * std::pow(10., 9.) / std::pow(2., 32.))}};
+    + nanoseconds{int64_t(packet.txTm_f * pow(10., 9.) / pow(2., 32.))}};
 
   return t;
 }

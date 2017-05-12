@@ -2,6 +2,7 @@
 #include <iscore/serialization/JSONVisitor.hpp>
 
 #include <Network/Group/GroupManager.hpp>
+#include <Network/Session/Session.hpp>
 #include "DocumentPlugin.hpp"
 #include "PlaceholderPolicy.hpp"
 

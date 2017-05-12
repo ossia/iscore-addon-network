@@ -1,7 +1,8 @@
 #include <iscore/tools/std/Optional.hpp>
 #include <algorithm>
 #include <iterator>
-
+#include <Network/Client/RemoteClient.hpp>
+#include <QSignalBlocker>
 #include "Group.hpp"
 #include "GroupManager.hpp"
 #include <iscore/model/IdentifiedObject.hpp>
@@ -50,7 +51,23 @@ Group* GroupManager::group(const Id<Group>& id) const
 
 Id<Group> GroupManager::defaultGroup() const
 {
-    return m_groups[0]->id();
+  return m_groups[0]->id();
+}
+
+void GroupManager::cleanup(QList<RemoteClient*> c)
+{
+  for(Group* group : m_groups)
+  {
+    QSignalBlocker b(group);
+    auto clients = group->clients();
+    for(const auto& clt : clients)
+    {
+      if(ossia::none_of(c, [&] (auto rc) { return rc->id() == clt; }))
+      {
+        group->removeClient(clt);
+      }
+    }
+  }
 }
 
 std::size_t GroupManager::clientsCount(const std::vector<Id<Group> >& grps)

@@ -52,7 +52,7 @@ void SharedScenarioPolicy::operator()(
                      &cst, [=,&session,&mapi] (double s) {
       // TODO handle sync / async. Even though sync does not really make sense here...
       if(!(*block))
-        session.emitMessage(master, session.makeMessage(mapi.constraint_speed, path, s));
+        session.sendMessage(master, session.makeMessage(mapi.constraint_speed, path, s));
     });
 
     // Master -> This

@@ -141,6 +141,7 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   iscore::hash_map<Path<Scenario::ConstraintModel>, std::function<void(const Id<Client>&, double)>> constraint_speed_changed;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, NetworkExpressionData> network_expressions;
 
+  void on_stop();
 signals:
   void sessionChanged();
 
