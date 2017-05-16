@@ -108,11 +108,11 @@ void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
 
 void NetworkDocumentPlugin::on_stop()
 {
-  trigger_evaluation_entered.clear();
-  trigger_evaluation_finished.clear();
-  trigger_triggered.clear();
-  constraint_speed_changed.clear();
-  network_expressions.clear();
+  noncompensated.trigger_evaluation_entered.clear();
+  noncompensated.trigger_evaluation_finished.clear();
+  noncompensated.trigger_triggered.clear();
+  noncompensated.constraint_speed_changed.clear();
+  noncompensated.network_expressions.clear();
 }
 
 iscore::DocumentPlugin*DocumentPluginFactory::load(

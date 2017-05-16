@@ -3,6 +3,7 @@
 
 namespace Network
 {
+struct Timekeeper;
 class MasterExecutionPolicy : public ExecutionPolicy
 {
 public:
@@ -10,5 +11,8 @@ public:
       Session& s,
       NetworkDocumentPlugin& doc,
       const iscore::DocumentContext& c);
+
+private:
+  Timekeeper& m_keep;
 };
 }

@@ -89,9 +89,20 @@ struct Timekeeper final : public QObject
     // debug();
   }
 
+  const ClientTimes& timestamp(const Id<Client>& c) const {
+    auto it = m_timestamps.find(c);
+    ISCORE_ASSERT(it != m_timestamps.end());
+    return it.value();
+  }
+
+  using stamps = iscore::hash_map<Id<Client>, ClientTimes>;
+  const stamps& timestamps() const {
+    return m_timestamps;
+  }
+
 private:
   Session& m_session;
-  iscore::hash_map<Id<Client>, ClientTimes> m_timestamps;
+  stamps m_timestamps;
 };
 
 }

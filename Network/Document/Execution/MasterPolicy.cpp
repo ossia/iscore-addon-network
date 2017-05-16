@@ -4,13 +4,15 @@
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <iscore/model/path/PathSerialization.hpp>
+#include <Network/Document/MasterPolicy.hpp>
 namespace Network
 {
 
 MasterExecutionPolicy::MasterExecutionPolicy(
     Session& s,
     NetworkDocumentPlugin& doc,
-    const iscore::DocumentContext& c)
+    const iscore::DocumentContext& c):
+  m_keep{dynamic_cast<MasterEditionPolicy&>(doc.policy()).timekeeper()}
 {
   qDebug("MasterExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
@@ -21,8 +23,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
 
     // TODO there should be a consensus on this point.
-    auto it = doc.trigger_evaluation_entered.find(p);
-    if(it != doc.trigger_evaluation_entered.end())
+    auto it = doc.noncompensated.trigger_evaluation_entered.find(p);
+    if(it != doc.noncompensated.trigger_evaluation_entered.end())
     {
       // TODO also start evaluating expressions.
       if(it.value())
@@ -43,8 +45,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   {
     qDebug() << "master << trigger_finished";
     // TODO there should be a consensus on this point.
-    auto it = doc.trigger_evaluation_finished.find(p);
-    if(it != doc.trigger_evaluation_finished.end())
+    auto it = doc.noncompensated.trigger_evaluation_finished.find(p);
+    if(it != doc.noncompensated.trigger_evaluation_finished.end())
     {
       if(it.value())
         it.value()(m.clientId, val);
@@ -57,8 +59,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
     qDebug() << "master << trigger_expression_true";
-    auto it = doc.network_expressions.find(p);
-    if(it != doc.network_expressions.end())
+    auto it = doc.noncompensated.network_expressions.find(p);
+    if(it != doc.noncompensated.network_expressions.end())
     {
       NetworkExpressionData& e = it.value();
       Group* grp = doc.groupManager().group(e.thisGroup);
@@ -111,7 +113,34 @@ MasterExecutionPolicy::MasterExecutionPolicy(
             break;
           }
           case SyncMode::SyncUnordered:
+          {
+            // Compute delay for each client. Self delay == 0;
+            // The execution has to take place at the time where we can
+            // guarantee that all clients will have received the message.
+            // Hence we look for the client with the bigger delay.
+            std::chrono::nanoseconds max_del = 0;
+            for(auto& ts : m_keep.timestamps())
+            {
+              auto del = ts.second.roundtrip_latency / 2.;
+              if(del > max_del)
+                max_del = del;
+            }
+
+
+            /*
+            for(const auto& client : s.remoteClients())
+            {
+              auto& m = s.makeMessage(mapi.trigger_triggered_compensated, p, true);
+              if(client->id() != sender)
+                client->sendMessage(m);
+            }
+            */
+            // Everyone should trigger instantaneously.
+            //for(auto& cl : m_c)
+            //s.broadcastToAll(s.makeMessage(mapi.trigger_triggered, p, true));
+
             break;
+          }
         }
 
       }
@@ -125,8 +154,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
   {
     qDebug() << "master << trigger_previous_completed";
-    auto it = doc.network_expressions.find(p);
-    if(it != doc.network_expressions.end())
+    auto it = doc.noncompensated.network_expressions.find(p);
+    if(it != doc.noncompensated.network_expressions.end())
     {
       NetworkExpressionData& e = it.value();
       Group* grp = doc.groupManager().group(e.thisGroup);
@@ -157,9 +186,9 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.trigger_triggered,
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
-    qDebug() << "master << trigger_triggered";
-    auto it = doc.trigger_triggered.find(p);
-    if(it != doc.trigger_triggered.end())
+    qDebug() << "master << noncompensated.trigger_triggered";
+    auto it = doc.noncompensated.trigger_triggered.find(p);
+    if(it != doc.noncompensated.trigger_triggered.end())
     {
       if(it.value())
         it.value()(m.clientId);
@@ -171,8 +200,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.constraint_speed,
                          [&] (const NetworkMessage& m, Path<Scenario::ConstraintModel> p, double val)
   {
-    auto it = doc.constraint_speed_changed.find(p);
-    if(it != doc.constraint_speed_changed.end())
+    auto it = doc.noncompensated.constraint_speed_changed.find(p);
+    if(it != doc.noncompensated.constraint_speed_changed.end())
     {
       if(it.value())
         it.value()(m.clientId, val);

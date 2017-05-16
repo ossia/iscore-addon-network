@@ -26,10 +26,11 @@ BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
 
 void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Group& cur)
 {
-  ctx.doc.trigger_evaluation_entered.clear();
-  ctx.doc.trigger_evaluation_finished.clear();
-  ctx.doc.trigger_triggered.clear();
-  ctx.doc.network_expressions.clear();
+  ctx.doc.noncompensated.trigger_evaluation_entered.clear();
+  ctx.doc.noncompensated.trigger_evaluation_finished.clear();
+  ctx.doc.noncompensated.trigger_triggered.clear();
+  ctx.doc.noncompensated.constraint_speed_changed.clear();
+  ctx.doc.noncompensated.network_expressions.clear();
   SharedScenarioPolicy{ctx}(cst, cur);
 }
 

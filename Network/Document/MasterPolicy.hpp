@@ -16,6 +16,7 @@ class MasterEditionPolicy : public EditionPolicy
         void play() override;
         void stop() override;
 
+        Timekeeper& timekeeper() { return m_keep; }
     private:
         MasterSession* m_session{};
         const iscore::DocumentContext& m_ctx;

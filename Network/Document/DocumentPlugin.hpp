@@ -135,11 +135,13 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   EditionPolicy &policy() const
   { return *m_policy; }
 
+  struct NonCompensated {
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_triggered;
   iscore::hash_map<Path<Scenario::ConstraintModel>, std::function<void(const Id<Client>&, double)>> constraint_speed_changed;
   iscore::hash_map<Path<Scenario::TimeNodeModel>, NetworkExpressionData> network_expressions;
+  } noncompensated;
 
   void on_stop();
 signals:

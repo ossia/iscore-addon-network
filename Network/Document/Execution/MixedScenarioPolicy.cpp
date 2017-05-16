@@ -60,7 +60,7 @@ void MixedScenarioPolicy::operator()(Engine::Execution::TimeNodeComponent& comp,
 
 
             // Then set specific callbacks for outside events
-            doc.trigger_evaluation_entered[path] = [=] {
+            doc.noncompensated.trigger_evaluation_entered[path] = [=] {
               base_expr->it = ossia::expressions::add_callback(
                     *base_expr->expr,
                     [] (bool b) {
@@ -72,7 +72,7 @@ void MixedScenarioPolicy::operator()(Engine::Execution::TimeNodeComponent& comp,
               });
             };
 
-            doc.trigger_evaluation_finished[path] = [=] (bool b) {
+            doc.noncompensated.trigger_evaluation_finished[path] = [=] (bool b) {
               if(base_expr->it)
                 ossia::expressions::remove_callback(
                       *base_expr->expr, *base_expr->it);
@@ -80,7 +80,7 @@ void MixedScenarioPolicy::operator()(Engine::Execution::TimeNodeComponent& comp,
               expr_ptr->ping(); // TODO how to transmit the max bound information ??
             };
 
-            doc.trigger_triggered[path] = [=] {
+            doc.noncompensated.trigger_triggered[path] = [=] {
               if(base_expr->it)
                 ossia::expressions::remove_callback(
                       *base_expr->expr, *base_expr->it);
@@ -107,10 +107,10 @@ void MixedScenarioPolicy::operator()(Engine::Execution::TimeNodeComponent& comp,
             auto expr = std::make_unique<AsyncExpression>();
             auto expr_ptr = expr.get();
 
-            doc.trigger_triggered[path] = [=] {
+            doc.noncompensated.trigger_triggered[path] = [=] {
               expr_ptr->ping();
             };
-            doc.trigger_evaluation_finished[path] = [=] (bool) {
+            doc.noncompensated.trigger_evaluation_finished[path] = [=] (bool) {
               expr_ptr->ping(); // TODO how to transmit the max bound information ??
             };
 
@@ -156,7 +156,7 @@ struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
     auto master = ctx.master;
 
     // When the trigger enters evaluation
-    ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session] (Id<Client> orig) {
+    ctx.doc.noncompensated.trigger_evaluation_entered.emplace(path, [=,&session] (Id<Client> orig) {
       e.shared_expr->it = ossia::expressions::add_callback(
                             *e.shared_expr->expr,
                             [=,&session] (bool b) {
@@ -170,7 +170,7 @@ struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
     });
 
     // When the trigger finishes evaluation
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
+    ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool b) {
       if(e.shared_expr->it)
         ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
 
@@ -178,7 +178,7 @@ struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
     });
 
     // When the trigger can be triggered
-    ctx.doc.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
+    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
       if(e.shared_expr->it)
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
@@ -203,7 +203,7 @@ struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
     auto master = ctx.master;
 
     // When the trigger enters evaluation
-    ctx.doc.trigger_evaluation_entered.emplace(path, [=,&session] (Id<Client> orig) {
+    ctx.doc.noncompensated.trigger_evaluation_entered.emplace(path, [=,&session] (Id<Client> orig) {
       e.shared_expr->it = ossia::expressions::add_callback(
                             *e.shared_expr->expr,
                             [=,&session] (bool b) {
@@ -217,7 +217,7 @@ struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
     });
 
     // When the trigger finishes evaluation
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool b) {
+    ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool b) {
       if(e.shared_expr->it)
         ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
 
@@ -228,7 +228,7 @@ struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
     });
 
     // When the trigger can be triggered
-    ctx.doc.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
+    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
       if(e.shared_expr->it)
         ossia::expressions::remove_callback(
               *e.shared_expr->expr, *e.shared_expr->it);
@@ -253,10 +253,10 @@ struct MixedAsyncUnorderedOutOfGroup
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
 
-    ctx.doc.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
+    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=] (Id<Client> orig) {
       expr_ptr->ping();
     });
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool) {
+    ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=] (Id<Client> orig, bool) {
       expr_ptr->ping(); // TODO how to transmit the max bound information ??
     });
 
@@ -280,11 +280,11 @@ struct MixedAsyncOrderedOutOfGroup
     auto& session = ctx.session;
     auto master = ctx.master;
 
-    ctx.doc.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
+    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=,&session] (Id<Client> orig) {
       expr_ptr->ping();
       session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
     });
-    ctx.doc.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool) {
+    ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=,&session] (Id<Client> orig, bool) {
       expr_ptr->ping(); // TODO how to transmit the max bound information ??
       session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
     });
@@ -416,7 +416,7 @@ void SharedScenarioPolicy::setupMaster(
       ossia::transform(csts, std::back_inserter(exp.nextGroups), constraint_group);
     }
 
-    ctx.doc.network_expressions.emplace(std::move(p), std::move(exp));
+    ctx.doc.noncompensated.network_expressions.emplace(std::move(p), std::move(exp));
   }
 
 }

@@ -1,5 +1,6 @@
 #include "SharedScenarioPolicy.hpp"
-#include <Network/Document/Execution/SharedExpressions.hpp>
+#include <Network/Document/Execution/SharedNonCompensatedExpressions.hpp>
+#include <Network/Document/Execution/SharedCompensatedExpressions.hpp>
 
 namespace Network
 {
@@ -56,7 +57,7 @@ void SharedScenarioPolicy::operator()(
     });
 
     // Master -> This
-    ctx.doc.constraint_speed_changed.emplace(path, [&,block] (const Id<Client>& orig, double s) {
+    ctx.doc.noncompensated.constraint_speed_changed.emplace(path, [&,block] (const Id<Client>& orig, double s) {
       *block = true;
       constraint.duration.setExecutionSpeed(s);
       *block = false;
@@ -154,10 +155,10 @@ void SharedScenarioPolicy::operator()(
       switch(sync)
       {
         case SyncMode::AsyncOrdered:
-          SharedAsyncOrderedInGroup{}(ctx, comp, path);
+          SharedNonCompensatedSyncInGroup{}(ctx, comp, path);
           break;
         case SyncMode::AsyncUnordered:
-          SharedAsyncUnorderedInGroup{}(ctx, comp, path);
+          SharedNonCompensatedAsyncInGroup{}(ctx, comp, path);
           break;
         case SyncMode::SyncOrdered:
           break;
@@ -171,10 +172,10 @@ void SharedScenarioPolicy::operator()(
       switch(sync)
       {
         case SyncMode::AsyncOrdered:
-          SharedAsyncOrderedOutOfGroup{}(ctx, comp, path);
+          SharedNonCompensatedSyncOutOfGroup{}(ctx, comp, path);
           break;
         case SyncMode::AsyncUnordered:
-          SharedAsyncUnorderedOutOfGroup{}(ctx, comp, path);
+          SharedNonCompensatedAsyncOutOfGroup{}(ctx, comp, path);
           break;
         case SyncMode::SyncOrdered:
           break;
@@ -231,7 +232,7 @@ void SharedScenarioPolicy::setupMaster(
       ossia::transform(csts, std::back_inserter(exp.nextGroups), constraint_group);
     }
 
-    ctx.doc.network_expressions.emplace(std::move(p), std::move(exp));
+    ctx.doc.noncompensated.network_expressions.emplace(std::move(p), std::move(exp));
   }
 
 }
