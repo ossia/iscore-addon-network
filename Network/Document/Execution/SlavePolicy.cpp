@@ -51,6 +51,16 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
         it.value()(m.clientId);
     }
   });
+  s.mapper().addHandler_(mapi.trigger_triggered_compensated,
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, qint64 ns, bool val)
+  {
+    auto it = doc.compensated.trigger_triggered.find(p);
+    if(it != doc.compensated.trigger_triggered.end())
+    {
+      if(it.value())
+        it.value()(m.clientId, ns);
+    }
+  });
 
 
   s.mapper().addHandler_(mapi.constraint_speed,

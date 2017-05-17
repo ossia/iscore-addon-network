@@ -19,7 +19,7 @@ void SharedScenarioPolicy::operator()(
     }
   }
 
-  for(Scenario::EventModel& tn : ip.getTimeNodes())
+  for(Scenario::EventModel& tn : ip.getEvents())
   {
     auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
     if(comp)

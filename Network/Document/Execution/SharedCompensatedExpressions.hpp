@@ -84,7 +84,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
     });
 
     // When the trigger can be triggered
-    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=] (const Id<Client>& orig) {
+    ctx.doc.compensated.trigger_triggered.emplace(path, [=] (const Id<Client>& orig, qint64 ns) {
       qDebug() << "Triggered";
       if(e.shared_expr->it)
       {
@@ -144,7 +144,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
     });
 
     // When the trigger can be triggered
-    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=,&session] (const Id<Client>& orig) {
+    ctx.doc.compensated.trigger_triggered.emplace(path, [=,&session] (const Id<Client>& orig, qint64) {
       if(e.shared_expr->it)
       {
         ossia::expressions::remove_callback(
@@ -169,11 +169,11 @@ struct SharedCompensatedAsyncOutOfGroup
       Engine::Execution::TimeNodeComponent& comp,
       const Path<Scenario::TimeNodeModel>& path)
   {
-    qDebug() << "SharedAsyncUnorderedOutOfGroup";
+    qDebug() << "SharedCompensatedAsyncOutOfGroup";
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
 
-    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=] (const Id<Client>& orig) {
+    ctx.doc.compensated.trigger_triggered.emplace(path, [=] (const Id<Client>& orig, qint64) {
       expr_ptr->ping();
     });
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=] (const Id<Client>& orig, bool) {
@@ -195,14 +195,14 @@ struct SharedCompensatedSyncOutOfGroup
       Engine::Execution::TimeNodeComponent& comp,
       const Path<Scenario::TimeNodeModel>& path)
   {
-    qDebug() << "SharedAsyncUnorderedOutOfGroup";
+    qDebug() << "SharedCompensatedSyncOutOfGroup";
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
     auto& session = ctx.session;
     auto& mapi = ctx.mapi;
     auto master = ctx.master;
 
-    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig) {
+    ctx.doc.compensated.trigger_triggered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig, qint64) {
       expr_ptr->ping();
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });

@@ -91,7 +91,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
 
         switch(e.sync)
         {
-          case SyncMode::AsyncOrdered:
+          case SyncMode::NonCompensatedSync:
           {
             // Trigger all the clients before the time node.
             const auto& clients = doc.groupManager().clients(e.prevGroups);
@@ -101,18 +101,18 @@ MasterExecutionPolicy::MasterExecutionPolicy(
 
             break;
           }
-          case SyncMode::AsyncUnordered:
+          case SyncMode::NonCompensatedAsync:
           {
             // Everyone should trigger instantaneously.
             s.broadcastToAll(s.makeMessage(mapi.trigger_triggered, p, true));
 
             break;
           }
-          case SyncMode::SyncOrdered:
+          case SyncMode::CompensatedSync:
           {
             break;
           }
-          case SyncMode::SyncUnordered:
+          case SyncMode::CompensatedAsync:
           {
             // Compute delay for each client. Self delay == 0;
             // The execution has to take place at the time where we can
@@ -128,7 +128,6 @@ MasterExecutionPolicy::MasterExecutionPolicy(
             }
             // For testing
             max_del += std::chrono::nanoseconds(3000000000);
-
 
             for(const auto& client : s.remoteClients())
             {
@@ -198,6 +197,19 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     {
       if(it.value())
         it.value()(m.clientId);
+    }
+
+    s.broadcastToOthers(m.clientId, m);
+  });
+  s.mapper().addHandler_(mapi.trigger_triggered_compensated,
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, qint64 ns, bool val)
+  {
+    qDebug() << "master << noncompensated.trigger_triggered";
+    auto it = doc.compensated.trigger_triggered.find(p);
+    if(it != doc.compensated.trigger_triggered.end())
+    {
+      if(it.value())
+        it.value()(m.clientId , ns);
     }
 
     s.broadcastToOthers(m.clientId, m);

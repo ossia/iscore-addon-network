@@ -145,6 +145,10 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   iscore::hash_map<Path<Scenario::TimeNodeModel>, NetworkExpressionData> network_expressions;
   } noncompensated;
 
+  struct Compensated {
+      iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>, qint64)>> trigger_triggered;
+  } compensated;
+
   void on_stop();
 signals:
   void sessionChanged();

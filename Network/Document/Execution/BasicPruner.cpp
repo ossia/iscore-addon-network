@@ -31,6 +31,8 @@ void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Gro
   ctx.doc.noncompensated.trigger_triggered.clear();
   ctx.doc.noncompensated.constraint_speed_changed.clear();
   ctx.doc.noncompensated.network_expressions.clear();
+
+  ctx.doc.compensated.trigger_triggered.clear();
   SharedScenarioPolicy{ctx}(cst, cur);
 }
 

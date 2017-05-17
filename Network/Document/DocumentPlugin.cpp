@@ -113,6 +113,8 @@ void NetworkDocumentPlugin::on_stop()
   noncompensated.trigger_triggered.clear();
   noncompensated.constraint_speed_changed.clear();
   noncompensated.network_expressions.clear();
+
+  compensated.trigger_triggered.clear();
 }
 
 iscore::DocumentPlugin*DocumentPluginFactory::load(
