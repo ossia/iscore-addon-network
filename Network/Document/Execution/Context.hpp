@@ -67,15 +67,15 @@ SyncMode getInfos(const T& obj)
     order = str.unordered;
 
   if(syncmode == str.async && order == str.ordered)
-    return SyncMode::AsyncOrdered;
+    return SyncMode::NonCompensatedSync;
   else if(syncmode == str.async && order == str.unordered)
-    return SyncMode::AsyncUnordered;
+    return SyncMode::NonCompensatedAsync;
   else if(syncmode == str.sync && order == str.ordered)
-    return SyncMode::SyncOrdered;
+    return SyncMode::CompensatedSync;
   else if(syncmode == str.sync && order == str.unordered)
-    return SyncMode::SyncUnordered;
+    return SyncMode::CompensatedAsync;
 
-  return SyncMode::AsyncUnordered;
+  return SyncMode::NonCompensatedAsync;
 }
 
 template<typename T>
@@ -84,21 +84,6 @@ const Group& getGroup(const GroupManager& gm, const Group& cur, const T& obj)
   const auto& cst = Constants::instance();
 
   const Group* cur_group = &cur;
-
-  /*
-  // First look if there is a group
-  auto comp = iscore::findComponent<GroupMetadata>(cst.iscoreConstraint().components());
-  if(comp)
-  {
-
-  }
-  else
-  {
-    // We assume that we keep the parent group.
-  }
-
-  // If no group found through components, maybe through metadata :
-  */
   auto ostr = get_metadata<QString>(obj, cst.group);
   if(!ostr)
     return *cur_group;

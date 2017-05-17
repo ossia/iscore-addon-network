@@ -9,10 +9,10 @@ enum class ExpressionPolicy {
 };
 
 enum class SyncMode {
-  AsyncOrdered,
-  SyncOrdered,
-  AsyncUnordered,
-  SyncUnordered
+  NonCompensatedSync,
+  CompensatedSync,
+  NonCompensatedAsync,
+  CompensatedAsync
 };
 
 struct MessagesAPI

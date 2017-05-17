@@ -118,27 +118,33 @@ MasterExecutionPolicy::MasterExecutionPolicy(
             // The execution has to take place at the time where we can
             // guarantee that all clients will have received the message.
             // Hence we look for the client with the bigger delay.
-            std::chrono::nanoseconds max_del = 0;
+
+            std::chrono::nanoseconds max_del{};
             for(auto& ts : m_keep.timestamps())
             {
-              auto del = ts.second.roundtrip_latency / 2.;
+              auto del = ts.second.roundtrip_latency / 2;
               if(del > max_del)
                 max_del = del;
             }
+            // For testing
+            max_del += std::chrono::nanoseconds(3000000000);
 
 
-            /*
             for(const auto& client : s.remoteClients())
             {
-              auto& m = s.makeMessage(mapi.trigger_triggered_compensated, p, true);
-              if(client->id() != sender)
-                client->sendMessage(m);
-            }
-            */
-            // Everyone should trigger instantaneously.
-            //for(auto& cl : m_c)
-            //s.broadcastToAll(s.makeMessage(mapi.trigger_triggered, p, true));
+              // Send to each clients how long it has to wait
+              const auto& m = s.makeMessage(
+                          mapi.trigger_triggered_compensated,
+                          p,
+                          true,
+                          (qint64)(max_del - (m_keep.timestamp(client->id()).roundtrip_latency / 2)).count());
 
+              client->sendMessage(m);
+            }
+            s.mapper().map(s.makeMessage(
+                             mapi.trigger_triggered_compensated,
+                             p,
+                             true, (qint64)max_del.count()));
             break;
           }
         }

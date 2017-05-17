@@ -14,6 +14,7 @@ struct SharedScenarioPolicy
       const Group& cur);
 
   void operator()(Engine::Execution::ConstraintComponent& cst, const Group& cur);
+  void operator()(Engine::Execution::EventComponent& cst, const Group& cur);
 
   //! Todo isn't this the code for the mixed mode actually ?
   //! In the "shared" mode we could assume that evaluation entering / leaving is the same

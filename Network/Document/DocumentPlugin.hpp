@@ -26,6 +26,8 @@ namespace Scenario {
 }
 namespace Engine {
   namespace Execution {
+    class EventComponent;
+    class ConstraintComponent;
     class TimeNodeComponent;
   }
 }

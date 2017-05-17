@@ -10,15 +10,21 @@ void SharedScenarioPolicy::operator()(
     Scenario::ScenarioInterface& ip,
     const Group& cur)
 {
-  // take the code of BasicPruner
-
   for(Scenario::TimeNodeModel& tn : ip.getTimeNodes())
   {
     auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
     if(comp)
     {
       operator()(*comp, cur);
+    }
+  }
 
+  for(Scenario::EventModel& tn : ip.getTimeNodes())
+  {
+    auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
+    if(comp)
+    {
+      operator()(*comp, cur);
     }
   }
 
@@ -62,6 +68,7 @@ void SharedScenarioPolicy::operator()(
       constraint.duration.setExecutionSpeed(s);
       *block = false;
     });
+
   }
 
   // Muting
@@ -111,6 +118,11 @@ void SharedScenarioPolicy::operator()(
   }
 }
 
+void SharedScenarioPolicy::operator()(Engine::Execution::EventComponent& cst, const Group& cur)
+{
+
+}
+
 
 void SharedScenarioPolicy::operator()(
     Engine::Execution::TimeNodeComponent& comp,
@@ -154,15 +166,17 @@ void SharedScenarioPolicy::operator()(
 
       switch(sync)
       {
-        case SyncMode::AsyncOrdered:
+        case SyncMode::NonCompensatedSync:
           SharedNonCompensatedSyncInGroup{}(ctx, comp, path);
           break;
-        case SyncMode::AsyncUnordered:
+        case SyncMode::NonCompensatedAsync:
           SharedNonCompensatedAsyncInGroup{}(ctx, comp, path);
           break;
-        case SyncMode::SyncOrdered:
+        case SyncMode::CompensatedSync:
+          SharedCompensatedSyncInGroup{}(ctx, comp, path);
           break;
-        case SyncMode::SyncUnordered:
+        case SyncMode::CompensatedAsync:
+          SharedCompensatedAsyncInGroup{}(ctx, comp, path);
           break;
       }
     }
@@ -171,15 +185,17 @@ void SharedScenarioPolicy::operator()(
       // Not in the group : we wait.
       switch(sync)
       {
-        case SyncMode::AsyncOrdered:
+        case SyncMode::NonCompensatedSync:
           SharedNonCompensatedSyncOutOfGroup{}(ctx, comp, path);
           break;
-        case SyncMode::AsyncUnordered:
+        case SyncMode::NonCompensatedAsync:
           SharedNonCompensatedAsyncOutOfGroup{}(ctx, comp, path);
           break;
-        case SyncMode::SyncOrdered:
+        case SyncMode::CompensatedSync:
+          SharedCompensatedSyncOutOfGroup{}(ctx, comp, path);
           break;
-        case SyncMode::SyncUnordered:
+        case SyncMode::CompensatedAsync:
+          SharedCompensatedAsyncOutOfGroup{}(ctx, comp, path);
           break;
       }
     }
@@ -188,12 +204,8 @@ void SharedScenarioPolicy::operator()(
   }
   else
   {
-    // Trigger not active. For now let's just hope that everything happens correctly.
+    // Trigger not active. Maybe we could explicitely resynchronize here...
   }
-  /*
-    auto expr = std::make_unique<DateExpression>(
-          std::chrono::nanoseconds{std::numeric_limits<int64_t>::max()},
-          comp.makeTrigger());*/
 }
 
 void SharedScenarioPolicy::setupMaster(
