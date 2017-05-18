@@ -13,7 +13,6 @@
 
 namespace Network
 {
-
 struct CompensatedExpressionInGroup
 {
   struct ExprData {
@@ -69,7 +68,6 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
       });
     });
 
-
     // When the trigger finishes evaluation
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=] (const Id<Client>& orig, bool b) {
       qDebug() << "Evaluation finished" << b;
@@ -80,7 +78,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
         e.shared_expr->it = ossia::none;
       }
 
-      //e.date_expr->ping(); // TODO how to transmit the max bound information ??
+      e.date_expr->set_min_date(get_now()); // TODO how to transmit the max bound information ??
     });
 
     // When the trigger can be triggered
@@ -94,7 +92,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
         e.shared_expr->it = ossia::none;
       }
 
-      //e.date_expr->ping();
+      e.date_expr->set_min_date(std::chrono::nanoseconds(ns));
     });
   }
 };
@@ -137,14 +135,14 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 
         e.shared_expr->it = ossia::none;
       }
-      //e.date_expr->ping(); // TODO how to transmit the max bound information ??
+      e.date_expr->set_min_date(get_now());  // TODO how to transmit the max bound information ??
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
 
     // When the trigger can be triggered
-    ctx.doc.compensated.trigger_triggered.emplace(path, [=,&session] (const Id<Client>& orig, qint64) {
+    ctx.doc.compensated.trigger_triggered.emplace(path, [=,&session] (const Id<Client>& orig, qint64 ns) {
       if(e.shared_expr->it)
       {
         ossia::expressions::remove_callback(
@@ -152,7 +150,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 
         e.shared_expr->it = ossia::none;
       }
-      //e.date_expr->ping();
+      e.date_expr->set_min_date(std::chrono::nanoseconds(ns));
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
@@ -170,14 +168,14 @@ struct SharedCompensatedAsyncOutOfGroup
       const Path<Scenario::TimeNodeModel>& path)
   {
     qDebug() << "SharedCompensatedAsyncOutOfGroup";
-    auto expr = std::make_unique<AsyncExpression>();
-    auto expr_ptr = expr.get();
+    auto expr = std::make_unique<DateExpression>();
+    DateExpression* expr_ptr = expr.get();
 
-    ctx.doc.compensated.trigger_triggered.emplace(path, [=] (const Id<Client>& orig, qint64) {
-      expr_ptr->ping();
+    ctx.doc.compensated.trigger_triggered.emplace(path, [=] (const Id<Client>& orig, qint64 ns) {
+      expr_ptr->set_min_date(std::chrono::nanoseconds(ns));
     });
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=] (const Id<Client>& orig, bool) {
-      expr_ptr->ping(); // TODO how to transmit the max bound information ??
+      expr_ptr->set_min_date(get_now()); // TODO how to transmit the max bound information ??
     });
 
     comp.OSSIATimeNode()->set_expression(
@@ -196,18 +194,18 @@ struct SharedCompensatedSyncOutOfGroup
       const Path<Scenario::TimeNodeModel>& path)
   {
     qDebug() << "SharedCompensatedSyncOutOfGroup";
-    auto expr = std::make_unique<AsyncExpression>();
-    auto expr_ptr = expr.get();
+    auto expr = std::make_unique<DateExpression>();
+    DateExpression* expr_ptr = expr.get();
     auto& session = ctx.session;
     auto& mapi = ctx.mapi;
     auto master = ctx.master;
 
-    ctx.doc.compensated.trigger_triggered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig, qint64) {
-      expr_ptr->ping();
+    ctx.doc.compensated.trigger_triggered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig, qint64 ns) {
+      expr_ptr->set_min_date(std::chrono::nanoseconds(ns));
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=,&session,&mapi] (const Id<Client>& orig, bool) {
-      expr_ptr->ping(); // TODO how to transmit the max bound information ??
+      expr_ptr->set_min_date(get_now()); // TODO how to transmit the max bound information ??
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
 

@@ -1,15 +1,19 @@
 #include "DateExpression.hpp"
-
+#include <type_traits>
 namespace Network
 {
 
-DateExpression::DateExpression(
-    std::chrono::nanoseconds t,
-    ossia::expression_ptr expr):
-  m_minDate{t}
-, m_expression{std::move(expr)}
+DateExpression::DateExpression():
+    m_minDate{std::numeric_limits<decltype(m_minDate.count())>::max()}
 {
 
+}
+
+void DateExpression::set_min_date(std::chrono::nanoseconds t)
+{
+  m_minDate = t;
+  if(m_curDate < m_minDate && m_cb)
+      m_cb();
 }
 
 void DateExpression::update()
@@ -18,56 +22,29 @@ void DateExpression::update()
   m_curDate = duration_cast<nanoseconds>(
                 high_resolution_clock::now()
                 .time_since_epoch());
-
-  if(m_expression)
-    ossia::expressions::update(*m_expression);
 }
 
 bool DateExpression::evaluate() const
 {
-  if(m_curDate < m_minDate)
-    return false;
-  return m_expression
-      ? ossia::expressions::evaluate(*m_expression)
-      : true;
+  bool val = m_curDate < m_minDate;
+  if(val)
+  {
+    m_minDate = std::chrono::nanoseconds{std::numeric_limits<decltype(m_minDate.count())>::max()};
+  }
+  return val;
 }
 
 void DateExpression::on_first_callback_added(
     ossia::expressions::expression_generic& self)
 {
-  // start first expression observation
-  if(m_expression)
-  {
-    m_callback =
-        ossia::expressions::add_callback(
-          *m_expression,
-          [&] (bool result) {
-      self.send(evaluate_callback(result));
-    });
-  }
-
+    m_cb = [&] { self.send(m_curDate < m_minDate); };
 }
 
 void DateExpression::on_removing_last_callback(
     ossia::expressions::expression_generic& self)
 {
-  if(m_expression)
-  {
-    ossia::expressions::remove_callback(
-          *m_expression,
-          m_callback);
-  }
+    m_cb = {};
 }
-
-bool DateExpression::evaluate_callback(
-    bool res)
-{
-  if(m_curDate < m_minDate)
-    return false;
-  return res;
-}
-
-
 
 
 
@@ -90,7 +67,13 @@ void AsyncExpression::update()
 
 bool AsyncExpression::evaluate() const
 {
-  return m_ping;
+  bool val = m_ping;
+  if(val)
+  {
+      // Reset the status for loops.
+      m_ping = false;
+  }
+  return val;
 }
 
 void AsyncExpression::on_first_callback_added(

@@ -5,31 +5,33 @@
 #include <chrono>
 namespace Network
 {
+static inline auto get_now()
+{
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(
+              std::chrono::high_resolution_clock::now().time_since_epoch());
+}
+
 class DateExpression :
     public QObject,
     public ossia::expressions::expression_generic_base
 {
   Q_OBJECT
   public:
-    DateExpression(std::chrono::nanoseconds t,
-                   ossia::expression_ptr expr);
+    DateExpression();
+
+    void set_min_date(std::chrono::nanoseconds t);
 
     void update() override;
     bool evaluate() const override;
     void on_first_callback_added(ossia::expressions::expression_generic& self) override;
     void on_removing_last_callback(ossia::expressions::expression_generic& self) override;
 
-signals:
-    void subexpressionReady();
-
 private:
-    bool evaluate_callback(bool res);
 
     // The minimal date (in nanosecond epoch) at which this expression shall become true.
-    std::chrono::nanoseconds m_minDate{};
+    mutable std::chrono::nanoseconds m_minDate{};
     std::chrono::nanoseconds m_curDate{};
-    ossia::expression_ptr m_expression{};
-    ossia::expressions::expression_callback_iterator m_callback;
+    std::function<void()> m_cb;
 };
 
 //! this expression is triggered exclusively from an outside source
@@ -47,7 +49,7 @@ class AsyncExpression :
     void on_removing_last_callback(ossia::expressions::expression_generic& self) override;
 
 private:
-    std::atomic_bool m_ping{};
+    mutable std::atomic_bool m_ping{};
     std::function<void()> m_cb;
 };
 
