@@ -68,6 +68,7 @@ void AsyncExpression::update()
 bool AsyncExpression::evaluate() const
 {
   bool val = m_ping;
+
   if(val)
   {
       // Reset the status for loops.

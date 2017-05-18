@@ -56,17 +56,21 @@ struct SharedNonCompensatedAsyncInGroup : public NonCompensatedExpressionInGroup
 
     // When the trigger enters evaluation
     ctx.doc.noncompensated.trigger_evaluation_entered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig) {
-      e.shared_expr->it = ossia::expressions::add_callback(
-                            *e.shared_expr->expr,
-                            [=,&session,&mapi] (bool b) {
-        qDebug() << "Evaluation entered" << b;
-        if(b)
-        {
-          session.emitMessage(
-                master,
-                session.makeMessage(mapi.trigger_expression_true, path));
-        }
-      });
+      if(!e.shared_expr->it)
+      {
+          // TODO what if this trigger's condition already had become true ?
+          e.shared_expr->it = ossia::expressions::add_callback(
+                      *e.shared_expr->expr,
+                      [=,&session,&mapi] (bool b) {
+              qDebug() << "Evaluation entered" << b;
+              if(b)
+              {
+                  session.emitMessage(
+                              master,
+                              session.makeMessage(mapi.trigger_expression_true, path));
+              }
+          });
+      }
     });
 
 
@@ -80,7 +84,7 @@ struct SharedNonCompensatedAsyncInGroup : public NonCompensatedExpressionInGroup
         e.shared_expr->it = ossia::none;
       }
 
-      e.async_expr->ping(); // TODO how to transmit the max bound information ??
+      //e.async_expr->ping(); // TODO how to transmit the max bound information ??
     });
 
     // When the trigger can be triggered
@@ -116,17 +120,22 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
     auto master = ctx.master;
 
     // When the trigger enters evaluation
-    ctx.doc.noncompensated.trigger_evaluation_entered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig) {
-      e.shared_expr->it = ossia::expressions::add_callback(
+    ctx.doc.noncompensated.trigger_evaluation_entered.emplace(
+                path,
+                [=,&session,&mapi] (const Id<Client>& orig) {
+        if(!e.shared_expr->it)
+        {
+            e.shared_expr->it = ossia::expressions::add_callback(
                         *e.shared_expr->expr,
                         [=,&session] (bool b) {
-        if(b)
-        {
-          session.emitMessage(
-                master,
-                session.makeMessage(mapi.trigger_expression_true, path));
+                if(b)
+                {
+                    session.emitMessage(
+                                master,
+                                session.makeMessage(mapi.trigger_expression_true, path));
+                }
+            });
         }
-      });
     });
 
     // When the trigger finishes evaluation
@@ -137,7 +146,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
 
         e.shared_expr->it = ossia::none;
       }
-      e.async_expr->ping(); // TODO how to transmit the max bound information ??
+      // e.async_expr->ping(); // TODO how to transmit the max bound information ??
 
       // Since we're ordered, we inform the master when we're ready to trigger the followers
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
@@ -177,7 +186,7 @@ struct SharedNonCompensatedAsyncOutOfGroup
       expr_ptr->ping();
     });
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=] (const Id<Client>& orig, bool) {
-      expr_ptr->ping(); // TODO how to transmit the max bound information ??
+      //expr_ptr->ping(); // TODO how to transmit the max bound information ??
     });
 
     comp.OSSIATimeNode()->set_expression(
@@ -207,7 +216,7 @@ struct SharedNonCompensatedSyncOutOfGroup
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=,&session,&mapi] (const Id<Client>& orig, bool) {
-      expr_ptr->ping(); // TODO how to transmit the max bound information ??
+      //expr_ptr->ping(); // TODO how to transmit the max bound information ??
       session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
     });
 

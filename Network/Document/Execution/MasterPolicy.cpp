@@ -22,13 +22,16 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     qDebug() << "master << trigger_entered";
     s.broadcastToOthers(m.clientId, m);
 
-    // TODO there should be a consensus on this point.
-    auto it = doc.noncompensated.trigger_evaluation_entered.find(p);
-    if(it != doc.noncompensated.trigger_evaluation_entered.end())
+    if(m.clientId != s.master().id())
     {
-      // TODO also start evaluating expressions.
-      if(it.value())
-        it.value()(m.clientId);
+        // TODO there should be a consensus on this point.
+        auto it = doc.noncompensated.trigger_evaluation_entered.find(p);
+        if(it != doc.noncompensated.trigger_evaluation_entered.end())
+        {
+            // TODO also start evaluating expressions.
+            if(it.value())
+                it.value()(m.clientId);
+        }
     }
   });
 
@@ -44,12 +47,16 @@ MasterExecutionPolicy::MasterExecutionPolicy(
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     qDebug() << "master << trigger_finished";
-    // TODO there should be a consensus on this point.
-    auto it = doc.noncompensated.trigger_evaluation_finished.find(p);
-    if(it != doc.noncompensated.trigger_evaluation_finished.end())
+
+    if(m.clientId != s.master().id())
     {
-      if(it.value())
-        it.value()(m.clientId, val);
+        // TODO there should be a consensus on this point.
+        auto it = doc.noncompensated.trigger_evaluation_finished.find(p);
+        if(it != doc.noncompensated.trigger_evaluation_finished.end())
+        {
+            if(it.value())
+                it.value()(m.clientId, val);
+        }
     }
 
     s.broadcastToOthers(m.clientId, m);
@@ -192,11 +199,14 @@ MasterExecutionPolicy::MasterExecutionPolicy(
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
   {
     qDebug() << "master << noncompensated.trigger_triggered";
-    auto it = doc.noncompensated.trigger_triggered.find(p);
-    if(it != doc.noncompensated.trigger_triggered.end())
+    if(m.clientId != s.master().id())
     {
-      if(it.value())
-        it.value()(m.clientId);
+        auto it = doc.noncompensated.trigger_triggered.find(p);
+        if(it != doc.noncompensated.trigger_triggered.end())
+        {
+            if(it.value())
+                it.value()(m.clientId);
+        }
     }
 
     s.broadcastToOthers(m.clientId, m);
@@ -205,11 +215,14 @@ MasterExecutionPolicy::MasterExecutionPolicy(
                          [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, qint64 ns, bool val)
   {
     qDebug() << "master << noncompensated.trigger_triggered";
-    auto it = doc.compensated.trigger_triggered.find(p);
-    if(it != doc.compensated.trigger_triggered.end())
+    if(m.clientId != s.master().id())
     {
-      if(it.value())
-        it.value()(m.clientId , ns);
+        auto it = doc.compensated.trigger_triggered.find(p);
+        if(it != doc.compensated.trigger_triggered.end())
+        {
+            if(it.value())
+                it.value()(m.clientId , ns);
+        }
     }
 
     s.broadcastToOthers(m.clientId, m);
@@ -218,12 +231,15 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(mapi.constraint_speed,
                          [&] (const NetworkMessage& m, Path<Scenario::ConstraintModel> p, double val)
   {
-    auto it = doc.noncompensated.constraint_speed_changed.find(p);
-    if(it != doc.noncompensated.constraint_speed_changed.end())
-    {
-      if(it.value())
-        it.value()(m.clientId, val);
-    }
+      if(m.clientId != s.master().id())
+      {
+          auto it = doc.noncompensated.constraint_speed_changed.find(p);
+          if(it != doc.noncompensated.constraint_speed_changed.end())
+          {
+              if(it.value())
+                  it.value()(m.clientId, val);
+          }
+      }
 
     s.broadcastToOthers(m.clientId, m);
   });
