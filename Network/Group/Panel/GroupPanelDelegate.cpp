@@ -142,7 +142,9 @@ class NetworkMetadataWidget : public QWidget
       const auto& str = Network::Constants::instance();
       auto setup = [=] (const QString& txt, const QString& k, const QString& v) {
         auto btn = new QPushButton{txt};
-        connect(btn, &QPushButton::clicked, this, [=] { SetCustomMetadata(m_ctx, {std::make_pair(k, v)}); });
+        connect(btn, &QPushButton::clicked, this, [=] {
+            SetCustomMetadata(m_ctx, {std::make_pair(k, v)});
+        });
         return btn;
       };
       if(auto l = this->layout())

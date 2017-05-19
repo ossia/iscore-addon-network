@@ -8,7 +8,7 @@
 #include <iscore/selection/SelectionStack.hpp>
 #include <iscore/model/path/PathSerialization.hpp>
 #include <iscore/command/Dispatchers/CommandDispatcher.hpp>
-
+#include <Scenario/Process/Algorithms/Accessors.hpp>
 namespace Network
 {
 namespace Command
@@ -110,10 +110,22 @@ void SetCustomMetadata(const iscore::DocumentContext& ctx,
 {
   auto sel = ctx.selectionStack.currentSelection();
 
+  QList<const Scenario::TimeNodeModel*> l;
+  l += filterSelectionByType<Scenario::TimeNodeModel>(sel);
+
+  auto states = filterSelectionByType<Scenario::StateModel>(sel);
+  if(!states.empty())
+  {
+      auto& s = Scenario::parentScenario(*states.first());
+      for(auto e : filterSelectionByType<Scenario::StateModel>(sel))
+          l.append(&Scenario::parentTimeNode(*e, s));
+  }
+  l = l.toSet().toList();
+
   auto cmd = new Command::AddCustomMetadata{
              filterSelectionByType<Scenario::ConstraintModel>(sel)
              , filterSelectionByType<Scenario::EventModel>(sel)
-             , filterSelectionByType<Scenario::TimeNodeModel>(sel)
+             , std::move(l)
              , md};
 
   CommandDispatcher<>{ctx.commandStack}.submitCommand(cmd);
