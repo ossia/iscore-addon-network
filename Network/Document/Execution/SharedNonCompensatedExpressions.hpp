@@ -112,7 +112,7 @@ struct SharedNonCompensatedAsyncInGroup : public NonCompensatedExpressionInGroup
                 e->shared_expr->it_finished = ossia::none;
             }
 
-            //e->async_expr->ping(); // TODO how to transmit the max bound information ??
+            e->async_expr->ping(); // TODO how to transmit the max bound information ??
         });
 
         // When the trigger can be triggered
@@ -189,7 +189,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
 
                 e->shared_expr->it_finished = ossia::none;
             }
-            // e->async_expr->ping(); // TODO how to transmit the max bound information ??
+            e->async_expr->ping(); // TODO how to transmit the max bound information ??
 
             // Since we're ordered, we inform the master when we're ready to trigger the followers
             session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
@@ -256,7 +256,7 @@ struct SharedNonCompensatedAsyncOutOfGroup
                 e->node.triggered.remove_callback(*e->it_triggered);
                 e->it_triggered = ossia::none;
             }
-            //expr_ptr->ping(); // TODO how to transmit the max bound information ??
+            expr_ptr->ping(); // TODO how to transmit the max bound information ??
         });
 
         comp.OSSIATimeNode()->set_expression(
@@ -312,7 +312,7 @@ struct SharedNonCompensatedSyncOutOfGroup
                 e->it_triggered = ossia::none;
             }
 
-            //expr_ptr->ping(); // TODO how to transmit the max bound information ??
+            expr_ptr->ping(); // TODO how to transmit the max bound information ??
             session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
 
