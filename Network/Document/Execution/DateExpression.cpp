@@ -1,5 +1,6 @@
 #include "DateExpression.hpp"
 #include <type_traits>
+#include <ossia/editor/scenario/time_node.hpp>
 namespace Network
 {
 
@@ -93,6 +94,15 @@ void AsyncExpression::on_removing_last_callback(
     ossia::expressions::expression_generic& self)
 {
   m_cb = {};
+}
+
+void ExprNotInGroup::cleanTriggerCallback()
+{
+    if(it_triggered)
+    {
+        node.triggered.remove_callback(*it_triggered);
+        it_triggered = ossia::none;
+    }
 }
 
 }

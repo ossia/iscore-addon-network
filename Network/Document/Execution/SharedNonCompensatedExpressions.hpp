@@ -14,12 +14,6 @@
 namespace Network
 {
 
-struct ExprNotInGroup
-{
-    ExprNotInGroup(ossia::time_node& n): node{n} { }
-    ossia::time_node& node;
-    optional<ossia::callback_container<std::function<void()>>::iterator> it_triggered;
-};
 
 struct NonCompensatedExpressionInGroup
 {
@@ -182,7 +176,15 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
         });
 
         // When the trigger finishes evaluation
-        ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=,&session] (const Id<Client>& orig, bool b) {
+        ctx.doc.noncompensated.trigger_evaluation_finished.emplace(
+                    path,
+                    [=,&session] (const Id<Client>& orig, bool b) {
+            if(e->it_triggered)
+            {
+                e->node.triggered.remove_callback(*e->it_triggered);
+                e->it_triggered = ossia::none;
+            }
+
             if(e->shared_expr->it_finished)
             {
                 ossia::expressions::remove_callback(*e->shared_expr->expr, *e->shared_expr->it_finished);
@@ -196,7 +198,15 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
         });
 
         // When the trigger can be triggered
-        ctx.doc.noncompensated.trigger_triggered.emplace(path, [=,&session] (const Id<Client>& orig) {
+        ctx.doc.noncompensated.trigger_triggered.emplace(
+                    path,
+                    [=,&session] (const Id<Client>& orig) {
+            if(e->it_triggered)
+            {
+                e->node.triggered.remove_callback(*e->it_triggered);
+                e->it_triggered = ossia::none;
+            }
+
             if(e->shared_expr->it_finished)
             {
                 ossia::expressions::remove_callback(
@@ -243,19 +253,11 @@ struct SharedNonCompensatedAsyncOutOfGroup
         });
 
         ctx.doc.noncompensated.trigger_triggered.emplace(path, [=] (const Id<Client>& orig) {
-            if(e->it_triggered)
-            {
-                e->node.triggered.remove_callback(*e->it_triggered);
-                e->it_triggered = ossia::none;
-            }
+            e->cleanTriggerCallback();
             expr_ptr->ping();
         });
         ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=] (const Id<Client>& orig, bool) {
-            if(e->it_triggered)
-            {
-                e->node.triggered.remove_callback(*e->it_triggered);
-                e->it_triggered = ossia::none;
-            }
+            e->cleanTriggerCallback();
             expr_ptr->ping(); // TODO how to transmit the max bound information ??
         });
 
@@ -295,22 +297,13 @@ struct SharedNonCompensatedSyncOutOfGroup
         });
 
         ctx.doc.noncompensated.trigger_triggered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig) {
-            if(e->it_triggered)
-            {
-                e->node.triggered.remove_callback(*e->it_triggered);
-                e->it_triggered = ossia::none;
-            }
+            e->cleanTriggerCallback();
 
             expr_ptr->ping();
             session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
         ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=,&session,&mapi] (const Id<Client>& orig, bool) {
-
-            if(e->it_triggered)
-            {
-                e->node.triggered.remove_callback(*e->it_triggered);
-                e->it_triggered = ossia::none;
-            }
+            e->cleanTriggerCallback();
 
             expr_ptr->ping(); // TODO how to transmit the max bound information ??
             session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
