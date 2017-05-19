@@ -56,7 +56,10 @@ AsyncExpression::AsyncExpression()
 
 void AsyncExpression::ping()
 {
+  qDebug("ping");
+  m_mutex.lock();
   m_ping = true;
+  m_mutex.unlock();
   if(m_cb)
     m_cb();
 }
@@ -67,13 +70,16 @@ void AsyncExpression::update()
 
 bool AsyncExpression::evaluate() const
 {
+  m_mutex.lock();
   bool val = m_ping;
 
+  qDebug() << "evaluate" << val;
   if(val)
   {
       // Reset the status for loops.
       m_ping = false;
   }
+  m_mutex.unlock();
   return val;
 }
 

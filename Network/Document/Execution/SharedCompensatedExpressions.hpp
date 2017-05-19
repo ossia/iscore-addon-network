@@ -55,7 +55,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
 
     // When the trigger enters evaluation
     ctx.doc.noncompensated.trigger_evaluation_entered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig) {
-      e.shared_expr->it = ossia::expressions::add_callback(
+      e.shared_expr->it_finished = ossia::expressions::add_callback(
                             *e.shared_expr->expr,
                             [=,&session,&mapi] (bool b) {
         qDebug() << "Evaluation entered" << b;
@@ -71,11 +71,11 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
     // When the trigger finishes evaluation
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=] (const Id<Client>& orig, bool b) {
       qDebug() << "Evaluation finished" << b;
-      if(e.shared_expr->it)
+      if(e.shared_expr->it_finished)
       {
-        ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
+        ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it_finished);
 
-        e.shared_expr->it = ossia::none;
+        e.shared_expr->it_finished = ossia::none;
       }
 
       e.date_expr->set_min_date(get_now()); // TODO how to transmit the max bound information ??
@@ -84,12 +84,12 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
     // When the trigger can be triggered
     ctx.doc.compensated.trigger_triggered.emplace(path, [=] (const Id<Client>& orig, qint64 ns) {
       qDebug() << "Triggered";
-      if(e.shared_expr->it)
+      if(e.shared_expr->it_finished)
       {
         ossia::expressions::remove_callback(
-              *e.shared_expr->expr, *e.shared_expr->it);
+              *e.shared_expr->expr, *e.shared_expr->it_finished);
 
-        e.shared_expr->it = ossia::none;
+        e.shared_expr->it_finished = ossia::none;
       }
 
       e.date_expr->set_min_date(std::chrono::nanoseconds(ns));
@@ -115,7 +115,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 
     // When the trigger enters evaluation
     ctx.doc.noncompensated.trigger_evaluation_entered.emplace(path, [=,&session,&mapi] (const Id<Client>& orig) {
-      e.shared_expr->it = ossia::expressions::add_callback(
+      e.shared_expr->it_finished = ossia::expressions::add_callback(
                         *e.shared_expr->expr,
                         [=,&session] (bool b) {
         if(b)
@@ -129,11 +129,11 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 
     // When the trigger finishes evaluation
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(path, [=,&session] (const Id<Client>& orig, bool b) {
-      if(e.shared_expr->it)
+      if(e.shared_expr->it_finished)
       {
-        ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it);
+        ossia::expressions::remove_callback(*e.shared_expr->expr, *e.shared_expr->it_finished);
 
-        e.shared_expr->it = ossia::none;
+        e.shared_expr->it_finished = ossia::none;
       }
       e.date_expr->set_min_date(get_now());  // TODO how to transmit the max bound information ??
 
@@ -143,12 +143,12 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 
     // When the trigger can be triggered
     ctx.doc.compensated.trigger_triggered.emplace(path, [=,&session] (const Id<Client>& orig, qint64 ns) {
-      if(e.shared_expr->it)
+      if(e.shared_expr->it_finished)
       {
         ossia::expressions::remove_callback(
-              *e.shared_expr->expr, *e.shared_expr->it);
+              *e.shared_expr->expr, *e.shared_expr->it_finished);
 
-        e.shared_expr->it = ossia::none;
+        e.shared_expr->it_finished = ossia::none;
       }
       e.date_expr->set_min_date(std::chrono::nanoseconds(ns));
 

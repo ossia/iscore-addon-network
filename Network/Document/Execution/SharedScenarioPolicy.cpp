@@ -148,15 +148,6 @@ void SharedScenarioPolicy::operator()(
         qDebug("SharedScenarioPolicy: trigger left");
       session.emitMessage(master, session.makeMessage(mapi.trigger_left, path));
     });
-    comp.OSSIATimeNode()->finished_evaluation.add_callback([=,&mapi,&session] (bool b) {
-        qDebug("SharedScenarioPolicy: trigger finished");
-      // b : max bound reached
-      session.emitMessage(master, session.makeMessage(mapi.trigger_finished, path, b));
-    });
-    comp.OSSIATimeNode()->triggered.add_callback([=,&mapi,&session] {
-        qDebug("SharedScenarioPolicy: trigger triggered");
-      session.emitMessage(master, session.makeMessage(mapi.trigger_triggered, path));
-    });
 
     // If this group has this expression
     // Since we're in the SharedPolicy, everybody will get the same information

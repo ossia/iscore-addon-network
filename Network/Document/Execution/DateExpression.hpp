@@ -49,7 +49,8 @@ class AsyncExpression :
     void on_removing_last_callback(ossia::expressions::expression_generic& self) override;
 
 private:
-    mutable std::atomic_bool m_ping{};
+    mutable std::mutex m_mutex;
+    mutable bool m_ping{};
     std::function<void()> m_cb;
 };
 
@@ -57,7 +58,7 @@ struct expression_with_callback
 {
   expression_with_callback(ossia::expression* e): expr{e} { }
   ossia::expression* expr{};
-  optional<ossia::expressions::expression_callback_iterator> it;
+  optional<ossia::expressions::expression_callback_iterator> it_finished;
 };
 
 }
