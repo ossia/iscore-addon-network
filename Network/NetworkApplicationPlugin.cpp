@@ -147,8 +147,8 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
         auto clt = new LocalClient(Id<Client>(0)); clt->setName(tr("Master"));
         auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
         auto editpol = new MasterEditionPolicy{serv, ctx};
-        auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
         plug->setEditPolicy(editpol);
+        auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
         plug->setExecPolicy(execpol);
       }
       else

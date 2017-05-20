@@ -91,7 +91,8 @@ void GroupTableWidget::setup()
     Group& group = *m_mgr.groups()[i];
     for(auto& clt : group.clients())
     {
-      findCheckbox(i, clt)->setState(Qt::Checked);
+      if(auto cb = findCheckbox(i, clt))
+          cb->setState(Qt::Checked);
     }
 
     con(group, &Group::clientAdded,
@@ -120,7 +121,7 @@ GroupTableCheckbox* GroupTableWidget::findCheckbox(int i,  Id<Client> theClient)
     }
   }
 
-  ISCORE_ABORT;
+  qDebug() << "ALERT: checkbox" << i << "not found";
   return nullptr;
 }
 

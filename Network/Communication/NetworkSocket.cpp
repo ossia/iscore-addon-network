@@ -27,6 +27,8 @@ NetworkSocket::NetworkSocket(QString ip,
 
   if(ip.startsWith("::ffff:"))
      ip.remove("::ffff:");
+  else if(ip == "::1")
+      ip = "127.0.0.1";
   m_socket->open("ws://" + ip + ":" + QString::number(port));
 
 }
