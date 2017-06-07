@@ -21,6 +21,7 @@
 #include <QTcpServer>
 #include <iscore/plugins/documentdelegate/DocumentDelegateFactory.hpp>
 #include <iscore/application/ApplicationContext.hpp>
+#include <Network/Settings/NetworkSettingsModel.hpp>
 namespace Network
 {
 PlayerSessionBuilder::PlayerSessionBuilder(
@@ -44,7 +45,7 @@ void PlayerSessionBuilder::initiateConnection()
   askId.address = MessagesAPI::instance().session_askNewId;
   {
     QDataStream s{&askId.data, QIODevice::WriteOnly};
-    s << m_clientName;
+    s << m_context.settings<Network::Settings::Model>().getClientName();
   }
 
   m_mastersocket->sendMessage(askId);
