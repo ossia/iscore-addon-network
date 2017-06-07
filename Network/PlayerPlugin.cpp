@@ -74,8 +74,11 @@ void PlayerPlugin::setupServer()
     name = "i-score player";
 
 #if defined(OSSIA_DNSSD)
+  try {
   m_zeroconf = std::make_unique<servus::Servus>("_iscore_player._tcp");
   m_zeroconf->announce(m_listenServer.serverPort(), name.toStdString());
+  } catch(...) {
+  }
 #endif
 }
 
