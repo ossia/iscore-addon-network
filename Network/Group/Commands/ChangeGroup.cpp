@@ -54,12 +54,12 @@ ChangeGroup::ChangeGroup(ObjectPath &&path, Id<Group> newGroup):
     m_oldGroup = getGroupMetadata(&m_path.find<QObject>())->group();
 }
 
-void ChangeGroup::undo() const
+void ChangeGroup::undo(const iscore::DocumentContext& ctx) const
 {
     getGroupMetadata(&m_path.find<QObject>())->setGroup(m_oldGroup);
 }
 
-void ChangeGroup::redo() const
+void ChangeGroup::redo(const iscore::DocumentContext& ctx) const
 {
     getGroupMetadata(&m_path.find<QObject>())->setGroup(m_newGroup);
 }

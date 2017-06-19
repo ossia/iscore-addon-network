@@ -29,13 +29,13 @@ class ClientNameChangedCommand : public iscore::Command
         }
         */
 
-        void undo() const override
+        void undo(const iscore::DocumentContext& ctx) const override
         {
             auto target = qApp->findChild<NetworkSettingsModel*> ("NetworkSettingsModel");
             target->setClientName(m_oldval);
         }
 
-        void redo() const override
+        void redo(const iscore::DocumentContext& ctx) const override
         {
             auto target = qApp->findChild<NetworkSettingsModel*> ("NetworkSettingsModel");
             target->setClientName(m_newval);

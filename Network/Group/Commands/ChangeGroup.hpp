@@ -22,8 +22,8 @@ class ChangeGroup : public iscore::Command
     public:
         ChangeGroup(ObjectPath&& path, Id<Group> newGroup);
 
-        void undo() const override;
-        void redo() const override;
+        void undo(const iscore::DocumentContext& ctx) const override;
+        void redo(const iscore::DocumentContext& ctx) const override;
 
         void serializeImpl(DataStreamInput & s) const override;
         void deserializeImpl(DataStreamOutput & s) override;

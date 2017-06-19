@@ -60,35 +60,35 @@ AddCustomMetadata::AddCustomMetadata(
 
 }
 
-void AddCustomMetadata::undo() const
+void AddCustomMetadata::undo(const iscore::DocumentContext& ctx) const
 {
   for(auto& elt : m_constraints)
   {
-    elt.path.find().metadata().setExtendedMetadata(elt.before);
+    elt.path.find(ctx).metadata().setExtendedMetadata(elt.before);
   }
   for(auto& elt : m_events)
   {
-    elt.path.find().metadata().setExtendedMetadata(elt.before);
+    elt.path.find(ctx).metadata().setExtendedMetadata(elt.before);
   }
   for(auto& elt : m_nodes)
   {
-    elt.path.find().metadata().setExtendedMetadata(elt.before);
+    elt.path.find(ctx).metadata().setExtendedMetadata(elt.before);
   }
 }
 
-void AddCustomMetadata::redo() const
+void AddCustomMetadata::redo(const iscore::DocumentContext& ctx) const
 {
   for(auto& elt : m_constraints)
   {
-    elt.path.find().metadata().setExtendedMetadata(elt.after);
+    elt.path.find(ctx).metadata().setExtendedMetadata(elt.after);
   }
   for(auto& elt : m_events)
   {
-    elt.path.find().metadata().setExtendedMetadata(elt.after);
+    elt.path.find(ctx).metadata().setExtendedMetadata(elt.after);
   }
   for(auto& elt : m_nodes)
   {
-    elt.path.find().metadata().setExtendedMetadata(elt.after);
+    elt.path.find(ctx).metadata().setExtendedMetadata(elt.after);
   }
 
 }

@@ -7,28 +7,28 @@
 #include <Network/Group/GroupManager.hpp>
 #include <iscore/serialization/DataStreamVisitor.hpp>
 #include <iscore/model/path/ObjectPath.hpp>
+#include <iscore/model/path/PathSerialization.hpp>
 
 
 namespace Network
 {
 namespace Command
 {
-CreateGroup::CreateGroup(ObjectPath&& groupMgrPath, QString groupName):
-    m_path{groupMgrPath},
+CreateGroup::CreateGroup(const GroupManager& mgr, QString groupName):
+    m_path{mgr},
     m_name{groupName}
 {
-    auto& mgr = m_path.find<GroupManager>();
     m_newGroupId = getStrongId(mgr.groups());
 }
 
-void CreateGroup::undo() const
+void CreateGroup::undo(const iscore::DocumentContext& ctx) const
 {
-    m_path.find<GroupManager>().removeGroup(m_newGroupId);
+    m_path.find(ctx).removeGroup(m_newGroupId);
 }
 
-void CreateGroup::redo() const
+void CreateGroup::redo(const iscore::DocumentContext& ctx) const
 {
-    auto& mgr = m_path.find<GroupManager>();
+    auto& mgr = m_path.find(ctx);
     mgr.addGroup(new Group{m_name, m_newGroupId, &mgr});
 }
 

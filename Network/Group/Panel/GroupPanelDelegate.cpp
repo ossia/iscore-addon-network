@@ -206,8 +206,7 @@ void PanelDelegate::setView(
 
   // Add group button
   auto button = new QPushButton{QObject::tr("Add group")};
-  ObjectPath mgrpath{iscore::IDocument::unsafe_path(mgr)};
-  connect(button, &QPushButton::pressed, this, [=] ( )
+  connect(button, &QPushButton::pressed, this, [=,&mgr] ( )
   {
     if(auto doc = this->document())
     {
@@ -216,7 +215,7 @@ void PanelDelegate::setView(
                                            tr("Group name:"), QLineEdit::Normal, "", &ok);
       if (ok && !text.isEmpty())
       {
-        auto cmd = new Command::CreateGroup{ObjectPath{mgrpath}, text};
+        auto cmd = new Command::CreateGroup{mgr, text};
 
         CommandDispatcher<> dispatcher{doc->commandStack};
         dispatcher.submitCommand(cmd);

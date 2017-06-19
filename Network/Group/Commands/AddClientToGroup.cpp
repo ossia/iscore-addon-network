@@ -21,14 +21,14 @@ AddClientToGroup::AddClientToGroup(ObjectPath&& groupMgrPath,
 {
 }
 
-void AddClientToGroup::undo() const
+void AddClientToGroup::undo(const iscore::DocumentContext& ctx) const
 {
-    m_path.find<GroupManager>().group(m_group)->removeClient(m_client);
+    m_path.find<GroupManager>(ctx).group(m_group)->removeClient(m_client);
 }
 
-void AddClientToGroup::redo() const
+void AddClientToGroup::redo(const iscore::DocumentContext& ctx) const
 {
-    m_path.find<GroupManager>().group(m_group)->addClient(m_client);
+    m_path.find<GroupManager>(ctx).group(m_group)->addClient(m_client);
 }
 
 void AddClientToGroup::serializeImpl(DataStreamInput& s) const

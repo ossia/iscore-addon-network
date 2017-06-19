@@ -26,8 +26,8 @@ class RemoveClientFromGroup : public iscore::Command
                 Id<Client> client,
                 Id<Group> group);
 
-        void undo() const override;
-        void redo() const override;
+        void undo(const iscore::DocumentContext& ctx) const override;
+        void redo(const iscore::DocumentContext& ctx) const override;
 
         void serializeImpl(DataStreamInput & s) const override;
         void deserializeImpl(DataStreamOutput & s) override;

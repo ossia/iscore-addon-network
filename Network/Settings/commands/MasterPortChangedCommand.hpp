@@ -30,13 +30,13 @@ class MasterPortChangedCommand : public iscore::Command
         }
         */
 
-        void undo() const override
+        void undo(const iscore::DocumentContext& ctx) const override
         {
             auto target = qApp->findChild<NetworkSettingsModel*> ("NetworkSettingsModel");
             target->setMasterPort(m_oldval);
         }
 
-        void redo() const override
+        void redo(const iscore::DocumentContext& ctx) const override
         {
             auto target = qApp->findChild<NetworkSettingsModel*> ("NetworkSettingsModel");
             target->setMasterPort(m_newval);
