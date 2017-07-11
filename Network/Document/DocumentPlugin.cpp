@@ -122,7 +122,7 @@ iscore::DocumentPlugin*DocumentPluginFactory::load(
     iscore::DocumentContext& doc,
     QObject* parent)
 {
-  return deserialize_dyn(var, [&] (auto&& deserializer)
+  return iscore::deserialize_dyn(var, [&] (auto&& deserializer)
   { return new NetworkDocumentPlugin{doc, deserializer, parent}; });
 }
 
