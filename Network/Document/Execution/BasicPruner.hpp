@@ -17,7 +17,7 @@ struct ISCORE_ADDON_NETWORK_EXPORT BasicPruner
 
   void recurse(Engine::Execution::ConstraintComponent& cst, const Group& cur);
   void recurse(Scenario::ScenarioInterface&, const Group& cur);
-  void recurse(Engine::Execution::TimeNodeComponent&);
+  void recurse(Engine::Execution::TimeSyncComponent&);
   void operator()(const Engine::Execution::Context& exec_ctx);
 
 private:

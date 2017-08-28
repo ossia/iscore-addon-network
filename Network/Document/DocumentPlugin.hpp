@@ -22,13 +22,13 @@ class QWidget;
 struct VisitorVariant;
 namespace Scenario {
   class ConstraintModel;
-  class TimeNodeModel;
+  class TimeSyncModel;
 }
 namespace Engine {
   namespace Execution {
     class EventComponent;
     class ConstraintComponent;
-    class TimeNodeComponent;
+    class TimeSyncComponent;
   }
 }
 namespace Network
@@ -47,8 +47,8 @@ namespace Network
 
 struct NetworkExpressionData
 {
-  NetworkExpressionData(Engine::Execution::TimeNodeComponent& c): component{c} {}
-  Engine::Execution::TimeNodeComponent& component;
+  NetworkExpressionData(Engine::Execution::TimeSyncComponent& c): component{c} {}
+  Engine::Execution::TimeSyncComponent& component;
 
   //! Will fill itself with received messages
   iscore::hash_map<Id<Client>, optional<bool>> values;
@@ -138,15 +138,15 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   { return *m_policy; }
 
   struct NonCompensated {
-  iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
-  iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
-  iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>)>> trigger_triggered;
+  iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
+  iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
+  iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>)>> trigger_triggered;
   iscore::hash_map<Path<Scenario::ConstraintModel>, std::function<void(const Id<Client>&, double)>> constraint_speed_changed;
-  iscore::hash_map<Path<Scenario::TimeNodeModel>, NetworkExpressionData> network_expressions;
+  iscore::hash_map<Path<Scenario::TimeSyncModel>, NetworkExpressionData> network_expressions;
   } noncompensated;
 
   struct Compensated {
-      iscore::hash_map<Path<Scenario::TimeNodeModel>, std::function<void(Id<Client>, qint64)>> trigger_triggered;
+      iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>, qint64)>> trigger_triggered;
   } compensated;
 
   void on_stop();

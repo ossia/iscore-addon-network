@@ -9,8 +9,7 @@
 #include <Engine/Executor/BaseScenarioComponent.hpp>
 #include <Scenario/Process/ScenarioInterface.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
-#include <Scenario/Document/TimeNode/Trigger/TriggerModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 namespace Network
 {
 BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
@@ -41,7 +40,7 @@ void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
 
 }
 
-void BasicPruner::recurse(Engine::Execution::TimeNodeComponent& comp)
+void BasicPruner::recurse(Engine::Execution::TimeSyncComponent& comp)
 {
   // Check the previous / next constraints.
   // If some happen to have to execute in different computers

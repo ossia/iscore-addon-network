@@ -3,21 +3,20 @@
 #include <Network/Document/Execution/DateExpression.hpp>
 #include <Network/Document/Execution/MixedScenarioPolicy.hpp>
 #include <Network/Document/Execution/FreeScenarioPolicy.hpp>
-#include <Scenario/Document/TimeNode/Trigger/TriggerModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
-#include <Engine/Executor/TimeNodeComponent.hpp>
+#include <Engine/Executor/TimeSyncComponent.hpp>
 #include <Engine/Executor/ConstraintComponent.hpp>
 #include <iscore/model/path/PathSerialization.hpp>
-#include <ossia/editor/scenario/time_node.hpp>
+#include <ossia/editor/scenario/time_sync.hpp>
 
 namespace Network
 {
 struct CompensatedExpressionInGroup
 {
     struct ExprData {
-        ExprData(ossia::time_node& n): node{n} { }
-        ossia::time_node& node;
+        ExprData(ossia::time_sync& n): node{n} { }
+        ossia::time_sync& node;
         std::shared_ptr<expression_with_callback> shared_expr;
         DateExpression* date_expr{};
 
@@ -34,14 +33,14 @@ struct CompensatedExpressionInGroup
     };
 
     auto setupExpr(
-            Engine::Execution::TimeNodeComponent& comp)
+            Engine::Execution::TimeSyncComponent& comp)
     {
         // Wrap the expresion
-        auto e = std::make_shared<ExprData>(*comp.OSSIATimeNode());
+        auto e = std::make_shared<ExprData>(*comp.OSSIATimeSync());
         e->shared_expr = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
         e->date_expr = new DateExpression;
 
-        comp.OSSIATimeNode()->set_expression(
+        comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
                         ossia::expressions::expression_generic{
                             std::unique_ptr<ossia::expressions::expression_generic_base>(e->date_expr)})
@@ -55,8 +54,8 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeNodeComponent& comp,
-            const Path<Scenario::TimeNodeModel>& path)
+            Engine::Execution::TimeSyncComponent& comp,
+            const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedCompensatedAsyncInGroup";
         auto e = setupExpr(comp);
@@ -132,8 +131,8 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeNodeComponent& comp,
-            const Path<Scenario::TimeNodeModel>& path)
+            Engine::Execution::TimeSyncComponent& comp,
+            const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedCompensatedSyncInGroup";
         auto e = setupExpr(comp);
@@ -215,8 +214,8 @@ struct SharedCompensatedAsyncOutOfGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeNodeComponent& comp,
-            const Path<Scenario::TimeNodeModel>& path)
+            Engine::Execution::TimeSyncComponent& comp,
+            const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedCompensatedAsyncOutOfGroup";
         auto expr = std::make_unique<DateExpression>();
@@ -226,7 +225,7 @@ struct SharedCompensatedAsyncOutOfGroup
         auto& mapi = ctx.mapi;
         auto master = ctx.master;
 
-        auto e = std::make_shared<ExprNotInGroup>(*comp.OSSIATimeNode());
+        auto e = std::make_shared<ExprNotInGroup>(*comp.OSSIATimeSync());
         ctx.doc.noncompensated.trigger_evaluation_entered.emplace(
                     path,
                     [=,&session,&mapi] (const Id<Client>& orig) {
@@ -249,7 +248,7 @@ struct SharedCompensatedAsyncOutOfGroup
             expr_ptr->set_min_date(get_now()); // TODO how to transmit the max bound information ??
         });
 
-        comp.OSSIATimeNode()->set_expression(
+        comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
                         ossia::expressions::expression_generic{
                             std::move(expr)}));
@@ -261,8 +260,8 @@ struct SharedCompensatedSyncOutOfGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeNodeComponent& comp,
-            const Path<Scenario::TimeNodeModel>& path)
+            Engine::Execution::TimeSyncComponent& comp,
+            const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedCompensatedSyncOutOfGroup";
         auto expr = std::make_unique<DateExpression>();
@@ -271,7 +270,7 @@ struct SharedCompensatedSyncOutOfGroup
         auto& mapi = ctx.mapi;
         auto master = ctx.master;
 
-        auto e = std::make_shared<ExprNotInGroup>(*comp.OSSIATimeNode());
+        auto e = std::make_shared<ExprNotInGroup>(*comp.OSSIATimeSync());
         ctx.doc.noncompensated.trigger_evaluation_entered.emplace(
                     path,
                     [=,&session,&mapi] (const Id<Client>& orig) {
@@ -297,7 +296,7 @@ struct SharedCompensatedSyncOutOfGroup
             session.emitMessage(master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
 
-        comp.OSSIATimeNode()->set_expression(
+        comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
                         ossia::expressions::expression_generic{
                             std::move(expr)}));

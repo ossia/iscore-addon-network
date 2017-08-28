@@ -1,7 +1,7 @@
 #include <Network/Group/Commands/AddCustomMetadata.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 
 #include <iscore/document/DocumentContext.hpp>
@@ -16,7 +16,7 @@ namespace Command
 AddCustomMetadata::AddCustomMetadata(
     const QList<const Scenario::ConstraintModel*>& c,
     const QList<const Scenario::EventModel*>& e,
-    const QList<const Scenario::TimeNodeModel*>& n,
+    const QList<const Scenario::TimeSyncModel*>& n,
     const std::vector<std::pair<QString, QString> >& meta)
 {
   m_constraints.reserve(c.size());
@@ -48,7 +48,7 @@ AddCustomMetadata::AddCustomMetadata(
   m_nodes.reserve(n.size());
   for(auto elt : n)
   {
-    MetadataUndoRedo<Scenario::TimeNodeModel> m;
+    MetadataUndoRedo<Scenario::TimeSyncModel> m;
     m.path = iscore::IDocument::path(*elt);
     m.before = elt->metadata().getExtendedMetadata();
     m.after = m.before;
@@ -110,15 +110,15 @@ void SetCustomMetadata(const iscore::DocumentContext& ctx,
 {
   auto sel = ctx.selectionStack.currentSelection();
 
-  QList<const Scenario::TimeNodeModel*> l;
-  l += filterSelectionByType<Scenario::TimeNodeModel>(sel);
+  QList<const Scenario::TimeSyncModel*> l;
+  l += filterSelectionByType<Scenario::TimeSyncModel>(sel);
 
   auto states = filterSelectionByType<Scenario::StateModel>(sel);
   if(!states.empty())
   {
       auto& s = Scenario::parentScenario(*states.first());
       for(auto e : filterSelectionByType<Scenario::StateModel>(sel))
-          l.append(&Scenario::parentTimeNode(*e, s));
+          l.append(&Scenario::parentTimeSync(*e, s));
   }
   l = l.toSet().toList();
 

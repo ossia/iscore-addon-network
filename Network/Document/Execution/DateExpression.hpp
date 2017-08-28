@@ -3,7 +3,7 @@
 #include <ossia/editor/expression/expression.hpp>
 #include <iscore/tools/std/Optional.hpp>
 #include <chrono>
-namespace ossia { class time_node; }
+namespace ossia { class time_sync; }
 namespace Network
 {
 static inline auto get_now()
@@ -64,8 +64,8 @@ struct expression_with_callback
 
 struct ExprNotInGroup
 {
-    ExprNotInGroup(ossia::time_node& n): node{n} { }
-    ossia::time_node& node;
+    ExprNotInGroup(ossia::time_sync& n): node{n} { }
+    ossia::time_sync& node;
     optional<ossia::callback_container<std::function<void()>>::iterator> it_triggered;
 
     void cleanTriggerCallback();

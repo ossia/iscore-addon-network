@@ -9,30 +9,30 @@ void MixedScenarioPolicy::operator()(Engine::Execution::ProcessComponent& comp, 
 
 }
 
-void MixedScenarioPolicy::operator()(Engine::Execution::TimeNodeComponent& comp, const Group& parent_group)
+void MixedScenarioPolicy::operator()(Engine::Execution::TimeSyncComponent& comp, const Group& parent_group)
 {/*
     const auto& gm = doc.groupManager();
     // First fetch the required variables.
-    const Group& tn_group = getGroup(gm, parent_group, comp.iscoreTimeNode());
+    const Group& tn_group = getGroup(gm, parent_group, comp.iscoreTimeSync());
 
-    auto sync = getInfos(comp.iscoreTimeNode());
-    Path<Scenario::TimeNodeModel> path{comp.iscoreTimeNode()};
+    auto sync = getInfos(comp.iscoreTimeSync());
+    Path<Scenario::TimeSyncModel> path{comp.iscoreTimeSync()};
 
-    if(comp.iscoreTimeNode().trigger()->active())
+    if(comp.iscoreTimeSync().trigger()->active())
     {
       // Each trigger sends its own data, the master will choose the relevant info
-      comp.OSSIATimeNode()->enteredEvaluation.add_callback([] {
+      comp.OSSIATimeSync()->enteredEvaluation.add_callback([] {
         // Send message to master
       });
-      comp.OSSIATimeNode()->leftEvaluation.add_callback([] {
+      comp.OSSIATimeSync()->leftEvaluation.add_callback([] {
         // Send message to master
       });
-      comp.OSSIATimeNode()->finishedEvaluation.add_callback([] (bool b) {
+      comp.OSSIATimeSync()->finishedEvaluation.add_callback([] (bool b) {
         // Send message to master
 
         // b : max bound reached
       });
-      comp.OSSIATimeNode()->triggered.add_callback([] {
+      comp.OSSIATimeSync()->triggered.add_callback([] {
         // Send message to master
       });
 
@@ -56,7 +56,7 @@ void MixedScenarioPolicy::operator()(Engine::Execution::TimeNodeComponent& comp,
             ossia::expressions::expression_generic genexp;
             genexp.expr = std::move(expr);
 
-            comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+            comp.OSSIATimeSync()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
 
 
             // Then set specific callbacks for outside events
@@ -118,7 +118,7 @@ void MixedScenarioPolicy::operator()(Engine::Execution::TimeNodeComponent& comp,
             ossia::expressions::expression_generic genexp;
             genexp.expr = std::move(expr);
 
-            comp.OSSIATimeNode()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
+            comp.OSSIATimeSync()->setExpression(std::make_unique<ossia::expression>(std::move(genexp)));
 
             break;
           }
@@ -146,8 +146,8 @@ struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
-      Engine::Execution::TimeNodeComponent& comp,
-      const Path<Scenario::TimeNodeModel>& path)
+      Engine::Execution::TimeSyncComponent& comp,
+      const Path<Scenario::TimeSyncModel>& path)
   {
     ExprData e = setupExpr(comp);
 
@@ -193,8 +193,8 @@ struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
-      Engine::Execution::TimeNodeComponent& comp,
-      const Path<Scenario::TimeNodeModel>& path)
+      Engine::Execution::TimeSyncComponent& comp,
+      const Path<Scenario::TimeSyncModel>& path)
   {
     ExprData e = setupExpr(comp);
 
@@ -247,8 +247,8 @@ struct MixedAsyncUnorderedOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
-      Engine::Execution::TimeNodeComponent& comp,
-      const Path<Scenario::TimeNodeModel>& path)
+      Engine::Execution::TimeSyncComponent& comp,
+      const Path<Scenario::TimeSyncModel>& path)
   {
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
@@ -260,7 +260,7 @@ struct MixedAsyncUnorderedOutOfGroup
       expr_ptr->ping(); // TODO how to transmit the max bound information ??
     });
 
-    comp.OSSIATimeNode()->setExpression(
+    comp.OSSIATimeSync()->setExpression(
           std::make_unique<ossia::expression>(
             ossia::expressions::expression_generic{
               std::move(expr)}));
@@ -272,8 +272,8 @@ struct MixedAsyncOrderedOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
-      Engine::Execution::TimeNodeComponent& comp,
-      const Path<Scenario::TimeNodeModel>& path)
+      Engine::Execution::TimeSyncComponent& comp,
+      const Path<Scenario::TimeSyncModel>& path)
   {
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
@@ -289,7 +289,7 @@ struct MixedAsyncOrderedOutOfGroup
       session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_previous_completed, path));
     });
 
-    comp.OSSIATimeNode()->setExpression(
+    comp.OSSIATimeSync()->setExpression(
           std::make_unique<ossia::expression>(
             ossia::expressions::expression_generic{
               std::move(expr)}));
@@ -302,31 +302,31 @@ struct MixedAsyncOrderedOutOfGroup
 /*
 
 void SharedScenarioPolicy::operator()(
-    Engine::Execution::TimeNodeComponent& comp,
+    Engine::Execution::TimeSyncComponent& comp,
     const Group& parent_group)
 {
   // First fetch the required variables.
-  const Group& tn_group = getGroup(ctx.gm, parent_group, comp.iscoreTimeNode());
+  const Group& tn_group = getGroup(ctx.gm, parent_group, comp.iscoreTimeSync());
 
-  auto sync = getInfos(comp.iscoreTimeNode());
-  Path<Scenario::TimeNodeModel> path{comp.iscoreTimeNode()};
+  auto sync = getInfos(comp.iscoreTimeSync());
+  Path<Scenario::TimeSyncModel> path{comp.iscoreTimeSync()};
 
-  if(comp.iscoreTimeNode().trigger()->active())
+  if(comp.iscoreTimeSync().trigger()->active())
   {
     auto& session = ctx.session;
     auto master = ctx.master;
     // Each trigger sends its own data, the master will choose the relevant info
-    comp.OSSIATimeNode()->enteredEvaluation.add_callback([=,&session,&master] {
+    comp.OSSIATimeSync()->enteredEvaluation.add_callback([=,&session,&master] {
       session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_entered, path));
     });
-    comp.OSSIATimeNode()->leftEvaluation.add_callback([=,&session] {
+    comp.OSSIATimeSync()->leftEvaluation.add_callback([=,&session] {
       session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_left, path));
     });
-    comp.OSSIATimeNode()->finishedEvaluation.add_callback([=,&session] (bool b) {
+    comp.OSSIATimeSync()->finishedEvaluation.add_callback([=,&session] (bool b) {
       // b : max bound reached
       session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_finished, path, b));
     });
-    comp.OSSIATimeNode()->triggered.add_callback([=,&session] {
+    comp.OSSIATimeSync()->triggered.add_callback([=,&session] {
       session.emitMessage(master, session.makeMessage(ctx.mapi.trigger_triggered, path));
     });
 
@@ -381,8 +381,8 @@ void SharedScenarioPolicy::operator()(
 }
 
 void SharedScenarioPolicy::setupMaster(
-    Engine::Execution::TimeNodeComponent& comp,
-    Path<Scenario::TimeNodeModel> p,
+    Engine::Execution::TimeSyncComponent& comp,
+    Path<Scenario::TimeSyncModel> p,
     const Group& tn_group,
     SyncMode sync)
 {
@@ -394,7 +394,7 @@ void SharedScenarioPolicy::setupMaster(
     exp.sync = sync;
     exp.pol = ExpressionPolicy::OnFirst; // TODO another
 
-    auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.iscoreTimeNode().parent());
+    auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.iscoreTimeSync().parent());
 
     auto constraint_group = [&] (const Id<Scenario::ConstraintModel>& cst_id)
     {
@@ -405,13 +405,13 @@ void SharedScenarioPolicy::setupMaster(
 
     {
       // Find all the previous ConstraintComponents.
-      auto csts = Scenario::previousConstraints(comp.iscoreTimeNode(), *scenar);
+      auto csts = Scenario::previousConstraints(comp.iscoreTimeSync(), *scenar);
       exp.prevGroups.reserve(csts.size());
       ossia::transform(csts, std::back_inserter(exp.prevGroups), constraint_group);
     }
 
     {
-      auto csts = Scenario::nextConstraints(comp.iscoreTimeNode(), *scenar);
+      auto csts = Scenario::nextConstraints(comp.iscoreTimeSync(), *scenar);
       exp.nextGroups.reserve(csts.size());
       ossia::transform(csts, std::back_inserter(exp.nextGroups), constraint_group);
     }

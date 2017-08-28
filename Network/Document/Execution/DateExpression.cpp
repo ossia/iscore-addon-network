@@ -1,6 +1,6 @@
 #include "DateExpression.hpp"
 #include <type_traits>
-#include <ossia/editor/scenario/time_node.hpp>
+#include <ossia/editor/scenario/time_sync.hpp>
 #include <QDebug>
 namespace Network
 {

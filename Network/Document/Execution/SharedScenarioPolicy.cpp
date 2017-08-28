@@ -10,9 +10,9 @@ void SharedScenarioPolicy::operator()(
     Scenario::ScenarioInterface& ip,
     const Group& cur)
 {
-  for(Scenario::TimeNodeModel& tn : ip.getTimeNodes())
+  for(Scenario::TimeSyncModel& tn : ip.getTimeSyncs())
   {
-    auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
+    auto comp = iscore::findComponent<Engine::Execution::TimeSyncComponent>(tn.components());
     if(comp)
     {
       operator()(*comp, cur);
@@ -21,7 +21,7 @@ void SharedScenarioPolicy::operator()(
 
   for(Scenario::EventModel& tn : ip.getEvents())
   {
-    auto comp = iscore::findComponent<Engine::Execution::TimeNodeComponent>(tn.components());
+    auto comp = iscore::findComponent<Engine::Execution::TimeSyncComponent>(tn.components());
     if(comp)
     {
       operator()(*comp, cur);
@@ -125,26 +125,26 @@ void SharedScenarioPolicy::operator()(Engine::Execution::EventComponent& cst, co
 
 
 void SharedScenarioPolicy::operator()(
-    Engine::Execution::TimeNodeComponent& comp,
+    Engine::Execution::TimeSyncComponent& comp,
     const Group& parent_group)
 {
   auto& mapi = ctx.mapi;
   // First fetch the required variables.
-  const Group& tn_group = getGroup(ctx.gm, parent_group, comp.iscoreTimeNode());
+  const Group& tn_group = getGroup(ctx.gm, parent_group, comp.iscoreTimeSync());
 
-  auto sync = getInfos(comp.iscoreTimeNode());
-  Path<Scenario::TimeNodeModel> path{comp.iscoreTimeNode()};
+  auto sync = getInfos(comp.iscoreTimeSync());
+  Path<Scenario::TimeSyncModel> path{comp.iscoreTimeSync()};
 
-  if(comp.iscoreTimeNode().trigger()->active())
+  if(comp.iscoreTimeSync().active())
   {
     auto& session = ctx.session;
     auto master = ctx.master;
     // Each trigger sends its own data, the master will choose the relevant info
-    comp.OSSIATimeNode()->entered_evaluation.add_callback([=,&mapi,&session] {
+    comp.OSSIATimeSync()->entered_evaluation.add_callback([=,&mapi,&session] {
         qDebug("SharedScenarioPolicy: trigger entered");
       session.emitMessage(master, session.makeMessage(mapi.trigger_entered, path));
     });
-    comp.OSSIATimeNode()->left_evaluation.add_callback([=,&mapi,&session] {
+    comp.OSSIATimeSync()->left_evaluation.add_callback([=,&mapi,&session] {
         qDebug("SharedScenarioPolicy: trigger left");
       session.emitMessage(master, session.makeMessage(mapi.trigger_left, path));
     });
@@ -200,8 +200,8 @@ void SharedScenarioPolicy::operator()(
 }
 
 void SharedScenarioPolicy::setupMaster(
-    Engine::Execution::TimeNodeComponent& comp,
-    Path<Scenario::TimeNodeModel> p,
+    Engine::Execution::TimeSyncComponent& comp,
+    Path<Scenario::TimeSyncModel> p,
     const Group& tn_group,
     SyncMode sync)
 {
@@ -213,7 +213,7 @@ void SharedScenarioPolicy::setupMaster(
     exp.sync = sync;
     exp.pol = ExpressionPolicy::OnFirst; // TODO another
 
-    auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.iscoreTimeNode().parent());
+    auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.iscoreTimeSync().parent());
 
     auto constraint_group = [&] (const Id<Scenario::ConstraintModel>& cst_id)
     {
@@ -224,13 +224,13 @@ void SharedScenarioPolicy::setupMaster(
 
     {
       // Find all the previous ConstraintComponents.
-      auto csts = Scenario::previousConstraints(comp.iscoreTimeNode(), *scenar);
+      auto csts = Scenario::previousConstraints(comp.iscoreTimeSync(), *scenar);
       exp.prevGroups.reserve(csts.size());
       ossia::transform(csts, std::back_inserter(exp.prevGroups), constraint_group);
     }
 
     {
-      auto csts = Scenario::nextConstraints(comp.iscoreTimeNode(), *scenar);
+      auto csts = Scenario::nextConstraints(comp.iscoreTimeSync(), *scenar);
       exp.nextGroups.reserve(csts.size());
       ossia::transform(csts, std::back_inserter(exp.nextGroups), constraint_group);
     }

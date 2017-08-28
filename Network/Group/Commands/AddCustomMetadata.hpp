@@ -5,7 +5,7 @@
 
 namespace Scenario { class ConstraintModel; }
 namespace Scenario { class EventModel; }
-namespace Scenario { class TimeNodeModel; }
+namespace Scenario { class TimeSyncModel; }
 
 namespace Network
 {
@@ -28,7 +28,7 @@ class AddCustomMetadata : public iscore::Command
     AddCustomMetadata(
         const QList<const Scenario::ConstraintModel*>& c,
         const QList<const Scenario::EventModel*>& e,
-        const QList<const Scenario::TimeNodeModel*>& n,
+        const QList<const Scenario::TimeSyncModel*>& n,
         const std::vector<std::pair<QString, QString>>& meta
         );
 
@@ -43,7 +43,7 @@ class AddCustomMetadata : public iscore::Command
   private:
     std::vector<MetadataUndoRedo<Scenario::ConstraintModel>> m_constraints;
     std::vector<MetadataUndoRedo<Scenario::EventModel>> m_events;
-    std::vector<MetadataUndoRedo<Scenario::TimeNodeModel>> m_nodes;
+    std::vector<MetadataUndoRedo<Scenario::TimeSyncModel>> m_nodes;
 };
 
 }

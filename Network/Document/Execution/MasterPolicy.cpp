@@ -1,7 +1,7 @@
 #include <Network/Document/Execution/MasterPolicy.hpp>
 #include <Network/Session/Session.hpp>
 #include <Network/Communication/MessageMapper.hpp>
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <iscore/model/path/PathSerialization.hpp>
 #include <Network/Document/MasterPolicy.hpp>
@@ -17,7 +17,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   qDebug("MasterExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
   s.mapper().addHandler_(mapi.trigger_entered,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p)
   {
     qDebug() << "master << trigger_entered";
     s.broadcastToOthers(m.clientId, m);
@@ -36,7 +36,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_left,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p)
   {
     qDebug() << "master << trigger_left";
     // TODO there should be a consensus on this point.
@@ -44,7 +44,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_finished,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val)
   {
     qDebug() << "master << trigger_finished";
 
@@ -63,7 +63,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_expression_true,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p)
   {
     qDebug() << "master << trigger_expression_true";
     auto it = doc.noncompensated.network_expressions.find(p);
@@ -163,7 +163,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_previous_completed,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p)
   {
     qDebug() << "master << trigger_previous_completed";
     auto it = doc.noncompensated.network_expressions.find(p);
@@ -196,7 +196,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_triggered,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val)
   {
     qDebug() << "master << noncompensated.trigger_triggered";
     if(m.clientId != s.master().id())
@@ -212,7 +212,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
   });
   s.mapper().addHandler_(mapi.trigger_triggered_compensated,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, qint64 ns, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, qint64 ns, bool val)
   {
     qDebug() << "master << noncompensated.trigger_triggered";
     if(m.clientId != s.master().id())

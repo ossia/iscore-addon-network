@@ -15,7 +15,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     qDebug("SlaveExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
   s.mapper().addHandler_(mapi.trigger_entered,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p)
   {
     auto it = doc.noncompensated.trigger_evaluation_entered.find(p);
     if(it != doc.noncompensated.trigger_evaluation_entered.end())
@@ -26,12 +26,12 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_left,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p)
   {
   });
 
   s.mapper().addHandler_(mapi.trigger_finished,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val)
   {
     auto it = doc.noncompensated.trigger_evaluation_finished.find(p);
     if(it != doc.noncompensated.trigger_evaluation_finished.end())
@@ -42,7 +42,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
   });
 
   s.mapper().addHandler_(mapi.trigger_triggered,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val)
   {
     auto it = doc.noncompensated.trigger_triggered.find(p);
     if(it != doc.noncompensated.trigger_triggered.end())
@@ -52,7 +52,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     }
   });
   s.mapper().addHandler_(mapi.trigger_triggered_compensated,
-                         [&] (const NetworkMessage& m, Path<Scenario::TimeNodeModel> p, qint64 ns, bool val)
+                         [&] (const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, qint64 ns, bool val)
   {
     auto it = doc.compensated.trigger_triggered.find(p);
     if(it != doc.compensated.trigger_triggered.end())

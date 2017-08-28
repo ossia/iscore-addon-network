@@ -13,7 +13,7 @@ struct MixedScenarioPolicy
       Scenario::ScenarioInterface& ip,
       const Group& cur);
 
-  void operator()(Engine::Execution::TimeNodeComponent& comp, const Group& parent_group);
+  void operator()(Engine::Execution::TimeSyncComponent& comp, const Group& parent_group);
 };
 
 
