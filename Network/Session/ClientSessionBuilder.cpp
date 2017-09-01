@@ -107,7 +107,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     // undo, too.
 
     iscore::Document* doc = m_context.docManager.loadDocument(
-          m_context,
+          m_context, "Untitled",
           QJsonDocument::fromBinaryData(m_documentData).object(),
           *m_context.interfaces<iscore::DocumentDelegateList>().begin()); // TODO id instead
 
