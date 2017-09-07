@@ -18,11 +18,11 @@ namespace Network
 
 class Client;
 // Groups : registered in the session
-// Permissions ? for now we will just have, for each constraint in a score,
+// Permissions ? for now we will just have, for each interval in a score,
 // a chosen group.
-// There is a "default" group that runs the constraint everywhere.
+// There is a "default" group that runs the interval everywhere.
 // The groups are part of the document plugin.
-// Each client can be in a group (it will execute all the constraints that are part of this group).
+// Each client can be in a group (it will execute all the intervals that are part of this group).
 
 class Group : public IdentifiedObject<Group>
 {

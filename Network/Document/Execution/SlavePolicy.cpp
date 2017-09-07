@@ -63,11 +63,11 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
   });
 
 
-  s.mapper().addHandler_(mapi.constraint_speed,
-                         [&] (const NetworkMessage& m, Path<Scenario::ConstraintModel> p, double val)
+  s.mapper().addHandler_(mapi.interval_speed,
+                         [&] (const NetworkMessage& m, Path<Scenario::IntervalModel> p, double val)
   {
-    auto it = doc.noncompensated.constraint_speed_changed.find(p);
-    if(it != doc.noncompensated.constraint_speed_changed.end())
+    auto it = doc.noncompensated.interval_speed_changed.find(p);
+    if(it != doc.noncompensated.interval_speed_changed.end())
     {
       if(it.value())
         it.value()(m.clientId, val);

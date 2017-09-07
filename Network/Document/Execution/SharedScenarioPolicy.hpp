@@ -13,7 +13,7 @@ struct SharedScenarioPolicy
       Scenario::ScenarioInterface& ip,
       const Group& cur);
 
-  void operator()(Engine::Execution::ConstraintComponent& cst, const Group& cur);
+  void operator()(Engine::Execution::IntervalComponent& cst, const Group& cur);
   void operator()(Engine::Execution::EventComponent& cst, const Group& cur);
 
   //! Todo isn't this the code for the mixed mode actually ?

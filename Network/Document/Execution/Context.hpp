@@ -115,7 +115,7 @@ namespace Engine
 {
 namespace Execution
 {
-class ConstraintComponent;
+class IntervalComponent;
 class TimeSyncComponent;
 struct Context;
 class ProcessComponent;

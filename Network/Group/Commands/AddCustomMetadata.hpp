@@ -3,7 +3,7 @@
 #include <iscore/selection/Selection.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
 
-namespace Scenario { class ConstraintModel; }
+namespace Scenario { class IntervalModel; }
 namespace Scenario { class EventModel; }
 namespace Scenario { class TimeSyncModel; }
 
@@ -26,7 +26,7 @@ class AddCustomMetadata : public iscore::Command
         "Change metadata")
   public:
     AddCustomMetadata(
-        const QList<const Scenario::ConstraintModel*>& c,
+        const QList<const Scenario::IntervalModel*>& c,
         const QList<const Scenario::EventModel*>& e,
         const QList<const Scenario::TimeSyncModel*>& n,
         const std::vector<std::pair<QString, QString>>& meta
@@ -41,7 +41,7 @@ class AddCustomMetadata : public iscore::Command
     void deserializeImpl(DataStreamOutput& s) override;
 
   private:
-    std::vector<MetadataUndoRedo<Scenario::ConstraintModel>> m_constraints;
+    std::vector<MetadataUndoRedo<Scenario::IntervalModel>> m_intervals;
     std::vector<MetadataUndoRedo<Scenario::EventModel>> m_events;
     std::vector<MetadataUndoRedo<Scenario::TimeSyncModel>> m_nodes;
 };

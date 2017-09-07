@@ -14,7 +14,7 @@
 #include "DocumentPlugin.hpp"
 #include <Process/Process.hpp>
 #include <Network/Session/Session.hpp>
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <iscore/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
 #include <iscore/model/EntityMap.hpp>
@@ -51,7 +51,7 @@ MessagesAPI::MessagesAPI():
   trigger_left{QByteArrayLiteral("/trigger/left")},
   trigger_finished{QByteArrayLiteral("/trigger/finished")},
   trigger_triggered{QByteArrayLiteral("/trigger/triggered")},
-  constraint_speed{QByteArrayLiteral("/constraint/speed")}
+  interval_speed{QByteArrayLiteral("/interval/speed")}
 {
 
 }
@@ -111,7 +111,7 @@ void NetworkDocumentPlugin::on_stop()
   noncompensated.trigger_evaluation_entered.clear();
   noncompensated.trigger_evaluation_finished.clear();
   noncompensated.trigger_triggered.clear();
-  noncompensated.constraint_speed_changed.clear();
+  noncompensated.interval_speed_changed.clear();
   noncompensated.network_expressions.clear();
 
   compensated.trigger_triggered.clear();

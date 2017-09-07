@@ -162,7 +162,7 @@ void GUIClientEditionPolicy::play()
   {
     auto& plug = iscore::GUIAppContext().guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.on_play(
-          sm->baseConstraint(),
+          sm->baseInterval(),
           true,
           BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
     TimeVal{});

@@ -21,13 +21,13 @@ class JSONObject;
 class QWidget;
 struct VisitorVariant;
 namespace Scenario {
-  class ConstraintModel;
+  class IntervalModel;
   class TimeSyncModel;
 }
 namespace Engine {
   namespace Execution {
     class EventComponent;
-    class ConstraintComponent;
+    class IntervalComponent;
     class TimeSyncComponent;
   }
 }
@@ -141,7 +141,7 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
   iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
   iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>)>> trigger_triggered;
-  iscore::hash_map<Path<Scenario::ConstraintModel>, std::function<void(const Id<Client>&, double)>> constraint_speed_changed;
+  iscore::hash_map<Path<Scenario::IntervalModel>, std::function<void(const Id<Client>&, double)>> interval_speed_changed;
   iscore::hash_map<Path<Scenario::TimeSyncModel>, NetworkExpressionData> network_expressions;
   } noncompensated;
 

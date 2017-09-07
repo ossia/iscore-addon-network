@@ -2,7 +2,7 @@
 #include <Network/Session/Session.hpp>
 #include <Network/Communication/MessageMapper.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <iscore/model/path/PathSerialization.hpp>
 #include <Network/Document/MasterPolicy.hpp>
 namespace Network
@@ -228,13 +228,13 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
   });
 
-  s.mapper().addHandler_(mapi.constraint_speed,
-                         [&] (const NetworkMessage& m, Path<Scenario::ConstraintModel> p, double val)
+  s.mapper().addHandler_(mapi.interval_speed,
+                         [&] (const NetworkMessage& m, Path<Scenario::IntervalModel> p, double val)
   {
       if(m.clientId != s.master().id())
       {
-          auto it = doc.noncompensated.constraint_speed_changed.find(p);
-          if(it != doc.noncompensated.constraint_speed_changed.end())
+          auto it = doc.noncompensated.interval_speed_changed.find(p);
+          if(it != doc.noncompensated.interval_speed_changed.end())
           {
               if(it.value())
                   it.value()(m.clientId, val);

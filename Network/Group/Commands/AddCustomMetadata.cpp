@@ -1,5 +1,5 @@
 #include <Network/Group/Commands/AddCustomMetadata.hpp>
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
@@ -14,22 +14,22 @@ namespace Network
 namespace Command
 {
 AddCustomMetadata::AddCustomMetadata(
-    const QList<const Scenario::ConstraintModel*>& c,
+    const QList<const Scenario::IntervalModel*>& c,
     const QList<const Scenario::EventModel*>& e,
     const QList<const Scenario::TimeSyncModel*>& n,
     const std::vector<std::pair<QString, QString> >& meta)
 {
-  m_constraints.reserve(c.size());
+  m_intervals.reserve(c.size());
   for(auto elt : c)
   {
-    MetadataUndoRedo<Scenario::ConstraintModel> m;
+    MetadataUndoRedo<Scenario::IntervalModel> m;
     m.path = iscore::IDocument::path(*elt);
     m.before = elt->metadata().getExtendedMetadata();
     m.after = m.before;
     for(const auto& e : meta)
       m.after[e.first] = e.second;
 
-    m_constraints.push_back(std::move(m));
+    m_intervals.push_back(std::move(m));
   }
 
   m_events.reserve(e.size());
@@ -62,7 +62,7 @@ AddCustomMetadata::AddCustomMetadata(
 
 void AddCustomMetadata::undo(const iscore::DocumentContext& ctx) const
 {
-  for(auto& elt : m_constraints)
+  for(auto& elt : m_intervals)
   {
     elt.path.find(ctx).metadata().setExtendedMetadata(elt.before);
   }
@@ -78,7 +78,7 @@ void AddCustomMetadata::undo(const iscore::DocumentContext& ctx) const
 
 void AddCustomMetadata::redo(const iscore::DocumentContext& ctx) const
 {
-  for(auto& elt : m_constraints)
+  for(auto& elt : m_intervals)
   {
     elt.path.find(ctx).metadata().setExtendedMetadata(elt.after);
   }
@@ -95,13 +95,13 @@ void AddCustomMetadata::redo(const iscore::DocumentContext& ctx) const
 
 void AddCustomMetadata::serializeImpl(DataStreamInput& s) const
 {
-  s << m_constraints << m_events << m_nodes;
+  s << m_intervals << m_events << m_nodes;
 
 }
 
 void AddCustomMetadata::deserializeImpl(DataStreamOutput& s)
 {
-  s >> m_constraints >> m_events >> m_nodes;
+  s >> m_intervals >> m_events >> m_nodes;
 }
 }
 
@@ -123,7 +123,7 @@ void SetCustomMetadata(const iscore::DocumentContext& ctx,
   l = l.toSet().toList();
 
   auto cmd = new Command::AddCustomMetadata{
-             filterSelectionByType<Scenario::ConstraintModel>(sel)
+             filterSelectionByType<Scenario::IntervalModel>(sel)
              , filterSelectionByType<Scenario::EventModel>(sel)
              , std::move(l)
              , md};

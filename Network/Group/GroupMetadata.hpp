@@ -14,7 +14,7 @@ struct VisitorVariant;
 namespace Network
 {
 class Group;
-//! Goes into the constraints, events, etc.
+//! Goes into the intervals, events, etc.
 class GroupMetadata :
     public iscore::SerializableComponent
 {

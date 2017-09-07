@@ -9,7 +9,7 @@
 
 #include "ChangeGroup.hpp"
 #include <Network/Group/GroupMetadata.hpp"
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <iscore/plugins/documentdelegate/plugin/ElementPluginModel.hpp>
 #include <iscore/plugins/documentdelegate/plugin/ElementPluginModelList.hpp>
@@ -25,7 +25,7 @@ namespace Command
 {
 static GroupMetadata* getGroupMetadata(QObject* obj)
 {
-    if(auto cstr = dynamic_cast<Scenario::ConstraintModel*>(obj))
+    if(auto cstr = dynamic_cast<Scenario::IntervalModel*>(obj))
     {
         auto& plugs = cstr->pluginModelList.list();
         auto plug_it = find_if(plugs, [] (iscore::ElementPluginModel* elt)

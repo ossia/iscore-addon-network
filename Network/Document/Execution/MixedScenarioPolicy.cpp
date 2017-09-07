@@ -396,24 +396,24 @@ void SharedScenarioPolicy::setupMaster(
 
     auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.iscoreTimeSync().parent());
 
-    auto constraint_group = [&] (const Id<Scenario::ConstraintModel>& cst_id)
+    auto interval_group = [&] (const Id<Scenario::IntervalModel>& cst_id)
     {
-      auto& cst = scenar->constraint(cst_id);
+      auto& cst = scenar->interval(cst_id);
       auto& grp = getGroup(ctx.gm, tn_group, cst);
       return grp.id();
     };
 
     {
-      // Find all the previous ConstraintComponents.
-      auto csts = Scenario::previousConstraints(comp.iscoreTimeSync(), *scenar);
+      // Find all the previous IntervalComponents.
+      auto csts = Scenario::previousIntervals(comp.iscoreTimeSync(), *scenar);
       exp.prevGroups.reserve(csts.size());
-      ossia::transform(csts, std::back_inserter(exp.prevGroups), constraint_group);
+      ossia::transform(csts, std::back_inserter(exp.prevGroups), interval_group);
     }
 
     {
-      auto csts = Scenario::nextConstraints(comp.iscoreTimeSync(), *scenar);
+      auto csts = Scenario::nextIntervals(comp.iscoreTimeSync(), *scenar);
       exp.nextGroups.reserve(csts.size());
-      ossia::transform(csts, std::back_inserter(exp.nextGroups), constraint_group);
+      ossia::transform(csts, std::back_inserter(exp.nextGroups), interval_group);
     }
 
     ctx.doc.noncompensated.network_expressions.emplace(std::move(p), std::move(exp));

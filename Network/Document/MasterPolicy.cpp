@@ -172,7 +172,7 @@ void MasterEditionPolicy::play()
   {
     auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.on_play(
-          sm->baseConstraint(),
+          sm->baseInterval(),
           true,
           BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
           TimeVal{});

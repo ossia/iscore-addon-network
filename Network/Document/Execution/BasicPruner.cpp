@@ -8,7 +8,7 @@
 #include <Engine/Executor/DocumentPlugin.hpp>
 #include <Engine/Executor/BaseScenarioComponent.hpp>
 #include <Scenario/Process/ScenarioInterface.hpp>
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 namespace Network
 {
@@ -23,12 +23,12 @@ BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
 
 }
 
-void BasicPruner::recurse(Engine::Execution::ConstraintComponent& cst, const Group& cur)
+void BasicPruner::recurse(Engine::Execution::IntervalComponent& cst, const Group& cur)
 {
   ctx.doc.noncompensated.trigger_evaluation_entered.clear();
   ctx.doc.noncompensated.trigger_evaluation_finished.clear();
   ctx.doc.noncompensated.trigger_triggered.clear();
-  ctx.doc.noncompensated.constraint_speed_changed.clear();
+  ctx.doc.noncompensated.interval_speed_changed.clear();
   ctx.doc.noncompensated.network_expressions.clear();
 
   ctx.doc.compensated.trigger_triggered.clear();
@@ -42,9 +42,9 @@ void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
 
 void BasicPruner::recurse(Engine::Execution::TimeSyncComponent& comp)
 {
-  // Check the previous / next constraints.
+  // Check the previous / next intervals.
   // If some happen to have to execute in different computers
-  // i.e. for all constraints, list their group
+  // i.e. for all intervals, list their group
   // for these groups, list their clients.
   // if there are at least two clients we have to insert a synchronization point.
 
@@ -68,7 +68,7 @@ void BasicPruner::recurse(Engine::Execution::TimeSyncComponent& comp)
   // sends it to them (and to all computer that is not in "free" mode for this trigger ?)
 
   // What if two computers execute a scenario in "parallel" mode ?
-  // Execution modes for processes / constraints : parallel / synchronized / only one ?
+  // Execution modes for processes / intervals : parallel / synchronized / only one ?
 
 }
 
@@ -76,7 +76,7 @@ void BasicPruner::operator()(const Engine::Execution::Context& exec_ctx)
 {
   // We mute all the processes that are not in a group
   // of this client.
-  auto& root = exec_ctx.scenario.baseConstraint();
+  auto& root = exec_ctx.scenario.baseInterval();
 
   // Let's assume for now that we start in the "all" group...
   recurse(root, *ctx.gm.group(ctx.gm.defaultGroup()));

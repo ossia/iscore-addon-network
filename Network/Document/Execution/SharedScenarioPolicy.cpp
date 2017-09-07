@@ -28,9 +28,9 @@ void SharedScenarioPolicy::operator()(
     }
   }
 
-  for(Scenario::ConstraintModel& cst : ip.getConstraints())
+  for(Scenario::IntervalModel& cst : ip.getIntervals())
   {
-    auto comp = iscore::findComponent<Engine::Execution::ConstraintComponent>(cst.components());
+    auto comp = iscore::findComponent<Engine::Execution::IntervalComponent>(cst.components());
     if(comp)
       operator()(*comp, cur);
   }
@@ -38,34 +38,34 @@ void SharedScenarioPolicy::operator()(
 }
 
 void SharedScenarioPolicy::operator()(
-    Engine::Execution::ConstraintComponent& cst,
+    Engine::Execution::IntervalComponent& cst,
     const Group& cur)
 {
   const auto& str = Constants::instance();
 
-  Scenario::ConstraintModel& constraint = cst.iscoreConstraint();
+  Scenario::IntervalModel& interval = cst.iscoreInterval();
 
-  const Group& cur_group = getGroup(ctx.gm, cur, constraint);
+  const Group& cur_group = getGroup(ctx.gm, cur, interval);
 
   // Execution speed
   {
     auto& session = ctx.session;
     auto& mapi = ctx.mapi;
     auto master = ctx.master;
-    Path<Scenario::ConstraintModel> path{cst.iscoreConstraint()};
+    Path<Scenario::IntervalModel> path{cst.iscoreInterval()};
     // This -> Master
     auto block = std::make_shared<bool>(false);
-    QObject::connect(&constraint.duration, &Scenario::ConstraintDurations::executionSpeedChanged,
+    QObject::connect(&interval.duration, &Scenario::IntervalDurations::executionSpeedChanged,
                      &cst, [=,&session,&mapi] (double s) {
       // TODO handle sync / async. Even though sync does not really make sense here...
       if(!(*block))
-        session.sendMessage(master, session.makeMessage(mapi.constraint_speed, path, s));
+        session.sendMessage(master, session.makeMessage(mapi.interval_speed, path, s));
     });
 
     // Master -> This
-    ctx.doc.noncompensated.constraint_speed_changed.emplace(path, [&,block] (const Id<Client>& orig, double s) {
+    ctx.doc.noncompensated.interval_speed_changed.emplace(path, [&,block] (const Id<Client>& orig, double s) {
       *block = true;
-      constraint.duration.setExecutionSpeed(s);
+      interval.duration.setExecutionSpeed(s);
       *block = false;
     });
 
@@ -75,9 +75,9 @@ void SharedScenarioPolicy::operator()(
   {
     const bool isMuted = !cur_group.hasClient(ctx.self);
     // Mute the processes that are not meant to execute there.
-    constraint.setExecutionState(isMuted
-                                 ? Scenario::ConstraintExecutionState::Muted
-                                 : Scenario::ConstraintExecutionState::Enabled);
+    interval.setExecutionState(isMuted
+                                 ? Scenario::IntervalExecutionState::Muted
+                                 : Scenario::IntervalExecutionState::Enabled);
 
     for(const auto& process : cst.processes())
     {
@@ -88,9 +88,9 @@ void SharedScenarioPolicy::operator()(
 
   // Recursion
   {
-    auto constraint_sharemode = get_metadata<QString>(constraint, str.sharemode);
-    if(!constraint_sharemode || constraint_sharemode->isEmpty())
-      constraint_sharemode = str.shared;
+    auto interval_sharemode = get_metadata<QString>(interval, str.sharemode);
+    if(!interval_sharemode || interval_sharemode->isEmpty())
+      interval_sharemode = str.shared;
 
     for(const auto& process : cst.processes())
     {
@@ -99,7 +99,7 @@ void SharedScenarioPolicy::operator()(
       {
         auto sharemode = get_metadata<QString>(process.second->process(), str.sharemode);
         if(!sharemode || sharemode->isEmpty())
-          sharemode = constraint_sharemode;
+          sharemode = interval_sharemode;
 
         if(*sharemode == str.shared)
         {
@@ -215,24 +215,24 @@ void SharedScenarioPolicy::setupMaster(
 
     auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.iscoreTimeSync().parent());
 
-    auto constraint_group = [&] (const Id<Scenario::ConstraintModel>& cst_id)
+    auto interval_group = [&] (const Id<Scenario::IntervalModel>& cst_id)
     {
-      auto& cst = scenar->constraint(cst_id);
+      auto& cst = scenar->interval(cst_id);
       auto& grp = getGroup(ctx.gm, tn_group, cst);
       return grp.id();
     };
 
     {
-      // Find all the previous ConstraintComponents.
-      auto csts = Scenario::previousConstraints(comp.iscoreTimeSync(), *scenar);
+      // Find all the previous IntervalComponents.
+      auto csts = Scenario::previousIntervals(comp.iscoreTimeSync(), *scenar);
       exp.prevGroups.reserve(csts.size());
-      ossia::transform(csts, std::back_inserter(exp.prevGroups), constraint_group);
+      ossia::transform(csts, std::back_inserter(exp.prevGroups), interval_group);
     }
 
     {
-      auto csts = Scenario::nextConstraints(comp.iscoreTimeSync(), *scenar);
+      auto csts = Scenario::nextIntervals(comp.iscoreTimeSync(), *scenar);
       exp.nextGroups.reserve(csts.size());
-      ossia::transform(csts, std::back_inserter(exp.nextGroups), constraint_group);
+      ossia::transform(csts, std::back_inserter(exp.nextGroups), interval_group);
     }
 
     ctx.doc.noncompensated.network_expressions.emplace(std::move(p), std::move(exp));
