@@ -11,10 +11,10 @@
 #include <Network/Group/GroupMetadata.hpp"
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
-#include <iscore/plugins/documentdelegate/plugin/ElementPluginModel.hpp>
-#include <iscore/plugins/documentdelegate/plugin/ElementPluginModelList.hpp>
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/model/path/ObjectPath.hpp>
+#include <score/plugins/documentdelegate/plugin/ElementPluginModel.hpp>
+#include <score/plugins/documentdelegate/plugin/ElementPluginModelList.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/model/path/ObjectPath.hpp>
 
 
 namespace Network
@@ -28,22 +28,22 @@ static GroupMetadata* getGroupMetadata(QObject* obj)
     if(auto cstr = dynamic_cast<Scenario::IntervalModel*>(obj))
     {
         auto& plugs = cstr->pluginModelList.list();
-        auto plug_it = find_if(plugs, [] (iscore::ElementPluginModel* elt)
+        auto plug_it = find_if(plugs, [] (score::ElementPluginModel* elt)
         { return elt->metaObject()->className() == QString{"GroupMetadata"}; });
-        ISCORE_ASSERT(plug_it != plugs.end());
+        SCORE_ASSERT(plug_it != plugs.end());
 
         return static_cast<GroupMetadata*>(*plug_it);
     }
     else if(auto ev = dynamic_cast<Scenario::EventModel*>(obj))
     {
         auto& plugs = ev->pluginModelList.list();
-        auto plug_it = find_if(plugs, [] (iscore::ElementPluginModel* elt)
+        auto plug_it = find_if(plugs, [] (score::ElementPluginModel* elt)
         { return elt->metaObject()->className() == QString{"GroupMetadata"}; });
-        ISCORE_ASSERT(plug_it != plugs.end());
+        SCORE_ASSERT(plug_it != plugs.end());
 
         return static_cast<GroupMetadata*>(*plug_it);
     }
-    ISCORE_ABORT;
+    SCORE_ABORT;
     return nullptr;
 }
 
@@ -54,12 +54,12 @@ ChangeGroup::ChangeGroup(ObjectPath &&path, Id<Group> newGroup):
     m_oldGroup = getGroupMetadata(&m_path.find<QObject>())->group();
 }
 
-void ChangeGroup::undo(const iscore::DocumentContext& ctx) const
+void ChangeGroup::undo(const score::DocumentContext& ctx) const
 {
     getGroupMetadata(&m_path.find<QObject>())->setGroup(m_oldGroup);
 }
 
-void ChangeGroup::redo(const iscore::DocumentContext& ctx) const
+void ChangeGroup::redo(const score::DocumentContext& ctx) const
 {
     getGroupMetadata(&m_path.find<QObject>())->setGroup(m_newGroup);
 }

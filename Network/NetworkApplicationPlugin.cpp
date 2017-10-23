@@ -1,6 +1,6 @@
 #include "NetworkApplicationPlugin.hpp"
-#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
-#include <iscore/tools/std/Optional.hpp>
+#include <score/plugins/application/GUIApplicationPlugin.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <core/document/Document.hpp>
 #include <QAction>
 #include <QApplication>
@@ -17,20 +17,20 @@
 #include <Network/Document/MasterPolicy.hpp>
 #include <Network/Group/NetworkActions.hpp>
 #include <Network/Session/ClientSessionBuilder.hpp>
-#include <iscore/tools/IdentifierGeneration.hpp>
+#include <score/tools/IdentifierGeneration.hpp>
 
-#include <iscore/application/ApplicationContext.hpp>
+#include <score/application/ApplicationContext.hpp>
 #include <core/command/CommandStack.hpp>
 #include <core/document/DocumentModel.hpp>
 #include <core/presenter/DocumentManager.hpp>
-#include <iscore/actions/MenuManager.hpp>
-#include <iscore/actions/Menu.hpp>
-#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
-#include <iscore/model/Identifier.hpp>
-#include <iscore/actions/Menu.hpp>
+#include <score/actions/MenuManager.hpp>
+#include <score/actions/Menu.hpp>
+#include <score/plugins/application/GUIApplicationPlugin.hpp>
+#include <score/model/Identifier.hpp>
+#include <score/actions/Menu.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Session/MasterSession.hpp>
-#include <iscore/actions/ActionManager.hpp>
+#include <score/actions/ActionManager.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
 #include <QMessageBox>
 #include <QTcpSocket>
@@ -48,7 +48,7 @@ namespace Network
 class Client;
 class Session;
 
-NetworkApplicationPlugin::NetworkApplicationPlugin(const iscore::GUIApplicationContext& app) :
+NetworkApplicationPlugin::NetworkApplicationPlugin(const score::GUIApplicationContext& app) :
   GUIApplicationPlugin {app}
 {
 }
@@ -112,19 +112,19 @@ void NetworkApplicationPlugin::setupPlayerConnection(
   });
 }
 
-iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
+score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 {
-  using namespace iscore;
-  QMenu* fileMenu = context.menus.get().at(iscore::Menus::File()).menu();
+  using namespace score;
+  QMenu* fileMenu = context.menus.get().at(score::Menus::File()).menu();
 
 #ifdef OSSIA_DNSSD
-  m_serverBrowser = new ZeroconfBrowser{"_iscore._tcp", qApp->activeWindow()};
+  m_serverBrowser = new ZeroconfBrowser{"_score._tcp", qApp->activeWindow()};
   connect(m_serverBrowser, &ZeroconfBrowser::sessionSelected,
           this, &NetworkApplicationPlugin::setupClientConnection);
   auto serveract = m_serverBrowser->makeAction();
   serveract->setText("Browse for server");
 
-  m_playerBrowser = new ZeroconfBrowser{"_iscore_player._tcp", qApp->activeWindow()};
+  m_playerBrowser = new ZeroconfBrowser{"_score_player._tcp", qApp->activeWindow()};
   connect(m_playerBrowser, &ZeroconfBrowser::sessionSelected,
           this, &NetworkApplicationPlugin::setupPlayerConnection);
   auto playeract = m_playerBrowser->makeAction();
@@ -187,12 +187,12 @@ iscore::GUIElements NetworkApplicationPlugin::makeGUIElements()
   fileMenu->addAction(connectLocal);
 
   // Execution
-  QMenu* playMenu = context.menus.get().at(iscore::Menus::Play()).menu();
+  QMenu* playMenu = context.menus.get().at(score::Menus::Play()).menu();
 
   QAction* playAction = new QAction{tr("Play (network)"), this};
   QAction* stopAction = new QAction{tr("Stop (network)"), this};
 
-  iscore::GUIElements g;
+  score::GUIElements g;
   g.actions.add<Actions::NetworkPlay>(playAction);
   g.actions.add<Actions::NetworkStop>(stopAction);
 

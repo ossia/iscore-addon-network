@@ -1,8 +1,8 @@
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <qnamespace.h>
 
 #include "ClientSession.hpp"
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/Session.hpp>
 

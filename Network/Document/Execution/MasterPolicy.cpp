@@ -3,7 +3,7 @@
 #include <Network/Communication/MessageMapper.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
+#include <score/model/path/PathSerialization.hpp>
 #include <Network/Document/MasterPolicy.hpp>
 namespace Network
 {
@@ -11,7 +11,7 @@ namespace Network
 MasterExecutionPolicy::MasterExecutionPolicy(
     Session& s,
     NetworkDocumentPlugin& doc,
-    const iscore::DocumentContext& c):
+    const score::DocumentContext& c):
   m_keep{dynamic_cast<MasterEditionPolicy&>(doc.policy()).timekeeper()}
 {
   qDebug("MasterExecutionPolicy");
@@ -92,7 +92,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
         // Trigger the others :
 
         // Note : there is no problem for the ordered mode if we have A--|--A
-        // because the i-score algorithm keeps this order. The 'Unordered' will still be ordered in
+        // because the score algorithm keeps this order. The 'Unordered' will still be ordered in
         // this case (but instantaneous). However we don't have a "global" order, only a "local" order.
         // We want a global order... this means splitting the time_node execution.
 

@@ -4,8 +4,8 @@
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
 #include "RemoveClientFromGroup.hpp"
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/model/path/ObjectPath.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/model/path/ObjectPath.hpp>
 
 namespace Network
 {
@@ -18,12 +18,12 @@ RemoveClientFromGroup::RemoveClientFromGroup(ObjectPath&& groupMgrPath, Id<Clien
 {
 }
 
-void RemoveClientFromGroup::undo(const iscore::DocumentContext& ctx) const
+void RemoveClientFromGroup::undo(const score::DocumentContext& ctx) const
 {
     m_path.find<GroupManager>(ctx).group(m_group)->addClient(m_client);
 }
 
-void RemoveClientFromGroup::redo(const iscore::DocumentContext& ctx) const
+void RemoveClientFromGroup::redo(const score::DocumentContext& ctx) const
 {
     m_path.find<GroupManager>(ctx).group(m_group)->removeClient(m_client);
 }

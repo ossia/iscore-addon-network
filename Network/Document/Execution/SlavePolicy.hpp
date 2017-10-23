@@ -9,6 +9,6 @@ public:
   SlaveExecutionPolicy(
       Session& s,
       NetworkDocumentPlugin& doc,
-      const iscore::DocumentContext& c);
+      const score::DocumentContext& c);
 };
 }

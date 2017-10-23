@@ -1,5 +1,5 @@
 #include <Network/Group/Group.hpp>
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <QBoxLayout>
 #include <QLabel>
 #include <QObject>
@@ -8,7 +8,7 @@
 #include <QString>
 
 #include "GroupWidget.hpp"
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 namespace Network
 {

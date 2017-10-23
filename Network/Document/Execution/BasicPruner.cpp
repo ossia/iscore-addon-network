@@ -49,7 +49,7 @@ void BasicPruner::recurse(Engine::Execution::TimeSyncComponent& comp)
   // if there are at least two clients we have to insert a synchronization point.
 
   // Question : split in two ticks or do it in a single tick ?
-  // Answer : The i-score engine already does this.
+  // Answer : The score engine already does this.
 
   // Give a "group" to the timenode : all the machines of the group have to
   // verify the condition for it to become true.

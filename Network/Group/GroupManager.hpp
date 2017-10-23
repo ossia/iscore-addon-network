@@ -1,8 +1,8 @@
 #pragma once
-#include <iscore/model/IdentifiedObject.hpp>
+#include <score/model/IdentifiedObject.hpp>
 #include <vector>
 
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 class QObject;
 
 namespace Network

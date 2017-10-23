@@ -9,8 +9,8 @@
 
 namespace Network
 {
-PlayerPlugin::PlayerPlugin(const iscore::ApplicationContext& ctx):
-  iscore::ApplicationPlugin{ctx}
+PlayerPlugin::PlayerPlugin(const score::ApplicationContext& ctx):
+  score::ApplicationPlugin{ctx}
 {
 }
 
@@ -71,11 +71,11 @@ void PlayerPlugin::setupServer()
 
   auto name = s.getClientName();
   if(name.isEmpty())
-    name = "i-score player";
+    name = "score player";
 
 #if defined(OSSIA_DNSSD)
   try {
-  m_zeroconf = std::make_unique<servus::Servus>("_iscore_player._tcp");
+  m_zeroconf = std::make_unique<servus::Servus>("_score_player._tcp");
   m_zeroconf->announce(m_listenServer.serverPort(), name.toStdString());
   } catch(...) {
   }

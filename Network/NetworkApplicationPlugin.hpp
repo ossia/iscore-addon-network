@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
+#include <score/plugins/application/GUIApplicationPlugin.hpp>
 #include <memory>
 
 #ifdef OSSIA_DNSSD
@@ -12,12 +12,12 @@ class ClientSession;
 class ClientSessionBuilder;
 class NetworkApplicationPlugin :
         public QObject,
-        public iscore::GUIApplicationPlugin
+        public score::GUIApplicationPlugin
 {
         Q_OBJECT
 
     public:
-        NetworkApplicationPlugin(const iscore::GUIApplicationContext& app);
+        NetworkApplicationPlugin(const score::GUIApplicationContext& app);
 
     public slots:
         void setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);

@@ -12,7 +12,7 @@ namespace Network
 NetworkServer::NetworkServer(int port, QObject* parent):
     QObject{parent}
 {
-    m_server = new QWebSocketServer("i-score-network", QWebSocketServer::SslMode::NonSecureMode, this);
+    m_server = new QWebSocketServer("score-network", QWebSocketServer::SslMode::NonSecureMode, this);
 
     while(!m_server->listen(QHostAddress::Any, port))
     {

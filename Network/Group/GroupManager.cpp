@@ -1,11 +1,11 @@
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <algorithm>
 #include <iterator>
 #include <Network/Client/RemoteClient.hpp>
 #include <QSignalBlocker>
 #include "Group.hpp"
 #include "GroupManager.hpp"
-#include <iscore/model/IdentifiedObject.hpp>
+#include <score/model/IdentifiedObject.hpp>
 
 class QObject;
 

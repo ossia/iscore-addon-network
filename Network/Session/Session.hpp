@@ -10,8 +10,8 @@
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
-#include <iscore/model/IdentifiedObject.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/model/IdentifiedObject.hpp>
+#include <score/model/Identifier.hpp>
 
 namespace Network
 {

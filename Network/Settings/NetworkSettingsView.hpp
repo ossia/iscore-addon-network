@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/plugins/settingsdelegate/SettingsDelegateView.hpp>
+#include <score/plugins/settingsdelegate/SettingsDelegateView.hpp>
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QString>
@@ -11,7 +11,7 @@ namespace Network
 namespace Settings
 {
 class Presenter;
-class View : public iscore::SettingsDelegateView
+class View : public score::SettingsDelegateView
 {
         Q_OBJECT
     public:

@@ -1,4 +1,4 @@
-#include <iscore/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
 #include <QDataStream>
 #include <QIODevice>
 #include <sys/types.h>
@@ -9,9 +9,9 @@
 #include "PlayerSessionBuilder.hpp"
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Communication/NetworkSocket.hpp>
-#include <iscore/command/Command.hpp>
-#include <iscore/plugins/customfactory/StringFactoryKey.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/command/Command.hpp>
+#include <score/plugins/customfactory/StringFactoryKey.hpp>
+#include <score/model/Identifier.hpp>
 #include <core/document/Document.hpp>
 #include <core/command/CommandStackSerialization.hpp>
 #include <Network/Client/LocalClient.hpp>
@@ -19,13 +19,13 @@
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/ClientPolicy.hpp>
 #include <QTcpServer>
-#include <iscore/plugins/documentdelegate/DocumentDelegateFactory.hpp>
-#include <iscore/application/ApplicationContext.hpp>
+#include <score/plugins/documentdelegate/DocumentDelegateFactory.hpp>
+#include <score/application/ApplicationContext.hpp>
 #include <Network/Settings/NetworkSettingsModel.hpp>
 namespace Network
 {
 PlayerSessionBuilder::PlayerSessionBuilder(
-    const iscore::ApplicationContext& ctx,
+    const score::ApplicationContext& ctx,
     QString ip,
     int port):
   m_context{ctx}
@@ -61,7 +61,7 @@ QByteArray PlayerSessionBuilder::documentData() const
   return m_documentData;
 }
 
-const std::vector<iscore::CommandData>& PlayerSessionBuilder::commandStackData() const
+const std::vector<score::CommandData>& PlayerSessionBuilder::commandStackData() const
 {
   return m_commandStack;
 }
@@ -109,7 +109,7 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
         return;
     }
 
-    iscore::Document* doc = documentLoader(m_documentData);
+    score::Document* doc = documentLoader(m_documentData);
 
     if(!doc)
     {
@@ -121,7 +121,7 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
       return;
     }
 
-    iscore::loadCommandStack(
+    score::loadCommandStack(
           m_context.components,
           writer,
           doc->commandStack(),

@@ -1,9 +1,9 @@
 #pragma once
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <QObject>
 #include <QString>
 
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 class QWebSocket;
 

@@ -9,11 +9,11 @@
 #include <Network/Group/NetworkActions.hpp>
 #include <Network/Group/Commands/AddCustomMetadata.hpp>
 #include <Network/Document/Execution/Context.hpp>
-#include <iscore/actions/ActionManager.hpp>
-#include <iscore/document/DocumentInterface.hpp>
-#include <iscore/widgets/ClearLayout.hpp>
-#include <iscore/widgets/MarginLess.hpp>
-#include <iscore/widgets/Separator.hpp>
+#include <score/actions/ActionManager.hpp>
+#include <score/document/DocumentInterface.hpp>
+#include <score/widgets/ClearLayout.hpp>
+#include <score/widgets/MarginLess.hpp>
+#include <score/widgets/Separator.hpp>
 
 #include <QLabel>
 #include <QPushButton>
@@ -23,8 +23,8 @@
 #include <QGridLayout>
 namespace Network
 {
-PanelDelegate::PanelDelegate(const iscore::GUIApplicationContext& ctx):
-  iscore::PanelDelegate{ctx},
+PanelDelegate::PanelDelegate(const score::GUIApplicationContext& ctx):
+  score::PanelDelegate{ctx},
   m_widget{new QWidget}
 {
   new QVBoxLayout{m_widget};
@@ -35,9 +35,9 @@ QWidget* PanelDelegate::widget()
   return m_widget;
 }
 
-const iscore::PanelStatus&PanelDelegate::defaultPanelStatus() const
+const score::PanelStatus&PanelDelegate::defaultPanelStatus() const
 {
-  static const iscore::PanelStatus status{
+  static const score::PanelStatus status{
     false,
     Qt::RightDockWidgetArea,
         1,
@@ -48,8 +48,8 @@ const iscore::PanelStatus&PanelDelegate::defaultPanelStatus() const
 }
 
 void PanelDelegate::on_modelChanged(
-    iscore::MaybeDocument oldm,
-    iscore::MaybeDocument newm)
+    score::MaybeDocument oldm,
+    score::MaybeDocument newm)
 {
   disconnect(m_con);
   if(!newm)
@@ -88,11 +88,11 @@ class ClientListWidget: public QWidget
 
     void recompute()
     {
-      iscore::clearLayout(this->layout());
+      score::clearLayout(this->layout());
       m_clients.clear();
       delete this->layout();
 
-      auto lay = new iscore::MarginLess<QGridLayout>;
+      auto lay = new score::MarginLess<QGridLayout>;
       this->setLayout(lay);
 
       int i = 0;
@@ -121,11 +121,11 @@ class ClientListWidget: public QWidget
 
 class NetworkMetadataWidget : public QWidget
 {
-    const iscore::DocumentContext& m_ctx;
+    const score::DocumentContext& m_ctx;
     const GroupManager& m_mgr;
   public:
     NetworkMetadataWidget(
-        const iscore::DocumentContext& ctx,
+        const score::DocumentContext& ctx,
         const GroupManager& mgr,
         QWidget* parent)
       : QWidget{parent}
@@ -149,7 +149,7 @@ class NetworkMetadataWidget : public QWidget
       };
       if(auto l = this->layout())
       {
-        iscore::clearLayout(this->layout());
+        score::clearLayout(this->layout());
         delete l;
       }
 
@@ -187,7 +187,7 @@ class NetworkMetadataWidget : public QWidget
 };
 
 void PanelDelegate::setView(
-    const iscore::DocumentContext& ctx,
+    const score::DocumentContext& ctx,
     const GroupManager& mgr,
     const Session* session)
 {
@@ -225,7 +225,7 @@ void PanelDelegate::setView(
   m_subWidget->layout()->addWidget(button);
 
   // Group table
-  m_subWidget->layout()->addWidget(new iscore::HSeparator{m_subWidget});
+  m_subWidget->layout()->addWidget(new score::HSeparator{m_subWidget});
   auto transport_widg = new QWidget;
   auto transport_lay = new QHBoxLayout{transport_widg};
   auto play = new QPushButton{tr("Play")};
@@ -247,7 +247,7 @@ void PanelDelegate::setView(
 
   m_subWidget->layout()->addWidget(transport_widg);
   m_subWidget->layout()->addWidget(new ClientListWidget{*session, m_widget});
-  m_subWidget->layout()->addWidget(new iscore::HSeparator{m_subWidget});
+  m_subWidget->layout()->addWidget(new score::HSeparator{m_subWidget});
   m_subWidget->layout()->addWidget(new NetworkMetadataWidget{ctx, mgr, m_widget});
   m_subWidget->layout()->addWidget(new GroupTableWidget{mgr, session, m_widget});
 }

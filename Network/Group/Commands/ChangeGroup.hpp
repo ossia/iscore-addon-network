@@ -1,11 +1,11 @@
 #pragma once
 /*
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
-#include <iscore/tools/std/Optional.hpp>
-#include <iscore/command/Command.hpp>
-#include <iscore/model/path/ObjectPath.hpp>
+#include <score/tools/std/Optional.hpp>
+#include <score/command/Command.hpp>
+#include <score/model/path/ObjectPath.hpp>
 
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 struct DataStreamInput;
 struct DataStreamOutput;
@@ -15,15 +15,15 @@ namespace Network
 class Group;
 namespace Command
 {
-class ChangeGroup : public iscore::Command
+class ChangeGroup : public score::Command
 {
-        ISCORE_ COMMAND_DECL(DistributedScenarioCommandFactoryName(), ChangeGroup, "Change the group of an element")
+        SCORE_ COMMAND_DECL(DistributedScenarioCommandFactoryName(), ChangeGroup, "Change the group of an element")
 
     public:
         ChangeGroup(ObjectPath&& path, Id<Group> newGroup);
 
-        void undo(const iscore::DocumentContext& ctx) const override;
-        void redo(const iscore::DocumentContext& ctx) const override;
+        void undo(const score::DocumentContext& ctx) const override;
+        void redo(const score::DocumentContext& ctx) const override;
 
         void serializeImpl(DataStreamInput & s) const override;
         void deserializeImpl(DataStreamOutput & s) override;

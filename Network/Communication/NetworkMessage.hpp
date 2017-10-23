@@ -2,7 +2,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QMetaType>
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 class QDataStream;
 namespace Network

@@ -3,7 +3,7 @@
 
 #include "NetworkSettingsPresenter.hpp"
 #include "NetworkSettingsView.hpp"
-#include <iscore/plugins/settingsdelegate/SettingsDelegateView.hpp>
+#include <score/plugins/settingsdelegate/SettingsDelegateView.hpp>
 
 class QObject;
 

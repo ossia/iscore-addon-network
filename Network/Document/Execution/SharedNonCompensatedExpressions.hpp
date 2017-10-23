@@ -7,7 +7,7 @@
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Engine/Executor/TimeSyncComponent.hpp>
 #include <Engine/Executor/IntervalComponent.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
+#include <score/model/path/PathSerialization.hpp>
 #include <ossia/editor/scenario/time_sync.hpp>
 
 namespace Network

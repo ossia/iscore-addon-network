@@ -1,4 +1,4 @@
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <QBoxLayout>
 #include <QLayout>
 #include <algorithm>
@@ -7,7 +7,7 @@
 #include <Network/Group/GroupManager.hpp>
 #include "GroupListWidget.hpp"
 #include "GroupWidget.hpp"
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 namespace Network
 {

@@ -106,7 +106,7 @@ const Group& getGroup(const GroupManager& gm, const Group& cur, const T& obj)
       cur_group = group; // Else we default to the "parent" case.
     }
   }
-  ISCORE_ASSERT(cur_group);
+  SCORE_ASSERT(cur_group);
   return *cur_group;
 }
 }

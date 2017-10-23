@@ -12,7 +12,7 @@ void SharedScenarioPolicy::operator()(
 {
   for(Scenario::TimeSyncModel& tn : ip.getTimeSyncs())
   {
-    auto comp = iscore::findComponent<Engine::Execution::TimeSyncComponent>(tn.components());
+    auto comp = score::findComponent<Engine::Execution::TimeSyncComponent>(tn.components());
     if(comp)
     {
       operator()(*comp, cur);
@@ -21,7 +21,7 @@ void SharedScenarioPolicy::operator()(
 
   for(Scenario::EventModel& tn : ip.getEvents())
   {
-    auto comp = iscore::findComponent<Engine::Execution::TimeSyncComponent>(tn.components());
+    auto comp = score::findComponent<Engine::Execution::TimeSyncComponent>(tn.components());
     if(comp)
     {
       operator()(*comp, cur);
@@ -30,7 +30,7 @@ void SharedScenarioPolicy::operator()(
 
   for(Scenario::IntervalModel& cst : ip.getIntervals())
   {
-    auto comp = iscore::findComponent<Engine::Execution::IntervalComponent>(cst.components());
+    auto comp = score::findComponent<Engine::Execution::IntervalComponent>(cst.components());
     if(comp)
       operator()(*comp, cur);
   }
@@ -43,7 +43,7 @@ void SharedScenarioPolicy::operator()(
 {
   const auto& str = Constants::instance();
 
-  Scenario::IntervalModel& interval = cst.iscoreInterval();
+  Scenario::IntervalModel& interval = cst.scoreInterval();
 
   const Group& cur_group = getGroup(ctx.gm, cur, interval);
 
@@ -52,7 +52,7 @@ void SharedScenarioPolicy::operator()(
     auto& session = ctx.session;
     auto& mapi = ctx.mapi;
     auto master = ctx.master;
-    Path<Scenario::IntervalModel> path{cst.iscoreInterval()};
+    Path<Scenario::IntervalModel> path{cst.scoreInterval()};
     // This -> Master
     auto block = std::make_shared<bool>(false);
     QObject::connect(&interval.duration, &Scenario::IntervalDurations::executionSpeedChanged,
@@ -130,12 +130,12 @@ void SharedScenarioPolicy::operator()(
 {
   auto& mapi = ctx.mapi;
   // First fetch the required variables.
-  const Group& tn_group = getGroup(ctx.gm, parent_group, comp.iscoreTimeSync());
+  const Group& tn_group = getGroup(ctx.gm, parent_group, comp.scoreTimeSync());
 
-  auto sync = getInfos(comp.iscoreTimeSync());
-  Path<Scenario::TimeSyncModel> path{comp.iscoreTimeSync()};
+  auto sync = getInfos(comp.scoreTimeSync());
+  Path<Scenario::TimeSyncModel> path{comp.scoreTimeSync()};
 
-  if(comp.iscoreTimeSync().active())
+  if(comp.scoreTimeSync().active())
   {
     auto& session = ctx.session;
     auto master = ctx.master;
@@ -213,7 +213,7 @@ void SharedScenarioPolicy::setupMaster(
     exp.sync = sync;
     exp.pol = ExpressionPolicy::OnFirst; // TODO another
 
-    auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.iscoreTimeSync().parent());
+    auto scenar = dynamic_cast<Scenario::ScenarioInterface*>(comp.scoreTimeSync().parent());
 
     auto interval_group = [&] (const Id<Scenario::IntervalModel>& cst_id)
     {
@@ -224,13 +224,13 @@ void SharedScenarioPolicy::setupMaster(
 
     {
       // Find all the previous IntervalComponents.
-      auto csts = Scenario::previousIntervals(comp.iscoreTimeSync(), *scenar);
+      auto csts = Scenario::previousIntervals(comp.scoreTimeSync(), *scenar);
       exp.prevGroups.reserve(csts.size());
       ossia::transform(csts, std::back_inserter(exp.prevGroups), interval_group);
     }
 
     {
-      auto csts = Scenario::nextIntervals(comp.iscoreTimeSync(), *scenar);
+      auto csts = Scenario::nextIntervals(comp.scoreTimeSync(), *scenar);
       exp.nextGroups.reserve(csts.size());
       ossia::transform(csts, std::back_inserter(exp.nextGroups), interval_group);
     }

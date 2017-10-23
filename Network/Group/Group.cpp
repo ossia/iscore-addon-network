@@ -2,7 +2,7 @@
 #include <iterator>
 
 #include "Group.hpp"
-#include <iscore/model/IdentifiedObject.hpp>
+#include <score/model/IdentifiedObject.hpp>
 
 class Client;
 class QObject;
@@ -40,7 +40,7 @@ void Group::addClient(Id<Client> clt)
 void Group::removeClient(Id<Client> clt)
 {
     auto it = std::find(std::begin(m_executingClients), std::end(m_executingClients), clt);
-    ISCORE_ASSERT(it != std::end(m_executingClients));
+    SCORE_ASSERT(it != std::end(m_executingClients));
 
     m_executingClients.erase(it);
     emit clientRemoved(clt);

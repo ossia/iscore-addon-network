@@ -9,7 +9,7 @@ class MasterEditionPolicy : public EditionPolicy
 {
     public:
         MasterEditionPolicy(MasterSession* s,
-                            const iscore::DocumentContext& c);
+                            const score::DocumentContext& c);
 
         MasterSession* session() const override
         { return m_session; }
@@ -19,7 +19,7 @@ class MasterEditionPolicy : public EditionPolicy
         Timekeeper& timekeeper() { return m_keep; }
     private:
         MasterSession* m_session{};
-        const iscore::DocumentContext& m_ctx;
+        const score::DocumentContext& m_ctx;
         Timekeeper m_keep{*m_session};
 };
 }

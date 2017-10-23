@@ -4,10 +4,10 @@
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 
-#include <iscore/document/DocumentContext.hpp>
-#include <iscore/selection/SelectionStack.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
-#include <iscore/command/Dispatchers/CommandDispatcher.hpp>
+#include <score/document/DocumentContext.hpp>
+#include <score/selection/SelectionStack.hpp>
+#include <score/model/path/PathSerialization.hpp>
+#include <score/command/Dispatchers/CommandDispatcher.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 namespace Network
 {
@@ -23,7 +23,7 @@ AddCustomMetadata::AddCustomMetadata(
   for(auto elt : c)
   {
     MetadataUndoRedo<Scenario::IntervalModel> m;
-    m.path = iscore::IDocument::path(*elt);
+    m.path = score::IDocument::path(*elt);
     m.before = elt->metadata().getExtendedMetadata();
     m.after = m.before;
     for(const auto& e : meta)
@@ -36,7 +36,7 @@ AddCustomMetadata::AddCustomMetadata(
   for(auto elt : e)
   {
     MetadataUndoRedo<Scenario::EventModel> m;
-    m.path = iscore::IDocument::path(*elt);
+    m.path = score::IDocument::path(*elt);
     m.before = elt->metadata().getExtendedMetadata();
     m.after = m.before;
     for(const auto& e : meta)
@@ -49,7 +49,7 @@ AddCustomMetadata::AddCustomMetadata(
   for(auto elt : n)
   {
     MetadataUndoRedo<Scenario::TimeSyncModel> m;
-    m.path = iscore::IDocument::path(*elt);
+    m.path = score::IDocument::path(*elt);
     m.before = elt->metadata().getExtendedMetadata();
     m.after = m.before;
     for(const auto& e : meta)
@@ -60,7 +60,7 @@ AddCustomMetadata::AddCustomMetadata(
 
 }
 
-void AddCustomMetadata::undo(const iscore::DocumentContext& ctx) const
+void AddCustomMetadata::undo(const score::DocumentContext& ctx) const
 {
   for(auto& elt : m_intervals)
   {
@@ -76,7 +76,7 @@ void AddCustomMetadata::undo(const iscore::DocumentContext& ctx) const
   }
 }
 
-void AddCustomMetadata::redo(const iscore::DocumentContext& ctx) const
+void AddCustomMetadata::redo(const score::DocumentContext& ctx) const
 {
   for(auto& elt : m_intervals)
   {
@@ -105,7 +105,7 @@ void AddCustomMetadata::deserializeImpl(DataStreamOutput& s)
 }
 }
 
-void SetCustomMetadata(const iscore::DocumentContext& ctx,
+void SetCustomMetadata(const score::DocumentContext& ctx,
                        std::vector<std::pair<QString, QString> > md)
 {
   auto sel = ctx.selectionStack.currentSelection();
