@@ -133,7 +133,7 @@ bool IpWidget::eventFilter(QObject *obj, QEvent *event)
                                 // user wants to move to next item
                                 MoveNextLineEdit(i);
                             }
-                            emit signalTextChanged( pEdit );
+                            signalTextChanged( pEdit );
                             break;
 
                         case Qt::Key_Backspace:
@@ -150,7 +150,7 @@ bool IpWidget::eventFilter(QObject *obj, QEvent *event)
                             break;
 
                         default:
-                            emit signalTextChanged( pEdit );
+                            signalTextChanged( pEdit );
                             break;
 
                     }

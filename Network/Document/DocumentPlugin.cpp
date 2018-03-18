@@ -1,9 +1,9 @@
 #include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <core/document/Document.hpp>
 #include <core/document/DocumentModel.hpp>
-#include <iscore/serialization/VisitorCommon.hpp>
+#include <score/serialization/VisitorCommon.hpp>
 
 #include <QString>
 
@@ -16,9 +16,9 @@
 #include <Network/Session/Session.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
-#include <iscore/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
-#include <iscore/model/EntityMap.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
+#include <score/model/EntityMap.hpp>
+#include <score/model/Identifier.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
 class QWidget;
@@ -63,15 +63,15 @@ const MessagesAPI& MessagesAPI::instance()
 }
 
 NetworkDocumentPlugin::NetworkDocumentPlugin(
-    const iscore::DocumentContext& ctx,
+    const score::DocumentContext& ctx,
     EditionPolicy *policy,
-    Id<iscore::DocumentPlugin> id,
+    Id<score::DocumentPlugin> id,
     QObject* parent):
-  iscore::SerializableDocumentPlugin{ctx, std::move(id), "NetworkDocumentPlugin", parent},
+  score::SerializableDocumentPlugin{ctx, std::move(id), "NetworkDocumentPlugin", parent},
   m_policy{policy},
   m_groups{new GroupManager{this}}
 {
-  ISCORE_ASSERT(policy);
+  SCORE_ASSERT(policy);
   m_policy->setParent(this);
 
   // Base group set-up
@@ -87,19 +87,19 @@ NetworkDocumentPlugin::~NetworkDocumentPlugin()
 
 void NetworkDocumentPlugin::setEditPolicy(EditionPolicy * pol)
 {
-  ISCORE_ASSERT(pol);
+  SCORE_ASSERT(pol);
 
   delete m_policy;
   pol->setParent(this);
   m_policy = pol;
   m_groups->cleanup(m_policy->session()->remoteClients());
 
-  emit sessionChanged();
+  sessionChanged();
 }
 
 void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
 {
-  ISCORE_ASSERT(pol);
+  SCORE_ASSERT(pol);
 
   delete m_exec;
   pol->setParent(this);
@@ -117,12 +117,12 @@ void NetworkDocumentPlugin::on_stop()
   compensated.trigger_triggered.clear();
 }
 
-iscore::DocumentPlugin*DocumentPluginFactory::load(
+score::DocumentPlugin*DocumentPluginFactory::load(
     const VisitorVariant& var,
-    iscore::DocumentContext& doc,
+    score::DocumentContext& doc,
     QObject* parent)
 {
-  return iscore::deserialize_dyn(var, [&] (auto&& deserializer)
+  return score::deserialize_dyn(var, [&] (auto&& deserializer)
   { return new NetworkDocumentPlugin{doc, deserializer, parent}; });
 }
 

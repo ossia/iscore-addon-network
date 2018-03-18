@@ -75,9 +75,9 @@ bool AsyncExpression::evaluate() const
   m_mutex.lock();
   bool val = m_ping;
 
-  qDebug() << "evaluate" << val;
   if(val)
   {
+      qDebug() << "expression evaluated to true" << val;
       // Reset the status for loops.
       m_ping = false;
   }

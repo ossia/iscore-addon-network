@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
-project(iscore_addon_network LANGUAGES CXX)
+project(score_addon_network LANGUAGES CXX)
 
-iscore_common_setup()
+score_common_setup()
 
 # Packages
 find_package(Qt5 5.3 REQUIRED COMPONENTS Core Widgets Network WebSockets Xml Test)
@@ -70,7 +70,7 @@ set(HDRS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsModel.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsPresenter.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsView.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/iscore_addon_network.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/score_addon_network.hpp"
 
     )
 set(SRCS
@@ -129,24 +129,25 @@ set(SRCS
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsPresenter.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsView.cpp"
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/iscore_addon_network.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/score_addon_network.cpp"
 )
 
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
-iscore_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
-target_sources(ossia PRIVATE $<TARGET_OBJECTS:Servus>)
-get_target_property(SERVUS_LINK_LIBRARIES Servus INTERFACE_LINK_LIBRARIES)
-get_target_property(SERVUS_COMPILE_DEFINITIONS Servus INTERFACE_COMPILE_DEFINITIONS)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${SERVUS_LINK_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${OSSIA_3RDPARTY_FOLDER}/Servus)
-target_compile_definitions(${PROJECT_NAME} PUBLIC ${SERVUS_COMPILE_DEFINITIONS})
+score_moc_headers(${PROJECT_NAME} "${HDRS}")
+score_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
+# target_sources(ossia PRIVATE $<TARGET_OBJECTS:Servus>)
+# get_target_property(SERVUS_LINK_LIBRARIES Servus INTERFACE_LINK_LIBRARIES)
+# get_target_property(SERVUS_COMPILE_DEFINITIONS Servus INTERFACE_COMPILE_DEFINITIONS)
+# target_link_libraries(${PROJECT_NAME} PUBLIC ${SERVUS_LINK_LIBRARIES})
+# target_include_directories(${PROJECT_NAME} PUBLIC ${OSSIA_3RDPARTY_FOLDER}/Servus)
+# target_compile_definitions(${PROJECT_NAME} PUBLIC ${SERVUS_COMPILE_DEFINITIONS})
 
 #target_include_directories(${PROJECT_NAME} PRIVATE "${OSSIA_3RDPARY_DIRECTORY}/libzmq/include")
 target_link_libraries(${PROJECT_NAME} PUBLIC
-                                    iscore_lib_base
-                                    iscore_plugin_scenario
-                                    iscore_lib_process
-                                    iscore_plugin_engine
+                                    score_lib_base
+                                    score_plugin_scenario
+                                    score_lib_process
+                                    score_plugin_engine
                                     Qt5::Core
                                     Qt5::Widgets
                                     Qt5::Network
@@ -155,4 +156,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     )
 
 
-setup_iscore_plugin(${PROJECT_NAME})
+setup_score_plugin(${PROJECT_NAME})

@@ -1,14 +1,14 @@
 
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <QJsonObject>
 #include <QJsonValue>
 #include <algorithm>
 
 #include "GroupMetadata.hpp"
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/serialization/JSONValueVisitor.hpp>
-#include <iscore/serialization/JSONVisitor.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/JSONValueVisitor.hpp>
+#include <score/serialization/JSONVisitor.hpp>
+#include <score/model/Identifier.hpp>
 
 template <typename T> class Reader;
 template <typename T> class Writer;

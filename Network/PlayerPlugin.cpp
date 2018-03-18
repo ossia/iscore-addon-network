@@ -2,15 +2,15 @@
 #include <Network/Session/PlayerSessionBuilder.hpp>
 #include <Network/Settings/NetworkSettingsModel.hpp>
 #include <QTcpSocket>
-
+#undef OSSIA_DNSSD
 #if defined(OSSIA_DNSSD)
 #include <servus/servus.h>
 #endif
 
 namespace Network
 {
-PlayerPlugin::PlayerPlugin(const iscore::ApplicationContext& ctx):
-  iscore::ApplicationPlugin{ctx}
+PlayerPlugin::PlayerPlugin(const score::ApplicationContext& ctx):
+  score::ApplicationPlugin{ctx}
 {
 }
 
@@ -75,7 +75,7 @@ void PlayerPlugin::setupServer()
 
 #if defined(OSSIA_DNSSD)
   try {
-  m_zeroconf = std::make_unique<servus::Servus>("_iscore_player._tcp");
+  m_zeroconf = std::make_unique<servus::Servus>("_score_player._tcp");
   m_zeroconf->announce(m_listenServer.serverPort(), name.toStdString());
   } catch(...) {
   }

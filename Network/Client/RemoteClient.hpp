@@ -33,7 +33,7 @@ class RemoteClient : public Client
 
         QString m_clientServerAddress;
         int m_clientServerPort{};
-    signals:
+    Q_SIGNALS:
         void messageReceived(NetworkMessage);
 
     private:

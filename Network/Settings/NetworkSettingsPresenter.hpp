@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/plugins/settingsdelegate/SettingsDelegatePresenter.hpp>
+#include <score/plugins/settingsdelegate/SettingsDelegatePresenter.hpp>
 #include <QIcon>
 
 #include <QString>
@@ -14,7 +14,7 @@ namespace Settings
 class Model;
 class View;
 class Presenter :
-        public iscore::SettingsDelegatePresenter
+        public score::GlobalSettingsPresenter
 {
         Q_OBJECT
     public:

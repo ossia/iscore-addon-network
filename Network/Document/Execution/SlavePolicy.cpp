@@ -1,7 +1,7 @@
 #include <Network/Document/Execution/SlavePolicy.hpp>
 #include <Network/Session/MasterSession.hpp>
 #include <Network/Communication/MessageMapper.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
+#include <score/model/path/PathSerialization.hpp>
 
 namespace Network
 {
@@ -10,7 +10,7 @@ namespace Network
 SlaveExecutionPolicy::SlaveExecutionPolicy(
     Session& s,
     NetworkDocumentPlugin& doc,
-    const iscore::DocumentContext& c)
+    const score::DocumentContext& c)
 {
     qDebug("SlaveExecutionPolicy");
   auto& mapi = MessagesAPI::instance();

@@ -10,7 +10,7 @@ public:
   MasterExecutionPolicy(
       Session& s,
       NetworkDocumentPlugin& doc,
-      const iscore::DocumentContext& c);
+      const score::DocumentContext& c);
 
 private:
   Timekeeper& m_keep;

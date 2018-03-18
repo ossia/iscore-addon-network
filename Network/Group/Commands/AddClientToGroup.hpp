@@ -1,10 +1,10 @@
 #pragma once
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
-#include <iscore/tools/std/Optional.hpp>
-#include <iscore/command/Command.hpp>
-#include <iscore/model/path/ObjectPath.hpp>
+#include <score/tools/std/Optional.hpp>
+#include <score/command/Command.hpp>
+#include <score/model/path/ObjectPath.hpp>
 
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 struct DataStreamInput;
 struct DataStreamOutput;
@@ -15,16 +15,16 @@ class Client;
 class Group;
 namespace Command
 {
-class AddClientToGroup : public iscore::Command
+class AddClientToGroup : public score::Command
 {
-        ISCORE_COMMAND_DECL(DistributedScenarioCommandFactoryName(), AddClientToGroup, "AddClientToGroup")
+        SCORE_COMMAND_DECL(DistributedScenarioCommandFactoryName(), AddClientToGroup, "AddClientToGroup")
     public:
         AddClientToGroup(ObjectPath&& groupMgrPath,
                          Id<Client> client,
                          Id<Group> group);
 
-        void undo(const iscore::DocumentContext& ctx) const override;
-        void redo(const iscore::DocumentContext& ctx) const override;
+        void undo(const score::DocumentContext& ctx) const override;
+        void redo(const score::DocumentContext& ctx) const override;
 
         void serializeImpl(DataStreamInput & s) const override;
         void deserializeImpl(DataStreamOutput & s) override;

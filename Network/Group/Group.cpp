@@ -2,7 +2,7 @@
 #include <iterator>
 
 #include "Group.hpp"
-#include <iscore/model/IdentifiedObject.hpp>
+#include <score/model/IdentifiedObject.hpp>
 
 class Client;
 class QObject;
@@ -28,22 +28,22 @@ void Group::setName(QString arg)
         return;
 
     m_name = arg;
-    emit nameChanged(arg);
+    nameChanged(arg);
 }
 
 void Group::addClient(Id<Client> clt)
 {
     m_executingClients.push_back(clt);
-    emit clientAdded(clt);
+    clientAdded(clt);
 }
 
 void Group::removeClient(Id<Client> clt)
 {
     auto it = std::find(std::begin(m_executingClients), std::end(m_executingClients), clt);
-    ISCORE_ASSERT(it != std::end(m_executingClients));
+    SCORE_ASSERT(it != std::end(m_executingClients));
 
     m_executingClients.erase(it);
-    emit clientRemoved(clt);
+    clientRemoved(clt);
 }
 
 bool Group::hasClient(const Id<Client>& clt) const

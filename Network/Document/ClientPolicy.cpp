@@ -4,12 +4,12 @@
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Scenario/Application/ScenarioActions.hpp>
 #include <Engine/ApplicationPlugin.hpp>
-#include <iscore/actions/ActionManager.hpp>
+#include <score/actions/ActionManager.hpp>
 namespace Network
 {
 ClientEditionPolicy::ClientEditionPolicy(
     ClientSession* s,
-    const iscore::DocumentContext& c):
+    const score::DocumentContext& c):
   m_session{s},
   m_ctx{c},
   m_keep{*s}
@@ -20,30 +20,30 @@ ClientEditionPolicy::ClientEditionPolicy(
   /////////////////////////////////////////////////////////////////////////////
   /// To the master
   /////////////////////////////////////////////////////////////////////////////
-  con(stack, &iscore::CommandStack::localCommand,
-      this, [&] (iscore::Command* cmd)
+  con(stack, &score::CommandStack::localCommand,
+      this, [&] (score::Command* cmd)
   {
     m_session->master().sendMessage(
-          m_session->makeMessage(mapi.command_new, iscore::CommandData{*cmd}));
+          m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
   });
 
   // Undo-redo
-  con(stack, &iscore::CommandStack::localUndo,
+  con(stack, &score::CommandStack::localUndo,
       this, [&] ()
   { m_session->master().sendMessage(m_session->makeMessage(mapi.command_undo)); });
-  con(stack, &iscore::CommandStack::localRedo,
+  con(stack, &score::CommandStack::localRedo,
       this, [&] ()
   { m_session->master().sendMessage(m_session->makeMessage(mapi.command_redo)); });
-  con(stack, &iscore::CommandStack::localIndexChanged,
+  con(stack, &score::CommandStack::localIndexChanged,
       this, [&] (int32_t idx)
   { m_session->master().sendMessage(m_session->makeMessage(mapi.command_index, idx)); });
 
   // Lock-unlock
-  con(locker, &iscore::ObjectLocker::lock,
+  con(locker, &score::ObjectLocker::lock,
       this, [&] (QByteArray arr)
   { qDebug() << "client send lock";
     m_session->master().sendMessage(m_session->makeMessage(mapi.lock, arr)); });
-  con(locker, &iscore::ObjectLocker::unlock,
+  con(locker, &score::ObjectLocker::unlock,
       this, [&] (QByteArray arr)
   { qDebug() << "client send unlock";
     m_session->master().sendMessage(m_session->makeMessage(mapi.unlock, arr)); });
@@ -57,7 +57,7 @@ ClientEditionPolicy::ClientEditionPolicy(
   s->mapper().addHandler(mapi.command_new,
                          [&] (const NetworkMessage& m)
   {
-    iscore::CommandData cmd;
+    score::CommandData cmd;
     DataStreamWriter writer{m.data};
     writer.writeTo(cmd);
 
@@ -139,12 +139,12 @@ ClientEditionPolicy::ClientEditionPolicy(
 
 void ClientEditionPolicy::connectToOtherClient(QString ip, int port)
 {
-  ISCORE_TODO;
+  SCORE_TODO;
 }
 
 GUIClientEditionPolicy::GUIClientEditionPolicy(
     ClientSession* s,
-    const iscore::DocumentContext& c):
+    const score::DocumentContext& c):
   ClientEditionPolicy{s, c}
 {
   auto& mapi = MessagesAPI::instance();
@@ -157,10 +157,10 @@ GUIClientEditionPolicy::GUIClientEditionPolicy(
 
 void GUIClientEditionPolicy::play()
 {
-  auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
-    auto& plug = iscore::GUIAppContext().guiApplicationPlugin<Engine::ApplicationPlugin>();
+    auto& plug = score::GUIAppContext().guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.on_play(
           sm->baseInterval(),
           true,
@@ -178,7 +178,7 @@ void GUIClientEditionPolicy::stop()
 
 PlayerClientEditionPolicy::PlayerClientEditionPolicy(
     ClientSession* s,
-    const iscore::DocumentContext& c):
+    const score::DocumentContext& c):
   ClientEditionPolicy{s, c}
 {
 }

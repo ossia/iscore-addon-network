@@ -10,8 +10,8 @@
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
-#include <iscore/model/IdentifiedObject.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/model/IdentifiedObject.hpp>
+#include <score/model/Identifier.hpp>
 
 namespace Network
 {
@@ -62,7 +62,7 @@ class Session : public IdentifiedObject<Session>
         void sendMessage(const Id<Client>& target, const NetworkMessage& m);
         void broadcastToClients(const std::vector<Id<Client> >& clts, const NetworkMessage& m);
 
-    signals:
+    Q_SIGNALS:
         void clientAdded(RemoteClient*);
         void clientRemoving(RemoteClient*);
         void clientRemoved(RemoteClient*);
@@ -70,7 +70,7 @@ class Session : public IdentifiedObject<Session>
 
         void emitMessage(Id<Client> target, const NetworkMessage& m);
 
-    public slots:
+    public Q_SLOTS:
         void validateMessage(const NetworkMessage& m);
 
     private:

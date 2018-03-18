@@ -1,8 +1,8 @@
 #pragma once
-#include <iscore/model/IdentifiedObject.hpp>
+#include <score/model/IdentifiedObject.hpp>
 
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/serialization/JSONVisitor.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/JSONVisitor.hpp>
 
 namespace Network
 {
@@ -32,17 +32,17 @@ class Client : public IdentifiedObject<Client>
             return m_name;
         }
 
-    public slots:
+    public Q_SLOTS:
         void setName(QString arg)
         {
             if (m_name == arg)
                 return;
 
             m_name = arg;
-            emit nameChanged(arg);
+            nameChanged(arg);
         }
 
-    signals:
+    Q_SIGNALS:
         void nameChanged(QString arg);
 
     private:

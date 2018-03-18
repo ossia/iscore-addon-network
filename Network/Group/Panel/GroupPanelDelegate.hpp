@@ -1,37 +1,37 @@
 #pragma once
-#include <iscore/plugins/panel/PanelDelegate.hpp>
+#include <score/plugins/panel/PanelDelegate.hpp>
 namespace Network
 {
 class GroupManager;
 class Session;
 class PanelDelegate final :
         public QObject,
-        public iscore::PanelDelegate
+        public score::PanelDelegate
 {
     public:
         PanelDelegate(
-                const iscore::GUIApplicationContext& ctx);
+                const score::GUIApplicationContext& ctx);
 
         void networkPluginReady();
     private:
         QWidget *widget() override;
 
-        const iscore::PanelStatus& defaultPanelStatus() const override;
+        const score::PanelStatus& defaultPanelStatus() const override;
 
         void on_modelChanged(
-                iscore::MaybeDocument oldm,
-                iscore::MaybeDocument newm) override;
+                score::MaybeDocument oldm,
+                score::MaybeDocument newm) override;
 
 
         void setView(
-            const iscore::DocumentContext& ctx,
+            const score::DocumentContext& ctx,
             const GroupManager& mgr,
             const Session* session);
 
         void setEmptyView();
 
         void on_update();
-        void scanPlugins(const iscore::DocumentContext& ctx);
+        void scanPlugins(const score::DocumentContext& ctx);
 
         QWidget* m_widget{};
         QWidget* m_subWidget{};

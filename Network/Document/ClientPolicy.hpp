@@ -12,7 +12,7 @@ class ClientEditionPolicy : public EditionPolicy
     public:
         ClientEditionPolicy(
             ClientSession* s,
-            const iscore::DocumentContext& c);
+            const score::DocumentContext& c);
 
         ClientSession* session() const override
         { return m_session; }
@@ -20,7 +20,7 @@ class ClientEditionPolicy : public EditionPolicy
     protected:
         void connectToOtherClient(QString ip, int port);
         ClientSession* m_session{};
-        const iscore::DocumentContext& m_ctx;
+        const score::DocumentContext& m_ctx;
         Timekeeper m_keep{*m_session};
 
         std::vector<std::unique_ptr<ClientSessionBuilder>> m_connections;
@@ -31,18 +31,18 @@ class GUIClientEditionPolicy : public ClientEditionPolicy
 public:
   GUIClientEditionPolicy(
       ClientSession* s,
-      const iscore::DocumentContext& c);
+      const score::DocumentContext& c);
 
   void play() override;
   void stop() override;
 };
 
-class ISCORE_ADDON_NETWORK_EXPORT PlayerClientEditionPolicy : public ClientEditionPolicy
+class SCORE_ADDON_NETWORK_EXPORT PlayerClientEditionPolicy : public ClientEditionPolicy
 {
 public:
   PlayerClientEditionPolicy(
       ClientSession* s,
-      const iscore::DocumentContext& c);
+      const score::DocumentContext& c);
 
   void play() override;
   void stop() override;

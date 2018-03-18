@@ -44,7 +44,7 @@ NetworkServer::NetworkServer(int port, QObject* parent):
     connect(m_server, &QWebSocketServer::newConnection,
             this, [=] ()
     {
-        emit newSocket(m_server->nextPendingConnection());
+        newSocket(m_server->nextPendingConnection());
     });
 }
 

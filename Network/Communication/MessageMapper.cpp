@@ -1,5 +1,5 @@
 #include <QDebug>
-#include <iscore/tools/Todo.hpp>
+#include <score/tools/Todo.hpp>
 #include "MessageMapper.hpp"
 #include <QDataStream>
 
@@ -7,7 +7,7 @@ namespace Network
 {
 void MessageMapper::addHandler(QByteArray addr, std::function<void(const NetworkMessage&)> fun)
 {
-    ISCORE_ASSERT(!contains(addr));
+    SCORE_ASSERT(!contains(addr));
     m_handlers[std::move(addr)] = std::move(fun);
 }
 

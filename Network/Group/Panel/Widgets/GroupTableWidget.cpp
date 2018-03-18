@@ -1,5 +1,5 @@
-#include <iscore/tools/std/Optional.hpp>
-#include <iscore/document/DocumentInterface.hpp>
+#include <score/tools/std/Optional.hpp>
+#include <score/document/DocumentInterface.hpp>
 #include <QGridLayout>
 #include <QLabel>
 #include <QLayout>
@@ -17,10 +17,10 @@
 #include "GroupTableCheckbox.hpp"
 #include "GroupTableWidget.hpp"
 #include "SessionHeaderItem.hpp"
-#include <iscore/command/Dispatchers/CommandDispatcher.hpp>
-#include <iscore/model/path/ObjectPath.hpp>
-#include <iscore/model/Identifier.hpp>
-#include <iscore/document/DocumentContext.hpp>
+#include <score/command/Dispatchers/CommandDispatcher.hpp>
+#include <score/model/path/ObjectPath.hpp>
+#include <score/model/Identifier.hpp>
+#include <score/document/DocumentContext.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/Session.hpp>
@@ -34,8 +34,8 @@ GroupTableWidget::GroupTableWidget(
   QWidget{parent},
   m_mgr{mgr},
   m_session{session},
-  m_managerPath{iscore::IDocument::unsafe_path(m_mgr)},
-  m_dispatcher{iscore::IDocument::documentContext(m_mgr).commandStack}
+  m_managerPath{score::IDocument::unsafe_path(m_mgr)},
+  m_dispatcher{score::IDocument::documentContext(m_mgr).commandStack}
 {
   con(m_mgr, &GroupManager::groupAdded, this, &GroupTableWidget::setup);
   con(m_mgr, &GroupManager::groupRemoved, this, &GroupTableWidget::setup);

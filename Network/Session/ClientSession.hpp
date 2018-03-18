@@ -1,6 +1,6 @@
 #pragma once
 #include <Network/Session/Session.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 namespace Network
 {

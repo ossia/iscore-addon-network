@@ -1,7 +1,7 @@
 /*
-#include <iscore/tools/std/Optional.hpp>
-#include <iscore/command/Dispatchers/CommandDispatcher.hpp>
-#include <iscore/document/DocumentInterface.hpp>
+#include <score/tools/std/Optional.hpp>
+#include <score/command/Dispatchers/CommandDispatcher.hpp>
+#include <score/document/DocumentInterface.hpp>
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QLabel>
@@ -16,10 +16,10 @@
 #include "GroupManager.hpp"
 #include "GroupMetadata.hpp"
 #include "GroupMetadataWidget.hpp"
-#include <iscore/model/Identifier.hpp>
-#include <iscore/tools/Todo.hpp>
-#include <iscore/document/DocumentContext.hpp>
-#include <iscore/widgets/SignalUtils.hpp>
+#include <score/model/Identifier.hpp>
+#include <score/tools/Todo.hpp>
+#include <score/document/DocumentContext.hpp>
+#include <score/widgets/SignalUtils.hpp>
 
 Q_DECLARE_METATYPE(Id<Network::Group>)
 
@@ -66,10 +66,10 @@ void GroupMetadataWidget::on_indexChanged(int)
     auto data = m_combo->currentData().value<Id<Group>>();
     if(m_object.group() != data)
     {
-        CommandDispatcher<> dispatcher{iscore::IDocument::documentContext(*m_groups).commandStack};
+        CommandDispatcher<> dispatcher{score::IDocument::documentContext(*m_groups).commandStack};
         dispatcher.submitCommand(
                     new Command::ChangeGroup{
-                        iscore::IDocument::unsafe_path(m_object.element()),
+                        score::IDocument::unsafe_path(m_object.element()),
                                                 data});
     }
 }

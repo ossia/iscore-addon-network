@@ -1,23 +1,25 @@
 #pragma once
-#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
+#include <score/plugins/application/GUIApplicationPlugin.hpp>
 #include <QTcpServer>
 #include <functional>
-#include <iscore_addon_network_export.h>
+#include <score_addon_network_export.h>
+
+#undef OSSIA_DNSSD
 namespace servus { class Servus; }
 namespace Network
 {
 class PlayerSessionBuilder;
-class ISCORE_ADDON_NETWORK_EXPORT PlayerPlugin
+class SCORE_ADDON_NETWORK_EXPORT PlayerPlugin
     : public QObject
-    , public iscore::ApplicationPlugin
+    , public score::ApplicationPlugin
 {
 public:
-  PlayerPlugin(const iscore::ApplicationContext& ctx);
+  PlayerPlugin(const score::ApplicationContext& ctx);
   ~PlayerPlugin();
 
   void initialize() override;
 
-  std::function<iscore::Document*(const QByteArray&)> documentLoader;
+  std::function<score::Document*(const QByteArray&)> documentLoader;
   std::function<void()> onDocumentLoaded;
 private:
   void setupServer();

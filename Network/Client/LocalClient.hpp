@@ -31,7 +31,7 @@ class LocalClient : public Client
 
         NetworkServer& server() const { return *m_server; }
 
-    signals:
+    Q_SIGNALS:
         void createNewClient(QWebSocket*);
 
     private:

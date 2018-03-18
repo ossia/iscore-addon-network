@@ -3,15 +3,15 @@
 #include <Network/Session/Session.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Document/Execution/Context.hpp>
-#include <iscore/model/Identifier.hpp>
-#include <iscore/tools/std/HashMap.hpp>
+#include <score/model/Identifier.hpp>
+#include <score/tools/std/HashMap.hpp>
 namespace Scenario
 {
 class ScenarioInterface;
 }
 namespace Network
 {
-struct ISCORE_ADDON_NETWORK_EXPORT BasicPruner
+struct SCORE_ADDON_NETWORK_EXPORT BasicPruner
 {
   BasicPruner(NetworkDocumentPlugin& d);
 

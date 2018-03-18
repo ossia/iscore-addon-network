@@ -4,7 +4,7 @@
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Scenario/Application/ScenarioActions.hpp>
 #include <Engine/ApplicationPlugin.hpp>
-#include <iscore/actions/ActionManager.hpp>
+#include <score/actions/ActionManager.hpp>
 
 namespace Network
 {
@@ -13,7 +13,7 @@ class Client;
 
 MasterEditionPolicy::MasterEditionPolicy(
     MasterSession* s,
-    const iscore::DocumentContext& c):
+    const score::DocumentContext& c):
   m_session{s},
   m_ctx{c},
   m_keep{*s}
@@ -24,31 +24,31 @@ MasterEditionPolicy::MasterEditionPolicy(
   /////////////////////////////////////////////////////////////////////////////
   /// From the master to the clients
   /////////////////////////////////////////////////////////////////////////////
-  con(stack, &iscore::CommandStack::localCommand,
-      this, [&] (iscore::Command* cmd)
+  con(stack, &score::CommandStack::localCommand,
+      this, [&] (score::Command* cmd)
   {
     m_session->broadcastToAllClients(
-          m_session->makeMessage(mapi.command_new,iscore::CommandData{*cmd}));
+          m_session->makeMessage(mapi.command_new,score::CommandData{*cmd}));
   });
 
   // Undo-redo
-  con(stack, &iscore::CommandStack::localUndo,
+  con(stack, &score::CommandStack::localUndo,
       this, [&] ()
   { m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_undo)); });
-  con(stack, &iscore::CommandStack::localRedo,
+  con(stack, &score::CommandStack::localRedo,
       this, [&] ()
   { m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_redo)); });
-  con(stack, &iscore::CommandStack::localIndexChanged,
+  con(stack, &score::CommandStack::localIndexChanged,
       this, [&] (int32_t idx)
   {
     m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_index, idx));
   });
 
   // Lock - unlock
-  con(c.objectLocker, &iscore::ObjectLocker::lock,
+  con(c.objectLocker, &score::ObjectLocker::lock,
       this, [&] (QByteArray arr)
   { m_session->broadcastToAllClients(m_session->makeMessage(mapi.lock, arr)); });
-  con(c.objectLocker, &iscore::ObjectLocker::unlock,
+  con(c.objectLocker, &score::ObjectLocker::unlock,
       this, [&] (QByteArray arr)
   { m_session->broadcastToAllClients(m_session->makeMessage(mapi.unlock, arr)); });
 
@@ -72,7 +72,7 @@ MasterEditionPolicy::MasterEditionPolicy(
   /////////////////////////////////////////////////////////////////////////////
   s->mapper().addHandler(mapi.command_new, [&] (const NetworkMessage& m)
   {
-    iscore::CommandData cmd;
+    score::CommandData cmd;
     DataStreamWriter writer{m.data};
     writer.writeTo(cmd);
 
@@ -167,7 +167,7 @@ MasterEditionPolicy::MasterEditionPolicy(
 
 void MasterEditionPolicy::play()
 {
-  auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
     auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
@@ -181,7 +181,7 @@ void MasterEditionPolicy::play()
 
 void MasterEditionPolicy::stop()
 {
-  auto sm = iscore::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
     auto stop_action = m_ctx.app.actions.action<Actions::Stop>().action();

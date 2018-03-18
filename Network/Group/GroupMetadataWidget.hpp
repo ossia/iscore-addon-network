@@ -3,7 +3,7 @@
 #include <QWidget>
 
 class QComboBox;
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 
 namespace Network
@@ -22,7 +22,7 @@ class GroupMetadataWidget : public QWidget
         void on_groupAdded(const Id<Group>&);
         void on_groupRemoved(const Id<Group>&);
 
-    private slots:
+    private Q_SLOTS:
         void on_indexChanged(int);
 
     private:

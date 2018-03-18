@@ -5,9 +5,9 @@
 #include "NetworkSettingsModel.hpp"
 #include "NetworkSettingsPresenter.hpp"
 #include "NetworkSettingsView.hpp"
-#include <iscore/command/Command.hpp>
-#include <iscore/plugins/settingsdelegate/SettingsDelegatePresenter.hpp>
-#include <iscore/tools/Todo.hpp>
+#include <score/command/Command.hpp>
+#include <score/plugins/settingsdelegate/SettingsDelegatePresenter.hpp>
+#include <score/tools/Todo.hpp>
 
 
 namespace Network
@@ -18,7 +18,7 @@ Presenter::Presenter(
     Model& m,
     View& v,
     QObject* parent) :
-  SettingsDelegatePresenter {m, v, parent}
+  score::GlobalSettingsPresenter {m, v, parent}
 {
   auto& net_model = static_cast<Model&>(m_model);
   con(net_model, &Model::MasterPortChanged,

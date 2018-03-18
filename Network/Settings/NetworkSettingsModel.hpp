@@ -1,16 +1,12 @@
 #pragma once
-#include <iscore/plugins/settingsdelegate/SettingsDelegateModel.hpp>
+#include <score/plugins/settingsdelegate/SettingsDelegateModel.hpp>
 #include <QString>
-#include <iscore_addon_network_export.h>
-namespace iscore
-{
-    class SettingsDelegatePresenter;
-}
+#include <score_addon_network_export.h>
 namespace Network
 {
 namespace Settings
 {
-class ISCORE_ADDON_NETWORK_EXPORT Model : public iscore::SettingsDelegateModel
+class SCORE_ADDON_NETWORK_EXPORT Model : public score::SettingsDelegateModel
 {
         Q_OBJECT
         Q_PROPERTY(QString ClientName READ getClientName WRITE setClientName NOTIFY ClientNameChanged FINAL)
@@ -18,12 +14,12 @@ class ISCORE_ADDON_NETWORK_EXPORT Model : public iscore::SettingsDelegateModel
         Q_PROPERTY(int MasterPort READ getMasterPort WRITE setMasterPort NOTIFY MasterPortChanged FINAL)
         Q_PROPERTY(int PlayerPort READ getMasterPort WRITE setMasterPort NOTIFY MasterPortChanged FINAL)
     public:
-        Model(QSettings& set, const iscore::ApplicationContext& ctx);
+        Model(QSettings& set, const score::ApplicationContext& ctx);
 
-        ISCORE_SETTINGS_PARAMETER_HPP(QString, ClientName)
-        ISCORE_SETTINGS_PARAMETER_HPP(int, ClientPort)
-        ISCORE_SETTINGS_PARAMETER_HPP(int, MasterPort)
-        ISCORE_SETTINGS_PARAMETER_HPP(int, PlayerPort)
+        SCORE_SETTINGS_PARAMETER_HPP(QString, ClientName)
+        SCORE_SETTINGS_PARAMETER_HPP(int, ClientPort)
+        SCORE_SETTINGS_PARAMETER_HPP(int, MasterPort)
+        SCORE_SETTINGS_PARAMETER_HPP(int, PlayerPort)
 
     private:
         QString m_ClientName;
@@ -33,10 +29,10 @@ class ISCORE_ADDON_NETWORK_EXPORT Model : public iscore::SettingsDelegateModel
 
 };
 
-ISCORE_SETTINGS_PARAMETER(Model, ClientName)
-ISCORE_SETTINGS_PARAMETER(Model, ClientPort)
-ISCORE_SETTINGS_PARAMETER(Model, MasterPort)
-ISCORE_SETTINGS_PARAMETER(Model, PlayerPort)
+SCORE_SETTINGS_PARAMETER(Model, ClientName)
+SCORE_SETTINGS_PARAMETER(Model, ClientPort)
+SCORE_SETTINGS_PARAMETER(Model, MasterPort)
+SCORE_SETTINGS_PARAMETER(Model, PlayerPort)
 
 }
 }

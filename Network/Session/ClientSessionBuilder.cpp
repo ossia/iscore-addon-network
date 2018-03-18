@@ -1,4 +1,4 @@
-#include <iscore/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
 #include <QDataStream>
 #include <QIODevice>
 #include <sys/types.h>
@@ -9,9 +9,9 @@
 #include "ClientSessionBuilder.hpp"
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Communication/NetworkSocket.hpp>
-#include <iscore/command/Command.hpp>
-#include <iscore/plugins/customfactory/StringFactoryKey.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/command/Command.hpp>
+#include <score/plugins/customfactory/StringFactoryKey.hpp>
+#include <score/model/Identifier.hpp>
 #include <core/presenter/Presenter.hpp>
 #include <core/presenter/DocumentManager.hpp>
 #include <core/document/Document.hpp>
@@ -22,12 +22,12 @@
 #include <Network/Document/ClientPolicy.hpp>
 #include <QJsonDocument>
 #include <QTcpServer>
-#include <iscore/plugins/documentdelegate/DocumentDelegateFactory.hpp>
-#include <iscore/application/ApplicationContext.hpp>
+#include <score/plugins/documentdelegate/DocumentDelegateFactory.hpp>
+#include <score/application/ApplicationContext.hpp>
 namespace Network
 {
 ClientSessionBuilder::ClientSessionBuilder(
-    const iscore::GUIApplicationContext& ctx,
+    const score::GUIApplicationContext& ctx,
     QString ip,
     int port):
   m_context{ctx}
@@ -62,7 +62,7 @@ QByteArray ClientSessionBuilder::documentData() const
   return m_documentData;
 }
 
-const std::vector<iscore::CommandData>& ClientSessionBuilder::commandStackData() const
+const std::vector<score::CommandData>& ClientSessionBuilder::commandStackData() const
 {
   return m_commandStack;
 }
@@ -106,10 +106,10 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     // in case somebody does undo, so that the computer who joined later can still
     // undo, too.
 
-    iscore::Document* doc = m_context.docManager.loadDocument(
+    score::Document* doc = m_context.docManager.loadDocument(
           m_context, "Untitled",
           QJsonDocument::fromBinaryData(m_documentData).object(),
-          *m_context.interfaces<iscore::DocumentDelegateList>().begin()); // TODO id instead
+          *m_context.interfaces<score::DocumentDelegateList>().begin()); // TODO id instead
 
     if(!doc)
     {
@@ -117,11 +117,11 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
       delete m_session;
       m_session = nullptr;
 
-      emit sessionFailed();
+      sessionFailed();
       return;
     }
 
-    iscore::loadCommandStack(
+    score::loadCommandStack(
           m_context.components,
           writer,
           doc->commandStack(),
@@ -139,7 +139,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     m_session->master().sendMessage(
           m_session->makeMessage(mapi.session_portinfo, local_server.m_localAddress, local_server.m_localPort));
 
-    emit sessionReady();
+    sessionReady();
   }
 }
 }

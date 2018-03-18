@@ -7,7 +7,7 @@
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Engine/Executor/TimeSyncComponent.hpp>
 #include <Engine/Executor/IntervalComponent.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
+#include <score/model/path/PathSerialization.hpp>
 #include <ossia/editor/scenario/time_sync.hpp>
 
 namespace Network
@@ -25,7 +25,7 @@ struct NonCompensatedExpressionInGroup
         optional<ossia::callback_container<std::function<void()>>::iterator> it_triggered;
     };
 
-    auto setupExpr(
+    std::shared_ptr<ExprData> setupExpr(
             Engine::Execution::TimeSyncComponent& comp)
     {
         // Wrap the expresion
@@ -33,10 +33,12 @@ struct NonCompensatedExpressionInGroup
         e->shared_expr = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
         e->async_expr = new AsyncExpression;
 
+        //ossia::expressions::expression_generic{
+        //    std::unique_ptr<ossia::expressions::expression_generic_base>(e->async_expr)};
         comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
-                        ossia::expressions::expression_generic{
-                            std::unique_ptr<ossia::expressions::expression_generic_base>(e->async_expr)})
+                        eggs::variants::in_place<ossia::expressions::expression_generic>,
+                        std::unique_ptr<ossia::expressions::expression_generic_base>(e->async_expr))
                     );
 
         return e;
@@ -62,15 +64,17 @@ struct SharedNonCompensatedAsyncInGroup : public NonCompensatedExpressionInGroup
         ctx.doc.noncompensated.trigger_evaluation_entered.emplace(
                     path,
                     [=,&session,&mapi] (const Id<Client>& orig) {
-            if(!e->it_triggered)
+            qDebug() << "Trigger entered evaluation";
+            if(!e->it_triggered.has_value())
             {
+                qDebug() << "Adding a 'triggered' callback";
                 e->it_triggered = e->node.triggered.add_callback([=,&mapi,&session] {
                     qDebug("SharedScenarioPolicy: trigger triggered");
                     session.emitMessage(master, session.makeMessage(mapi.trigger_triggered, path));
                 });
             }
 
-            if(!e->shared_expr->it_finished)
+            if(!e->shared_expr->it_finished.has_value())
             {
                 qDebug() << "Registering callback";
                 // TODO what if this trigger's condition already had become true ?
@@ -262,8 +266,8 @@ struct SharedNonCompensatedAsyncOutOfGroup
 
         comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
-                        ossia::expressions::expression_generic{
-                            std::move(expr)}));
+                        eggs::variants::in_place<ossia::expressions::expression_generic>,
+                        std::move(expr)));
     }
 };
 
@@ -310,8 +314,8 @@ struct SharedNonCompensatedSyncOutOfGroup
 
         comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
-                        ossia::expressions::expression_generic{
-                            std::move(expr)}));
+                            eggs::variants::in_place<ossia::expressions::expression_generic>,
+                            std::move(expr)));
     }
 };
 

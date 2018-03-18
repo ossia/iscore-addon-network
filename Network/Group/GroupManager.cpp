@@ -1,11 +1,11 @@
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <algorithm>
 #include <iterator>
 #include <Network/Client/RemoteClient.hpp>
 #include <QSignalBlocker>
 #include "Group.hpp"
 #include "GroupManager.hpp"
-#include <iscore/model/IdentifiedObject.hpp>
+#include <score/model/IdentifiedObject.hpp>
 
 class QObject;
 
@@ -20,7 +20,7 @@ GroupManager::GroupManager(QObject* parent):
 void GroupManager::addGroup(Group* group)
 {
     m_groups.push_back(group);
-    emit groupAdded(group->id());
+    groupAdded(group->id());
 }
 
 Group*GroupManager::findGroup(const QString& str) const
@@ -39,7 +39,7 @@ void GroupManager::removeGroup(Id<Group> group)
     auto it = find(begin(m_groups), end(m_groups), group);
     m_groups.erase(it);
 
-    emit groupRemoved(group);
+    groupRemoved(group);
 
     (*it)->deleteLater();
 }

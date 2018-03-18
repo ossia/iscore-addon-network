@@ -1,8 +1,8 @@
 #pragma once
-#include <iscore/model/IdentifiedObject.hpp>
+#include <score/model/IdentifiedObject.hpp>
 #include <vector>
 
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 class QObject;
 
 namespace Network
@@ -37,7 +37,7 @@ class GroupManager : public IdentifiedObject<GroupManager>
         std::size_t clientsCount(const std::vector<Id<Group>>& grps);
         std::vector<Id<Client>> clients(const std::vector<Id<Group>>& grps);
 
-    signals:
+    Q_SIGNALS:
         void groupAdded(Id<Group>);
         void groupRemoved(Id<Group>);
 

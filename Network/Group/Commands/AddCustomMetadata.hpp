@@ -1,6 +1,6 @@
 #pragma once
-#include <iscore/command/Command.hpp>
-#include <iscore/selection/Selection.hpp>
+#include <score/command/Command.hpp>
+#include <score/selection/Selection.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
 
 namespace Scenario { class IntervalModel; }
@@ -19,9 +19,9 @@ struct MetadataUndoRedo
     QVariantMap after;
 };
 
-class AddCustomMetadata : public iscore::Command
+class AddCustomMetadata : public score::Command
 {
-    ISCORE_COMMAND_DECL(
+    SCORE_COMMAND_DECL(
         DistributedScenarioCommandFactoryName(), AddCustomMetadata,
         "Change metadata")
   public:
@@ -32,9 +32,9 @@ class AddCustomMetadata : public iscore::Command
         const std::vector<std::pair<QString, QString>>& meta
         );
 
-    void undo(const iscore::DocumentContext& ctx) const override;
+    void undo(const score::DocumentContext& ctx) const override;
 
-    void redo(const iscore::DocumentContext& ctx) const override;
+    void redo(const score::DocumentContext& ctx) const override;
 
   protected:
     void serializeImpl(DataStreamInput& s) const override;
@@ -49,6 +49,6 @@ class AddCustomMetadata : public iscore::Command
 }
 
 void SetCustomMetadata(
-    const iscore::DocumentContext& ctx,
+    const score::DocumentContext& ctx,
     std::vector<std::pair<QString, QString>> md);
 }

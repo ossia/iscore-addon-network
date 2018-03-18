@@ -1,10 +1,10 @@
 #pragma once
 
-#include <iscore/command/Command.hpp>
+#include <score/command/Command.hpp>
 #include <QApplication>
 namespace Network
 {
-class ClientPortChangedCommand : public iscore::Command
+class ClientPortChangedCommand : public score::Command
 {
         // QUndoCommand interface
     public:
@@ -30,13 +30,13 @@ class ClientPortChangedCommand : public iscore::Command
         }
         */
 
-        void undo(const iscore::DocumentContext& ctx) const override
+        void undo(const score::DocumentContext& ctx) const override
         {
             auto target = qApp->findChild<NetworkSettingsModel*> ("NetworkSettingsModel");
             target->setClientPort(m_oldval);
         }
 
-        void redo(const iscore::DocumentContext& ctx) const override
+        void redo(const score::DocumentContext& ctx) const override
         {
             auto target = qApp->findChild<NetworkSettingsModel*> ("NetworkSettingsModel");
             target->setClientPort(m_newval);

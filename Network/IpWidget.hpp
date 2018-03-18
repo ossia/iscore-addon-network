@@ -28,10 +28,10 @@ class IpWidget : public QFrame
         bool eventFilter( QObject *obj, QEvent *event ) override;
 
         std::array<QLineEdit*, QTUTL_IP_SIZE> lineEdits;
-    public slots:
+    public Q_SLOTS:
         void slotTextChanged( QLineEdit* pEdit );
 
-    signals:
+    Q_SIGNALS:
         void signalTextChanged( QLineEdit* pEdit );
 
     private:

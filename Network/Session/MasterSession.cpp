@@ -1,26 +1,26 @@
-#include <iscore/tools/std/Optional.hpp>
-
-#if defined(USE_ZEROCONF)
-#include <KF5/KDNSSD/DNSSD/PublicService>
-#endif
+#include <score/tools/std/Optional.hpp>
 
 #include <qnamespace.h>
 
 #include "MasterSession.hpp"
 #include <Network/Communication/NetworkMessage.hpp>
-#include <iscore/model/Identifier.hpp>
-#include <iscore/tools/Todo.hpp>
+#include <score/model/Identifier.hpp>
+#include <score/tools/Todo.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Session/RemoteClientBuilder.hpp>
 #include <Network/Session/Session.hpp>
 #include <QHostAddress>
+#undef OSSIA_DNSSD
+#if defined(OSSIA_DNSSD)
 #include <servus/servus.h>
+#endif
+
 namespace Network
 {
 class Client;
 MasterSession::MasterSession(
-    const iscore::DocumentContext& doc,
+    const score::DocumentContext& doc,
     LocalClient* theclient,
     Id<Session> id, QObject* parent):
   Session{theclient, id, parent},
@@ -30,7 +30,7 @@ MasterSession::MasterSession(
       this, &MasterSession::on_createNewClient);
 
 #if defined(OSSIA_DNSSD)
-    m_dnssd = std::make_unique<servus::Servus>("_iscore._tcp");
+    m_dnssd = std::make_unique<servus::Servus>("_score._tcp");
     m_dnssd->announce(localClient().localPort(), "i-score master");
 #endif
 }

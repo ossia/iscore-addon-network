@@ -1,6 +1,6 @@
 #include <Network/Communication/NetworkSocket.hpp>
 #include <core/document/Document.hpp>
-#include <iscore/tools/IdentifierGeneration.hpp>
+#include <score/tools/IdentifierGeneration.hpp>
 #include <QByteArray>
 #include <QDataStream>
 #include <QIODevice>
@@ -13,10 +13,10 @@
 #include "RemoteClientBuilder.hpp"
 #include <Network/Communication/NetworkMessage.hpp>
 #include <core/command/CommandStack.hpp>
-#include <iscore/command/Command.hpp>
-#include <iscore/command/CommandData.hpp>
-#include <iscore/plugins/customfactory/StringFactoryKey.hpp>
-#include <iscore/serialization/DataStreamVisitor.hpp>
+#include <score/command/Command.hpp>
+#include <score/command/CommandData.hpp>
+#include <score/plugins/customfactory/StringFactoryKey.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
@@ -51,7 +51,7 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
       QDataStream stream(&idOffer.data, QIODevice::WriteOnly);
 
       // TODO make a strong id with the client array!!!!!!
-      int32_t id = iscore::random_id_generator::getRandomId();
+      int32_t id = score::random_id_generator::getRandomId();
       m_clientId = Id<Client>(id);
       stream << id;
     }
@@ -76,7 +76,7 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
 
     m_remoteClient = new RemoteClient(m_socket, m_clientId);
     m_remoteClient->setName(m_clientName);
-    emit clientReady(this, m_remoteClient);
+    clientReady(this, m_remoteClient);
   }
 }
 }

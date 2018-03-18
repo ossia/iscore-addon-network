@@ -1,7 +1,7 @@
 #pragma once
 #include <QObject>
 #include <ossia/editor/expression/expression.hpp>
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <chrono>
 namespace ossia { class time_sync; }
 namespace Network

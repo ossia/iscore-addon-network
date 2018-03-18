@@ -17,7 +17,7 @@ class NetworkServer : public QObject
 
         QString m_localAddress;
         int m_localPort;
-    signals:
+    Q_SIGNALS:
         void newSocket(QWebSocket* sock);
 
     private:

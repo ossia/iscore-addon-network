@@ -1,5 +1,5 @@
 
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 
 #include <Network/Communication/NetworkMessage.hpp>
 #include "Session.hpp"
@@ -60,8 +60,8 @@ void Session::addClient(RemoteClient* clt)
 {
   clt->setParent(this);
   m_remoteClients.append(clt);
-  emit clientAdded(clt);
-  emit clientsChanged();
+  clientAdded(clt);
+  clientsChanged();
 }
 
 void Session::removeClient(RemoteClient* clt)
@@ -69,7 +69,7 @@ void Session::removeClient(RemoteClient* clt)
   this->clientRemoving(clt);
   m_remoteClients.removeAll(clt);
   this->clientRemoved(clt);
-  emit clientsChanged();
+  clientsChanged();
   clt->deleteLater();
 }
 

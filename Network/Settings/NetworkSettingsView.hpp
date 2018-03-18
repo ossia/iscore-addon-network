@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/plugins/settingsdelegate/SettingsDelegateView.hpp>
+#include <score/plugins/settingsdelegate/SettingsDelegateView.hpp>
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QString>
@@ -11,7 +11,7 @@ namespace Network
 namespace Settings
 {
 class Presenter;
-class View : public iscore::SettingsDelegateView
+class View : public score::GlobalSettingsView
 {
         Q_OBJECT
     public:
@@ -23,7 +23,7 @@ class View : public iscore::SettingsDelegateView
 
         QWidget* getWidget() override;
 
-    signals:
+    Q_SIGNALS:
         void clientNameChanged(const QString&);
         void masterPortChanged(int);
         void clientPortChanged(int);

@@ -2,15 +2,15 @@
 #include <Network/Client/Client.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 
-#include <iscore/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/serialization/JSONVisitor.hpp>
-#include <iscore/actions/Action.hpp>
+#include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/JSONVisitor.hpp>
+#include <score/actions/Action.hpp>
 #include <core/document/Document.hpp>
 #include <ossia/editor/expression/expression.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
-#include <iscore_addon_network_export.h>
+#include <score_addon_network_export.h>
 #include <hopscotch_set.h>
 #include <QObject>
 #include <vector>
@@ -38,7 +38,7 @@ class NetworkDocumentPlugin;
 }
 UUID_METADATA(
     ,
-    iscore::DocumentPluginFactory,
+    score::DocumentPluginFactory,
     Network::NetworkDocumentPlugin,
     "58c9e19a-fde3-47d0-a121-35853fec667d")
 
@@ -51,7 +51,7 @@ struct NetworkExpressionData
   Engine::Execution::TimeSyncComponent& component;
 
   //! Will fill itself with received messages
-  iscore::hash_map<Id<Client>, optional<bool>> values;
+  score::hash_map<Id<Client>, optional<bool>> values;
   tsl::hopscotch_set<Id<Client>> previousCompleted;
 
   Id<Group> thisGroup;
@@ -83,7 +83,7 @@ struct NetworkExpressionData
 class Session;
 class GroupManager;
 class GroupMetadata;
-class ISCORE_ADDON_NETWORK_EXPORT EditionPolicy : public QObject
+class SCORE_ADDON_NETWORK_EXPORT EditionPolicy : public QObject
 {
 public:
   using QObject::QObject;
@@ -93,25 +93,25 @@ public:
   virtual void stop() = 0;
 };
 
-class ISCORE_ADDON_NETWORK_EXPORT ExecutionPolicy : public QObject
+class SCORE_ADDON_NETWORK_EXPORT ExecutionPolicy : public QObject
 {
 public:
   using QObject::QObject;
   virtual ~ExecutionPolicy();
 };
 
-class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
-    public iscore::SerializableDocumentPlugin
+class SCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
+    public score::SerializableDocumentPlugin
 {
   Q_OBJECT
 
-  ISCORE_SERIALIZE_FRIENDS
-  SERIALIZABLE_MODEL_METADATA_IMPL(NetworkDocumentPlugin)
+  SCORE_SERIALIZE_FRIENDS
+  MODEL_METADATA_IMPL(NetworkDocumentPlugin)
   public:
     NetworkDocumentPlugin(
-      const iscore::DocumentContext& ctx,
+      const score::DocumentContext& ctx,
       EditionPolicy* policy,
-      Id<iscore::DocumentPlugin> id,
+      Id<score::DocumentPlugin> id,
       QObject* parent);
 
   virtual ~NetworkDocumentPlugin();
@@ -120,10 +120,10 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   // and server.
   template<typename Impl>
   NetworkDocumentPlugin(
-      const iscore::DocumentContext& ctx,
+      const score::DocumentContext& ctx,
       Impl& vis,
       QObject* parent):
-    iscore::SerializableDocumentPlugin{ctx, vis, parent}
+    score::SerializableDocumentPlugin{ctx, vis, parent}
   {
     vis.writeTo(*this);
   }
@@ -138,19 +138,19 @@ class ISCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   { return *m_policy; }
 
   struct NonCompensated {
-  iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
-  iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
-  iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>)>> trigger_triggered;
-  iscore::hash_map<Path<Scenario::IntervalModel>, std::function<void(const Id<Client>&, double)>> interval_speed_changed;
-  iscore::hash_map<Path<Scenario::TimeSyncModel>, NetworkExpressionData> network_expressions;
+  score::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>)>> trigger_evaluation_entered;
+  score::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>, bool)>> trigger_evaluation_finished;
+  score::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>)>> trigger_triggered;
+  score::hash_map<Path<Scenario::IntervalModel>, std::function<void(const Id<Client>&, double)>> interval_speed_changed;
+  score::hash_map<Path<Scenario::TimeSyncModel>, NetworkExpressionData> network_expressions;
   } noncompensated;
 
   struct Compensated {
-      iscore::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>, qint64)>> trigger_triggered;
+      score::hash_map<Path<Scenario::TimeSyncModel>, std::function<void(Id<Client>, qint64)>> trigger_triggered;
   } compensated;
 
   void on_stop();
-signals:
+Q_SIGNALS:
   void sessionChanged();
 
 private:
@@ -161,14 +161,14 @@ private:
 };
 
 class DocumentPluginFactory :
-    public iscore::DocumentPluginFactory
+    public score::DocumentPluginFactory
 {
-  ISCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
+  SCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
 
   public:
-    iscore::DocumentPlugin* load(
+    score::DocumentPlugin* load(
       const VisitorVariant& var,
-      iscore::DocumentContext& doc,
+      score::DocumentContext& doc,
       QObject* parent) override;
 };
 }

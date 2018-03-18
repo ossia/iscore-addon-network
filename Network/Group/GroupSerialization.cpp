@@ -1,6 +1,6 @@
 
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/serialization/JSONVisitor.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/JSONVisitor.hpp>
 #include <QDataStream>
 #include <QtGlobal>
 #include <QJsonArray>
@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "Group.hpp"
-#include <iscore/serialization/JSONValueVisitor.hpp>
+#include <score/serialization/JSONValueVisitor.hpp>
 
 template <>
 void DataStreamReader::read(

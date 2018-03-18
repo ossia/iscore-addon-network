@@ -1,12 +1,12 @@
 #pragma once
-#include <iscore/tools/std/Optional.hpp>
-#include <iscore/model/IdentifiedObject.hpp>
+#include <score/tools/std/Optional.hpp>
+#include <score/model/IdentifiedObject.hpp>
 #include <QString>
 #include <QVector>
 
-#include <iscore/model/Identifier.hpp>
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/serialization/JSONVisitor.hpp>
+#include <score/model/Identifier.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/JSONVisitor.hpp>
 
 class DataStream;
 class JSONObject;
@@ -29,7 +29,7 @@ class Group : public IdentifiedObject<Group>
         Q_OBJECT
         Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
-        ISCORE_SERIALIZE_FRIENDS
+        SCORE_SERIALIZE_FRIENDS
     public:
         Group(QString name, Id<Group> id, QObject* parent);
 
@@ -51,7 +51,7 @@ class Group : public IdentifiedObject<Group>
         const QVector<Id<Client>>& clients() const
         { return m_executingClients; }
 
-    signals:
+    Q_SIGNALS:
         void nameChanged(QString arg);
 
         void clientAdded(Id<Client>);

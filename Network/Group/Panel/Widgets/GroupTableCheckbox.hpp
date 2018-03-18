@@ -13,10 +13,10 @@ class GroupTableCheckbox : public QWidget
 
         int state();
 
-    signals:
+    Q_SIGNALS:
         void stateChanged(int);
 
-    public slots:
+    public Q_SLOTS:
         void setState(int state);
 
     private:

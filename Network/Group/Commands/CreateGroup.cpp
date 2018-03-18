@@ -1,13 +1,13 @@
 
-#include <iscore/tools/IdentifierGeneration.hpp>
+#include <score/tools/IdentifierGeneration.hpp>
 #include <vector>
 
 #include "CreateGroup.hpp"
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
-#include <iscore/serialization/DataStreamVisitor.hpp>
-#include <iscore/model/path/ObjectPath.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/model/path/ObjectPath.hpp>
+#include <score/model/path/PathSerialization.hpp>
 
 
 namespace Network
@@ -21,12 +21,12 @@ CreateGroup::CreateGroup(const GroupManager& mgr, QString groupName):
     m_newGroupId = getStrongId(mgr.groups());
 }
 
-void CreateGroup::undo(const iscore::DocumentContext& ctx) const
+void CreateGroup::undo(const score::DocumentContext& ctx) const
 {
     m_path.find(ctx).removeGroup(m_newGroupId);
 }
 
-void CreateGroup::redo(const iscore::DocumentContext& ctx) const
+void CreateGroup::redo(const score::DocumentContext& ctx) const
 {
     auto& mgr = m_path.find(ctx);
     mgr.addGroup(new Group{m_name, m_newGroupId, &mgr});

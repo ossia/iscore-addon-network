@@ -1,4 +1,4 @@
-#include <iscore/serialization/VisitorCommon.hpp>
+#include <score/serialization/VisitorCommon.hpp>
 
 #include "GroupMetadata.hpp"
 
@@ -11,7 +11,7 @@ GroupMetadata::GroupMetadata(
     Id<Component> self,
     Id<Group> id,
     QObject* parent):
-  iscore::SerializableComponent{self, "GroupMetadata", parent},
+  score::SerializableComponent{self, "GroupMetadata", parent},
   m_id{id}
 {
 
@@ -27,7 +27,7 @@ void GroupMetadata::setGroup(const Id<Group>& id)
   if(id != m_id)
   {
     m_id = id;
-    emit groupChanged(id);
+    groupChanged(id);
   }
 }
 

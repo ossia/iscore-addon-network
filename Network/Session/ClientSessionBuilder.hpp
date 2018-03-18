@@ -1,14 +1,14 @@
 #pragma once
-#include <iscore/tools/std/Optional.hpp>
-#include <iscore/command/Command.hpp>
-#include <iscore/command/CommandData.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/tools/std/Optional.hpp>
+#include <score/command/Command.hpp>
+#include <score/command/CommandData.hpp>
+#include <score/model/Identifier.hpp>
 #include <QByteArray>
 #include <QList>
 #include <QObject>
 #include <QPair>
 #include <QString>
-namespace iscore
+namespace score
 {
 struct GUIApplicationContext;
 }
@@ -27,32 +27,32 @@ class ClientSessionBuilder final : public QObject
         Q_OBJECT
     public:
         ClientSessionBuilder(
-                const iscore::GUIApplicationContext&,
+                const score::GUIApplicationContext&,
                 QString ip,
                 int port);
 
         void initiateConnection();
         ClientSession* builtSession() const;
         QByteArray documentData() const;
-        const std::vector<iscore::CommandData>& commandStackData() const;
+        const std::vector<score::CommandData>& commandStackData() const;
 
-    public slots:
+    public Q_SLOTS:
         void on_messageReceived(const NetworkMessage& m);
 
-    signals:
+    Q_SIGNALS:
         void connected();
         void sessionReady();
         void sessionFailed();
 
     private:
-        const iscore::GUIApplicationContext& m_context;
+        const score::GUIApplicationContext& m_context;
         QString m_clientName{"A Client"};
         Id<Client> m_masterId, m_clientId;
         Id<Session> m_sessionId;
         NetworkSocket* m_mastersocket{};
 
 
-        std::vector<iscore::CommandData> m_commandStack;
+        std::vector<score::CommandData> m_commandStack;
         QByteArray m_documentData;
 
         ClientSession* m_session{};

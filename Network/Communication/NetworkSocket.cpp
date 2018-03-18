@@ -50,7 +50,7 @@ void NetworkSocket::init()
   connect(m_socket, &QWebSocket::connected,
           this, [=] () {
     qDebug() << "WS Connected";
-    emit connected();
+    connected();
   });
   connect(m_socket, &QWebSocket::disconnected, this, [] () {
     qDebug("Disconnected");
@@ -62,7 +62,7 @@ void NetworkSocket::init()
     NetworkMessage m;
     reader >> m;
 
-    emit messageReceived(m);
+    messageReceived(m);
   });
 
   // m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);

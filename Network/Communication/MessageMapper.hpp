@@ -4,7 +4,7 @@
 #include <QString>
 #include <functional>
 #include <QDataStream>
-#include <iscore/tools/std/HashMap.hpp>
+#include <score/tools/std/HashMap.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
 
 namespace std
@@ -73,6 +73,6 @@ public:
 
   bool contains(const QByteArray& b) const;
 private:
-  iscore::hash_map<QByteArray, std::function<void(const NetworkMessage&)>> m_handlers;
+  score::hash_map<QByteArray, std::function<void(const NetworkMessage&)>> m_handlers;
 };
 }

@@ -7,7 +7,7 @@
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Engine/Executor/TimeSyncComponent.hpp>
 #include <Engine/Executor/IntervalComponent.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
+#include <score/model/path/PathSerialization.hpp>
 #include <ossia/editor/scenario/time_sync.hpp>
 
 namespace Network
@@ -42,8 +42,8 @@ struct CompensatedExpressionInGroup
 
         comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
-                        ossia::expressions::expression_generic{
-                            std::unique_ptr<ossia::expressions::expression_generic_base>(e->date_expr)})
+                           eggs::variants::in_place<ossia::expressions::expression_generic>,
+                           std::unique_ptr<ossia::expressions::expression_generic_base>(e->date_expr))
                     );
 
         return e;
@@ -250,8 +250,8 @@ struct SharedCompensatedAsyncOutOfGroup
 
         comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
-                        ossia::expressions::expression_generic{
-                            std::move(expr)}));
+                        eggs::variants::in_place<ossia::expressions::expression_generic>,
+                        std::move(expr)));
     }
 };
 
@@ -298,8 +298,8 @@ struct SharedCompensatedSyncOutOfGroup
 
         comp.OSSIATimeSync()->set_expression(
                     std::make_unique<ossia::expression>(
-                        ossia::expressions::expression_generic{
-                            std::move(expr)}));
+                            eggs::variants::in_place<ossia::expressions::expression_generic>,
+                            std::move(expr)));
     }
 };
 

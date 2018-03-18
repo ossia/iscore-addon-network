@@ -1,9 +1,9 @@
 #pragma once
-#include <iscore/tools/std/Optional.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <QObject>
 #include <QString>
 
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 class QWebSocket;
 
@@ -22,10 +22,10 @@ class RemoteClientBuilder final : public QObject
     public:
         RemoteClientBuilder(MasterSession& session, QWebSocket* sock);
 
-    signals:
+    Q_SIGNALS:
         void clientReady(RemoteClientBuilder* builder, RemoteClient*);
 
-    public slots:
+    public Q_SLOTS:
         void on_messageReceived(const NetworkMessage& m);
 
 

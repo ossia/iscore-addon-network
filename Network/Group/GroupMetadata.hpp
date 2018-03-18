@@ -1,13 +1,13 @@
 #pragma once
 
-#include <iscore/model/ComponentSerialization.hpp>
-#include <iscore/tools/std/Optional.hpp>
+#include <score/model/ComponentSerialization.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <QObject>
 
 #include <QString>
 
 
-#include <iscore/model/Identifier.hpp>
+#include <score/model/Identifier.hpp>
 
 struct VisitorVariant;
 
@@ -16,7 +16,7 @@ namespace Network
 class Group;
 //! Goes into the intervals, events, etc.
 class GroupMetadata :
-    public iscore::SerializableComponent
+    public score::SerializableComponent
 {
         Q_OBJECT
 
@@ -31,7 +31,7 @@ class GroupMetadata :
         template<typename DeserializerVisitor>
         GroupMetadata(DeserializerVisitor&& vis,
                       QObject* parent) :
-            iscore::SerializableComponent{vis, parent}
+            score::SerializableComponent{vis, parent}
         {
             vis.writeTo(*this);
         }
@@ -39,10 +39,10 @@ class GroupMetadata :
         const auto& group() const
         { return m_id; }
 
-    signals:
+    Q_SIGNALS:
         void groupChanged(Id<Group>);
 
-    public slots:
+    public Q_SLOTS:
         void setGroup(const Id<Group>& id);
 
     private:

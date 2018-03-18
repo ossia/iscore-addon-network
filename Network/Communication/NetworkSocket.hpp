@@ -20,7 +20,7 @@ class NetworkSocket : public QObject
 
         QWebSocket& socket() const { return *m_socket; }
 
-    signals:
+    Q_SIGNALS:
         void connected();
         void messageReceived(NetworkMessage);
 
