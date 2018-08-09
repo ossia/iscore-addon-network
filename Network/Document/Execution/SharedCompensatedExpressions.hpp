@@ -5,8 +5,8 @@
 #include <Network/Document/Execution/FreeScenarioPolicy.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
-#include <Engine/Executor/TimeSyncComponent.hpp>
-#include <Engine/Executor/IntervalComponent.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncExecution.hpp>
+#include <Scenario/Document/Interval/IntervalExecution.hpp>
 #include <score/model/path/PathSerialization.hpp>
 #include <ossia/editor/scenario/time_sync.hpp>
 
@@ -33,7 +33,7 @@ struct CompensatedExpressionInGroup
     };
 
     auto setupExpr(
-            Engine::Execution::TimeSyncComponent& comp)
+            Execution::TimeSyncComponent& comp)
     {
         // Wrap the expresion
         auto e = std::make_shared<ExprData>(*comp.OSSIATimeSync());
@@ -54,7 +54,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeSyncComponent& comp,
+            Execution::TimeSyncComponent& comp,
             const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedCompensatedAsyncInGroup";
@@ -131,7 +131,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeSyncComponent& comp,
+            Execution::TimeSyncComponent& comp,
             const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedCompensatedSyncInGroup";
@@ -214,7 +214,7 @@ struct SharedCompensatedAsyncOutOfGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeSyncComponent& comp,
+            Execution::TimeSyncComponent& comp,
             const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedCompensatedAsyncOutOfGroup";
@@ -260,7 +260,7 @@ struct SharedCompensatedSyncOutOfGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeSyncComponent& comp,
+            Execution::TimeSyncComponent& comp,
             const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedCompensatedSyncOutOfGroup";

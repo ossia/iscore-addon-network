@@ -1,5 +1,6 @@
 #pragma once
 #include <score/plugins/application/GUIApplicationPlugin.hpp>
+#include <wobjectdefs.h>
 #include <memory>
 
 #ifdef OSSIA_DNSSD
@@ -14,15 +15,16 @@ class NetworkApplicationPlugin :
         public QObject,
         public score::GUIApplicationPlugin
 {
-        Q_OBJECT
+        W_OBJECT(NetworkApplicationPlugin)
 
     public:
         NetworkApplicationPlugin(const score::GUIApplicationContext& app);
         ~NetworkApplicationPlugin();
 
-    public Q_SLOTS:
         void setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
+        W_SLOT(setupClientConnection)
         void setupPlayerConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
+        W_SLOT(setupPlayerConnection)
 
     private:
         GUIElements makeGUIElements() override;
@@ -34,3 +36,6 @@ class NetworkApplicationPlugin :
 #endif
 };
 }
+
+using string_ba_map = QMap<QString, QByteArray>;
+W_REGISTER_ARGTYPE(string_ba_map)

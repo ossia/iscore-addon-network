@@ -5,8 +5,10 @@
 #include "Session.hpp"
 #include <Network/Client/LocalClient.hpp>
 
-class QObject;
-
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::Session)
+W_OBJECT_IMPL(Network::LocalClient)
+W_OBJECT_IMPL(Network::RemoteClient)
 namespace Network
 {
 Session::Session(LocalClient* client, Id<Session> id, QObject* parent):

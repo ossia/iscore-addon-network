@@ -1,4 +1,5 @@
 #pragma once
+#include <Network/Client/Client.hpp>
 #include <score/tools/std/Optional.hpp>
 #include <score/model/IdentifiedObject.hpp>
 #include <QString>
@@ -16,7 +17,6 @@ class QObject;
 namespace Network
 {
 
-class Client;
 // Groups : registered in the session
 // Permissions ? for now we will just have, for each interval in a score,
 // a chosen group.
@@ -26,7 +26,7 @@ class Client;
 
 class Group : public IdentifiedObject<Group>
 {
-        Q_OBJECT
+        W_OBJECT(Group)
         Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
         SCORE_SERIALIZE_FRIENDS
@@ -51,11 +51,10 @@ class Group : public IdentifiedObject<Group>
         const QVector<Id<Client>>& clients() const
         { return m_executingClients; }
 
-    Q_SIGNALS:
-        void nameChanged(QString arg);
+        void nameChanged(QString arg) W_SIGNAL(nameChanged, arg);
 
-        void clientAdded(Id<Client>);
-        void clientRemoved(Id<Client>);
+        void clientAdded(Id<Client> arg) W_SIGNAL(clientAdded, arg);
+        void clientRemoved(Id<Client> arg) W_SIGNAL(clientRemoved, arg);
 
     private:
         QString m_name;
@@ -63,3 +62,4 @@ class Group : public IdentifiedObject<Group>
         QVector<Id<Client>> m_executingClients;
 };
 }
+W_REGISTER_ARGTYPE(Id<Network::Group>)

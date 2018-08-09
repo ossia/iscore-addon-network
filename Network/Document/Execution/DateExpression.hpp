@@ -16,7 +16,6 @@ class DateExpression :
     public QObject,
     public ossia::expressions::expression_generic_base
 {
-  Q_OBJECT
   public:
     DateExpression();
 

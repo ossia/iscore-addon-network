@@ -4,6 +4,7 @@
 #include <QSpinBox>
 #include <QString>
 #include <QWidget>
+#include <wobjectdefs.h>
 
 class QObject;
 namespace Network
@@ -13,7 +14,7 @@ namespace Settings
 class Presenter;
 class View : public score::GlobalSettingsView
 {
-        Q_OBJECT
+        W_OBJECT(View)
     public:
         explicit View();
 
@@ -23,10 +24,9 @@ class View : public score::GlobalSettingsView
 
         QWidget* getWidget() override;
 
-    Q_SIGNALS:
-        void clientNameChanged(const QString&);
-        void masterPortChanged(int);
-        void clientPortChanged(int);
+        void clientNameChanged(const QString& v) W_SIGNAL(clientNameChanged, v);
+        void masterPortChanged(int v) W_SIGNAL(masterPortChanged, v);
+        void clientPortChanged(int v) W_SIGNAL(clientPortChanged, v);
 
     private:
         QWidget* m_widget {new QWidget};

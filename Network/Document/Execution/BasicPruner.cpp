@@ -4,9 +4,9 @@
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Session/Session.hpp>
 #include <Network/Document/Execution/SharedScenarioPolicy.hpp>
-#include <Engine/Executor/ExecutorContext.hpp>
-#include <Engine/Executor/DocumentPlugin.hpp>
-#include <Engine/Executor/BaseScenarioComponent.hpp>
+#include <Process/ExecutionContext.hpp>
+#include <Execution/DocumentPlugin.hpp>
+#include <Execution/BaseScenarioComponent.hpp>
 #include <Scenario/Process/ScenarioInterface.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
@@ -23,7 +23,7 @@ BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
 
 }
 
-void BasicPruner::recurse(Engine::Execution::IntervalComponent& cst, const Group& cur)
+void BasicPruner::recurse(Execution::IntervalComponent& cst, const Group& cur)
 {
   ctx.doc.noncompensated.trigger_evaluation_entered.clear();
   ctx.doc.noncompensated.trigger_evaluation_finished.clear();
@@ -40,7 +40,7 @@ void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur)
 
 }
 
-void BasicPruner::recurse(Engine::Execution::TimeSyncComponent& comp)
+void BasicPruner::recurse(Execution::TimeSyncComponent& comp)
 {
   // Check the previous / next intervals.
   // If some happen to have to execute in different computers
@@ -72,11 +72,11 @@ void BasicPruner::recurse(Engine::Execution::TimeSyncComponent& comp)
 
 }
 
-void BasicPruner::operator()(const Engine::Execution::Context& exec_ctx)
+void BasicPruner::operator()(const Execution::Context& exec_ctx, const Execution::BaseScenarioElement& scenar)
 {
   // We mute all the processes that are not in a group
   // of this client.
-  auto& root = exec_ctx.scenario.baseInterval();
+  auto& root = scenar.baseInterval();
 
   // Let's assume for now that we start in the "all" group...
   recurse(root, *ctx.gm.group(ctx.gm.defaultGroup()));

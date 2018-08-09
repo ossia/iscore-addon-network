@@ -24,7 +24,7 @@ struct NetworkMessage;
 //! Used by a client to join a Session.
 class ClientSessionBuilder final : public QObject
 {
-        Q_OBJECT
+    W_OBJECT(ClientSessionBuilder)
     public:
         ClientSessionBuilder(
                 const score::GUIApplicationContext&,
@@ -36,13 +36,12 @@ class ClientSessionBuilder final : public QObject
         QByteArray documentData() const;
         const std::vector<score::CommandData>& commandStackData() const;
 
-    public Q_SLOTS:
-        void on_messageReceived(const NetworkMessage& m);
+        void on_messageReceived(const NetworkMessage& m); W_SLOT(on_messageReceived)
 
-    Q_SIGNALS:
-        void connected();
-        void sessionReady();
-        void sessionFailed();
+        void connected() W_SIGNAL(connected);
+        void sessionReady() W_SIGNAL(sessionReady);
+        void sessionFailed() W_SIGNAL(sessionFailed);
+
 
     private:
         const score::GUIApplicationContext& m_context;

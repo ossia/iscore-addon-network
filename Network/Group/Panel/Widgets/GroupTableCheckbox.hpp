@@ -1,5 +1,6 @@
 #pragma once
 #include <QWidget>
+#include <wobjectdefs.h>
 
 class QCheckBox;
 
@@ -7,17 +8,15 @@ namespace Network
 {
 class GroupTableCheckbox : public QWidget
 {
-        Q_OBJECT
+        W_OBJECT(GroupTableCheckbox)
     public:
         GroupTableCheckbox();
 
         int state();
 
-    Q_SIGNALS:
-        void stateChanged(int);
+        void stateChanged(int w) W_SIGNAL(stateChanged, w);
 
-    public Q_SLOTS:
-        void setState(int state);
+        void setState(int state); W_SLOT(setState)
 
     private:
         QCheckBox* m_cb;

@@ -5,8 +5,8 @@
 #include <Network/Document/Execution/FreeScenarioPolicy.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
-#include <Engine/Executor/TimeSyncComponent.hpp>
-#include <Engine/Executor/IntervalComponent.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncExecution.hpp>
+#include <Scenario/Document/Interval/IntervalExecution.hpp>
 #include <score/model/path/PathSerialization.hpp>
 #include <ossia/editor/scenario/time_sync.hpp>
 
@@ -26,7 +26,7 @@ struct NonCompensatedExpressionInGroup
     };
 
     std::shared_ptr<ExprData> setupExpr(
-            Engine::Execution::TimeSyncComponent& comp)
+            Execution::TimeSyncComponent& comp)
     {
         // Wrap the expresion
         auto e = std::make_shared<ExprData>(*comp.OSSIATimeSync());
@@ -49,7 +49,7 @@ struct SharedNonCompensatedAsyncInGroup : public NonCompensatedExpressionInGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeSyncComponent& comp,
+            Execution::TimeSyncComponent& comp,
             const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedNonCompensatedAsyncInGroup";
@@ -139,7 +139,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeSyncComponent& comp,
+            Execution::TimeSyncComponent& comp,
             const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedNonCompensatedSyncInGroup";
@@ -231,7 +231,7 @@ struct SharedNonCompensatedAsyncOutOfGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeSyncComponent& comp,
+            Execution::TimeSyncComponent& comp,
             const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedAsyncUnorderedOutOfGroup";
@@ -276,7 +276,7 @@ struct SharedNonCompensatedSyncOutOfGroup
 {
     void operator()(
             NetworkPrunerContext& ctx,
-            Engine::Execution::TimeSyncComponent& comp,
+            Execution::TimeSyncComponent& comp,
             const Path<Scenario::TimeSyncModel>& path)
     {
         qDebug() << "SharedAsyncUnorderedOutOfGroup";

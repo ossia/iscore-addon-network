@@ -7,7 +7,7 @@ namespace Network
 {
 class LocalClient : public Client
 {
-        Q_OBJECT
+        W_OBJECT(LocalClient)
     public:
         LocalClient(Id<Client> id, QObject* parent = nullptr):
             Client{id, parent},
@@ -31,8 +31,7 @@ class LocalClient : public Client
 
         NetworkServer& server() const { return *m_server; }
 
-    Q_SIGNALS:
-        void createNewClient(QWebSocket*);
+        void createNewClient(QWebSocket* w) W_SIGNAL(createNewClient, w);
 
     private:
         NetworkServer* m_server{};

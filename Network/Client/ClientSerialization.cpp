@@ -7,6 +7,8 @@
 
 #include "Client.hpp"
 
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::Client)
 template <>
 void DataStreamReader::read(
         const Network::Client& elt)

@@ -9,16 +9,20 @@ namespace Scenario
 {
 class ScenarioInterface;
 }
+namespace Execution
+{
+class BaseScenarioElement;
+}
 namespace Network
 {
 struct SCORE_ADDON_NETWORK_EXPORT BasicPruner
 {
   BasicPruner(NetworkDocumentPlugin& d);
 
-  void recurse(Engine::Execution::IntervalComponent& cst, const Group& cur);
+  void recurse(Execution::IntervalComponent& cst, const Group& cur);
   void recurse(Scenario::ScenarioInterface&, const Group& cur);
-  void recurse(Engine::Execution::TimeSyncComponent&);
-  void operator()(const Engine::Execution::Context& exec_ctx);
+  void recurse(Execution::TimeSyncComponent&);
+  void operator()(const Execution::Context& exec_ctx, const Execution::BaseScenarioElement& scenar);
 
 private:
   NetworkPrunerContext ctx;

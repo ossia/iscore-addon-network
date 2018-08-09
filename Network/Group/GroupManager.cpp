@@ -7,8 +7,8 @@
 #include "GroupManager.hpp"
 #include <score/model/IdentifiedObject.hpp>
 
-class QObject;
-
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::GroupManager)
 namespace Network
 {
 GroupManager::GroupManager(QObject* parent):

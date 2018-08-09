@@ -7,7 +7,8 @@
 class Client;
 class QObject;
 
-
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::Group)
 namespace Network
 {
 Group::Group(QString name, Id<Group> id, QObject* parent):

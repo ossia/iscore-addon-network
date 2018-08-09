@@ -3,13 +3,13 @@
 namespace Network
 {
 
-void MixedScenarioPolicy::operator()(Engine::Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
+void MixedScenarioPolicy::operator()(Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
 {
   // muzukashi
 
 }
 
-void MixedScenarioPolicy::operator()(Engine::Execution::TimeSyncComponent& comp, const Group& parent_group)
+void MixedScenarioPolicy::operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
 {/*
     const auto& gm = doc.groupManager();
     // First fetch the required variables.
@@ -146,7 +146,7 @@ struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
-      Engine::Execution::TimeSyncComponent& comp,
+      Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     ExprData e = setupExpr(comp);
@@ -193,7 +193,7 @@ struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
-      Engine::Execution::TimeSyncComponent& comp,
+      Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     ExprData e = setupExpr(comp);
@@ -247,7 +247,7 @@ struct MixedAsyncUnorderedOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
-      Engine::Execution::TimeSyncComponent& comp,
+      Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     auto expr = std::make_unique<AsyncExpression>();
@@ -272,7 +272,7 @@ struct MixedAsyncOrderedOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
-      Engine::Execution::TimeSyncComponent& comp,
+      Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     auto expr = std::make_unique<AsyncExpression>();
@@ -302,7 +302,7 @@ struct MixedAsyncOrderedOutOfGroup
 /*
 
 void SharedScenarioPolicy::operator()(
-    Engine::Execution::TimeSyncComponent& comp,
+    Execution::TimeSyncComponent& comp,
     const Group& parent_group)
 {
   // First fetch the required variables.
@@ -381,7 +381,7 @@ void SharedScenarioPolicy::operator()(
 }
 
 void SharedScenarioPolicy::setupMaster(
-    Engine::Execution::TimeSyncComponent& comp,
+    Execution::TimeSyncComponent& comp,
     Path<Scenario::TimeSyncModel> p,
     const Group& tn_group,
     SyncMode sync)

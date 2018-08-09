@@ -4,6 +4,7 @@
 #include <QString>
 
 #include <score/model/Identifier.hpp>
+#include <wobjectdefs.h>
 
 class QWebSocket;
 
@@ -18,15 +19,13 @@ class NetworkSocket;
 //! Used by the master to create a RemoteClient instance from a connecting client.
 class RemoteClientBuilder final : public QObject
 {
-        Q_OBJECT
+        W_OBJECT(RemoteClientBuilder)
     public:
         RemoteClientBuilder(MasterSession& session, QWebSocket* sock);
 
-    Q_SIGNALS:
-        void clientReady(RemoteClientBuilder* builder, RemoteClient*);
+        void clientReady(RemoteClientBuilder* builder, RemoteClient* c) W_SIGNAL(clientReady, builder, c);
 
-    public Q_SLOTS:
-        void on_messageReceived(const NetworkMessage& m);
+        void on_messageReceived(const NetworkMessage& m); W_SLOT(on_messageReceived)
 
 
     private:

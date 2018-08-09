@@ -21,6 +21,8 @@
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
 
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::RemoteClientBuilder)
 
 namespace Network
 {

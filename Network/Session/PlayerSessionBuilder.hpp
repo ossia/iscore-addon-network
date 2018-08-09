@@ -23,7 +23,7 @@ struct NetworkMessage;
 
 class PlayerSessionBuilder final : public QObject
 {
-        Q_OBJECT
+        W_OBJECT(PlayerSessionBuilder)
     public:
         PlayerSessionBuilder(
                 const score::ApplicationContext&,
@@ -37,13 +37,11 @@ class PlayerSessionBuilder final : public QObject
         QByteArray documentData() const;
         const std::vector<score::CommandData>& commandStackData() const;
 
-    public Q_SLOTS:
-        void on_messageReceived(const NetworkMessage& m);
+        void on_messageReceived(const NetworkMessage& m); W_SLOT(on_messageReceived)
 
-    Q_SIGNALS:
-        void connected();
-        void sessionReady();
-        void sessionFailed();
+        void connected() W_SIGNAL(connected);
+        void sessionReady() W_SIGNAL(sessionReady);
+        void sessionFailed() W_SIGNAL(sessionFailed);
 
     private:
         const score::ApplicationContext& m_context;

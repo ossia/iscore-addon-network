@@ -41,6 +41,8 @@
 #include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
 #endif
 
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::NetworkApplicationPlugin)
 struct VisitorVariant;
 
 namespace Network

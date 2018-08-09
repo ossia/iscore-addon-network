@@ -7,6 +7,9 @@
 
 #include "NetworkSocket.hpp"
 #include <Network/Communication/NetworkMessage.hpp>
+
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::NetworkSocket)
 namespace Network
 {
 NetworkSocket::NetworkSocket(QWebSocket* sock,

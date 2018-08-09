@@ -4,20 +4,19 @@
 #include "NetworkSettingsModel.hpp"
 #include <score/plugins/settingsdelegate/SettingsDelegateModel.hpp>
 
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::Settings::Model)
 namespace Network
 {
 namespace Settings
 {
 namespace Parameters
 {
-const score::sp<ModelClientNameParameter> ClientName{
-  QStringLiteral("Network/ClientName"), "i-score"};
-const score::sp<ModelClientPortParameter> ClientPort{
-    QStringLiteral("Network/ClientPort"), 7777};
-const score::sp<ModelMasterPortParameter> MasterPort{
-    QStringLiteral("Network/MasterPort"), 8888};
-const score::sp<ModelMasterPortParameter> PlayerPort{
-    QStringLiteral("Network/PlayerPort"), 0};
+
+SETTINGS_PARAMETER_IMPL(ClientName){QStringLiteral("Network/ClientName"), "score"};
+SETTINGS_PARAMETER_IMPL(ClientPort){QStringLiteral("Network/ClientPort"), 7777};
+SETTINGS_PARAMETER_IMPL(MasterPort){QStringLiteral("Network/MasterPort"), 8888};
+SETTINGS_PARAMETER_IMPL(PlayerPort){QStringLiteral("Network/PlayerPort"), 0};
 
 static auto list()
 {

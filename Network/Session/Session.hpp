@@ -19,7 +19,7 @@ class MessageMapper;
 class MessageValidator;
 class Session : public IdentifiedObject<Session>
 {
-        Q_OBJECT
+        W_OBJECT(Session)
     public:
         Session(LocalClient* client,
                 Id<Session> id,
@@ -62,16 +62,15 @@ class Session : public IdentifiedObject<Session>
         void sendMessage(const Id<Client>& target, const NetworkMessage& m);
         void broadcastToClients(const std::vector<Id<Client> >& clts, const NetworkMessage& m);
 
-    Q_SIGNALS:
-        void clientAdded(RemoteClient*);
-        void clientRemoving(RemoteClient*);
-        void clientRemoved(RemoteClient*);
-        void clientsChanged();
 
-        void emitMessage(Id<Client> target, const NetworkMessage& m);
+        void clientAdded(RemoteClient* c) W_SIGNAL(clientAdded, c);
+        void clientRemoving(RemoteClient* c) W_SIGNAL(clientRemoving, c);
+        void clientRemoved(RemoteClient* c) W_SIGNAL(clientRemoved, c);
+        void clientsChanged() W_SIGNAL(clientsChanged);
 
-    public Q_SLOTS:
-        void validateMessage(const NetworkMessage& m);
+        void emitMessage(Id<Client> target, const NetworkMessage& m) W_SIGNAL(emitMessage, target, m);
+
+        void validateMessage(const NetworkMessage& m); W_SLOT(validateMessage);
 
     private:
         template<typename Arg>
@@ -92,3 +91,4 @@ class Session : public IdentifiedObject<Session>
         QList<RemoteClient*> m_remoteClients;
 };
 }
+W_REGISTER_ARGTYPE(Network::RemoteClient*)

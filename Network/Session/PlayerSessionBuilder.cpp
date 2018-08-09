@@ -22,6 +22,9 @@
 #include <score/plugins/documentdelegate/DocumentDelegateFactory.hpp>
 #include <score/application/ApplicationContext.hpp>
 #include <Network/Settings/NetworkSettingsModel.hpp>
+
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::PlayerSessionBuilder)
 namespace Network
 {
 PlayerSessionBuilder::PlayerSessionBuilder(

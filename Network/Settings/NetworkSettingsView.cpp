@@ -5,8 +5,8 @@
 #include "NetworkSettingsView.hpp"
 #include <score/plugins/settingsdelegate/SettingsDelegateView.hpp>
 
-class QObject;
-
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::Settings::View)
 namespace Network
 {
 

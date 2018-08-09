@@ -65,11 +65,12 @@ std::pair<const CommandGroupKey, CommandGeneratorMap> score_addon_network::make_
     std::pair<const CommandGroupKey, CommandGeneratorMap> cmds{
         DistributedScenarioCommandFactoryName(), CommandGeneratorMap{}};
 
-    using Types = TypeList<
-#include <score_addon_network_commands.hpp>
-      >;
-    for_each_type<Types>(score::commands::FactoryInserter{cmds.second});
-
+    ossia::for_each_type<
+    #include <score_addon_network_commands.hpp>
+        >(score::commands::FactoryInserter{cmds.second});
 
     return cmds;
 }
+
+#include <score/plugins/PluginInstances.hpp>
+SCORE_EXPORT_PLUGIN(score_addon_network)

@@ -1,6 +1,7 @@
 #pragma once
 #include <QFrame>
 #include <array>
+#include <wobjectdefs.h>
 
 class QEvent;
 class QLineEdit;
@@ -14,7 +15,7 @@ namespace Network
 // http://stackoverflow.com/questions/9306335/an-ip-address-widget-for-qt-similar-to-mfcs-ip-address-control
 class IpWidget : public QFrame
 {
-        Q_OBJECT
+        W_OBJECT(IpWidget)
 
         enum
         {
@@ -28,11 +29,10 @@ class IpWidget : public QFrame
         bool eventFilter( QObject *obj, QEvent *event ) override;
 
         std::array<QLineEdit*, QTUTL_IP_SIZE> lineEdits;
-    public Q_SLOTS:
-        void slotTextChanged( QLineEdit* pEdit );
 
-    Q_SIGNALS:
-        void signalTextChanged( QLineEdit* pEdit );
+        void slotTextChanged( QLineEdit* pEdit ); W_SLOT(slotTextChanged)
+
+        void signalTextChanged( QLineEdit* pEdit ) W_SIGNAL(signalTextChanged, pEdit);
 
     private:
         void MoveNextLineEdit (int i);
@@ -40,3 +40,4 @@ class IpWidget : public QFrame
 };
 
 }
+W_REGISTER_ARGTYPE(QLineEdit*)

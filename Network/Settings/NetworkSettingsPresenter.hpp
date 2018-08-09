@@ -16,7 +16,6 @@ class View;
 class Presenter :
         public score::GlobalSettingsPresenter
 {
-        Q_OBJECT
     public:
         using model_type = Model;
         using view_type = View;

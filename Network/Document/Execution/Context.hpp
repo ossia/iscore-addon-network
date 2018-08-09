@@ -111,13 +111,10 @@ const Group& getGroup(const GroupManager& gm, const Group& cur, const T& obj)
 }
 }
 
-namespace Engine
-{
 namespace Execution
 {
 class IntervalComponent;
 class TimeSyncComponent;
 struct Context;
 class ProcessComponent;
-}
 }

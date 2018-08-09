@@ -15,6 +15,8 @@
 class QObject;
 class QWidget;
 
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::IpWidget)
 namespace Network
 {
 IpWidget::IpWidget(QWidget *parent) : QFrame(parent)

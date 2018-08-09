@@ -16,6 +16,8 @@
 #include <servus/servus.h>
 #endif
 
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::MasterSession)
 namespace Network
 {
 class Client;

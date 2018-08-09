@@ -21,7 +21,7 @@ class RemoteClientBuilder;
 struct NetworkMessage;
 class MasterSession : public Session
 {
-           Q_OBJECT
+           W_OBJECT(MasterSession)
     public:
         MasterSession(const score::DocumentContext& doc,
                       LocalClient* theclient,
@@ -35,9 +35,8 @@ class MasterSession : public Session
         LocalClient& master() const override
         { return this->localClient(); }
 
-    public Q_SLOTS:
-        void on_createNewClient(QWebSocket* sock);
-        void on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt);
+        void on_createNewClient(QWebSocket* sock); W_SLOT(on_createNewClient);
+        void on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt); W_SLOT(on_clientReady);
 
     private:
         const score::DocumentContext& m_ctx;
@@ -50,3 +49,5 @@ class MasterSession : public Session
 };
 
 }
+
+W_REGISTER_ARGTYPE(Network::RemoteClientBuilder*)

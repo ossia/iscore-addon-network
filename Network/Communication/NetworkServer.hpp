@@ -1,6 +1,6 @@
 #pragma once
 #include <QObject>
-
+#include <wobjectdefs.h>
 class QWebSocketServer;
 class QWebSocket;
 
@@ -8,7 +8,7 @@ namespace Network
 {
 class NetworkServer : public QObject
 {
-        Q_OBJECT
+        W_OBJECT(NetworkServer)
     public:
         NetworkServer(int port, QObject* parent);
         int port() const;
@@ -17,11 +17,13 @@ class NetworkServer : public QObject
 
         QString m_localAddress;
         int m_localPort;
-    Q_SIGNALS:
-        void newSocket(QWebSocket* sock);
+
+        void newSocket(QWebSocket* sock) W_SIGNAL(newSocket, sock);
 
     private:
         QWebSocketServer* m_server{};
 };
 }
 
+
+W_REGISTER_ARGTYPE(QWebSocket*)

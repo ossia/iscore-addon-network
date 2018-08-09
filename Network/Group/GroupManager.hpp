@@ -12,7 +12,7 @@ class Client;
 class RemoteClient;
 class GroupManager : public IdentifiedObject<GroupManager>
 {
-        Q_OBJECT
+        W_OBJECT(GroupManager)
     public:
         explicit GroupManager(QObject* parent);
 
@@ -37,9 +37,8 @@ class GroupManager : public IdentifiedObject<GroupManager>
         std::size_t clientsCount(const std::vector<Id<Group>>& grps);
         std::vector<Id<Client>> clients(const std::vector<Id<Group>>& grps);
 
-    Q_SIGNALS:
-        void groupAdded(Id<Group>);
-        void groupRemoved(Id<Group>);
+        void groupAdded(Id<Group> g) W_SIGNAL(groupAdded, g);
+        void groupRemoved(Id<Group> g) W_SIGNAL(groupRemoved, g);
 
     private:
         std::vector<Group*> m_groups;

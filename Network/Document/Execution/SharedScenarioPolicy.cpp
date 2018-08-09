@@ -6,13 +6,13 @@ namespace Network
 {
 
 void SharedScenarioPolicy::operator()(
-    Engine::Execution::ProcessComponent& c,
+    Execution::ProcessComponent& c,
     Scenario::ScenarioInterface& ip,
     const Group& cur)
 {
   for(Scenario::TimeSyncModel& tn : ip.getTimeSyncs())
   {
-    auto comp = score::findComponent<Engine::Execution::TimeSyncComponent>(tn.components());
+    auto comp = score::findComponent<Execution::TimeSyncComponent>(tn.components());
     if(comp)
     {
       operator()(*comp, cur);
@@ -21,7 +21,7 @@ void SharedScenarioPolicy::operator()(
 
   for(Scenario::EventModel& tn : ip.getEvents())
   {
-    auto comp = score::findComponent<Engine::Execution::TimeSyncComponent>(tn.components());
+    auto comp = score::findComponent<Execution::TimeSyncComponent>(tn.components());
     if(comp)
     {
       operator()(*comp, cur);
@@ -30,7 +30,7 @@ void SharedScenarioPolicy::operator()(
 
   for(Scenario::IntervalModel& cst : ip.getIntervals())
   {
-    auto comp = score::findComponent<Engine::Execution::IntervalComponent>(cst.components());
+    auto comp = score::findComponent<Execution::IntervalComponent>(cst.components());
     if(comp)
       operator()(*comp, cur);
   }
@@ -38,7 +38,7 @@ void SharedScenarioPolicy::operator()(
 }
 
 void SharedScenarioPolicy::operator()(
-    Engine::Execution::IntervalComponent& cst,
+    Execution::IntervalComponent& cst,
     const Group& cur)
 {
   const auto& str = Constants::instance();
@@ -55,7 +55,7 @@ void SharedScenarioPolicy::operator()(
     Path<Scenario::IntervalModel> path{cst.scoreInterval()};
     // This -> Master
     auto block = std::make_shared<bool>(false);
-    QObject::connect(&interval.duration, &Scenario::IntervalDurations::executionSpeedChanged,
+    QObject::connect(&interval.duration, &Scenario::IntervalDurations::speedChanged,
                      &cst, [=,&session,&mapi] (double s) {
       // TODO handle sync / async. Even though sync does not really make sense here...
       if(!(*block))
@@ -65,7 +65,7 @@ void SharedScenarioPolicy::operator()(
     // Master -> This
     ctx.doc.noncompensated.interval_speed_changed.emplace(path, [&,block] (const Id<Client>& orig, double s) {
       *block = true;
-      interval.duration.setExecutionSpeed(s);
+      interval.duration.setSpeed(s);
       *block = false;
     });
 
@@ -118,14 +118,14 @@ void SharedScenarioPolicy::operator()(
   }
 }
 
-void SharedScenarioPolicy::operator()(Engine::Execution::EventComponent& cst, const Group& cur)
+void SharedScenarioPolicy::operator()(Execution::EventComponent& cst, const Group& cur)
 {
 
 }
 
 
 void SharedScenarioPolicy::operator()(
-    Engine::Execution::TimeSyncComponent& comp,
+    Execution::TimeSyncComponent& comp,
     const Group& parent_group)
 {
   auto& mapi = ctx.mapi;
@@ -200,7 +200,7 @@ void SharedScenarioPolicy::operator()(
 }
 
 void SharedScenarioPolicy::setupMaster(
-    Engine::Execution::TimeSyncComponent& comp,
+    Execution::TimeSyncComponent& comp,
     Path<Scenario::TimeSyncModel> p,
     const Group& tn_group,
     SyncMode sync)

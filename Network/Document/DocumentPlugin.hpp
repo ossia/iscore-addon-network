@@ -24,12 +24,10 @@ namespace Scenario {
   class IntervalModel;
   class TimeSyncModel;
 }
-namespace Engine {
-  namespace Execution {
-    class EventComponent;
-    class IntervalComponent;
-    class TimeSyncComponent;
-  }
+namespace Execution {
+class EventComponent;
+class IntervalComponent;
+class TimeSyncComponent;
 }
 namespace Network
 {
@@ -47,8 +45,8 @@ namespace Network
 
 struct NetworkExpressionData
 {
-  NetworkExpressionData(Engine::Execution::TimeSyncComponent& c): component{c} {}
-  Engine::Execution::TimeSyncComponent& component;
+  NetworkExpressionData(Execution::TimeSyncComponent& c): component{c} {}
+  Execution::TimeSyncComponent& component;
 
   //! Will fill itself with received messages
   score::hash_map<Id<Client>, optional<bool>> values;
@@ -103,7 +101,7 @@ public:
 class SCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
     public score::SerializableDocumentPlugin
 {
-  Q_OBJECT
+  W_OBJECT(NetworkDocumentPlugin)
 
   SCORE_SERIALIZE_FRIENDS
   MODEL_METADATA_IMPL(NetworkDocumentPlugin)
@@ -150,8 +148,8 @@ class SCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final :
   } compensated;
 
   void on_stop();
-Q_SIGNALS:
-  void sessionChanged();
+
+  void sessionChanged() W_SIGNAL(sessionChanged);
 
 private:
   EditionPolicy* m_policy{};

@@ -4,9 +4,12 @@
 #include <QNetworkInterface>
 #include <QString>
 #include <QtWebSockets/QWebSocketServer>
+#include <QWebSocket>
 
 #include "NetworkServer.hpp"
 
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::NetworkServer)
 namespace Network
 {
 NetworkServer::NetworkServer(int port, QObject* parent):

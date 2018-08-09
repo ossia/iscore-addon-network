@@ -9,11 +9,11 @@ struct MixedScenarioPolicy
   NetworkPrunerContext& ctx;
 
   void operator()(
-      Engine::Execution::ProcessComponent& comp,
+      Execution::ProcessComponent& comp,
       Scenario::ScenarioInterface& ip,
       const Group& cur);
 
-  void operator()(Engine::Execution::TimeSyncComponent& comp, const Group& parent_group);
+  void operator()(Execution::TimeSyncComponent& comp, const Group& parent_group);
 };
 
 

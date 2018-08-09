@@ -1,10 +1,10 @@
 #include "FreeScenarioPolicy.hpp"
-#include <Engine/Executor/ProcessComponent.hpp>
+#include <Process/Execution/ProcessComponent.hpp>
 
 namespace Network
 {
 void FreeScenarioPolicy::operator()(
-    Engine::Execution::ProcessComponent& comp,
+    Execution::ProcessComponent& comp,
     Scenario::ScenarioInterface& ip,
     const Group& cur)
 {

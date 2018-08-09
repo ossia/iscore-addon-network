@@ -18,19 +18,11 @@ class PanelFactory;
 }  // namespace score
 
 class score_addon_network :
-        public QObject,
         public score::Plugin_QtInterface,
         public score::ApplicationPlugin_QtInterface,
         public score::CommandFactory_QtInterface,
         public score::FactoryInterface_QtInterface
 {
-        Q_OBJECT
-        Q_PLUGIN_METADATA(IID ApplicationPlugin_QtInterface_iid)
-        Q_INTERFACES(
-                score::Plugin_QtInterface
-                score::ApplicationPlugin_QtInterface
-                score::CommandFactory_QtInterface
-                score::FactoryInterface_QtInterface)
   SCORE_PLUGIN_METADATA(1, "33508c6d-46a1-4449-bfff-57246d579621")
 
     public:

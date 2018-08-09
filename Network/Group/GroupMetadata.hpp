@@ -18,7 +18,7 @@ class Group;
 class GroupMetadata :
     public score::SerializableComponent
 {
-        Q_OBJECT
+        W_OBJECT(GroupMetadata)
 
     public:
         GroupMetadata(
@@ -39,11 +39,9 @@ class GroupMetadata :
         const auto& group() const
         { return m_id; }
 
-    Q_SIGNALS:
-        void groupChanged(Id<Group>);
+        void groupChanged(Id<Group> g) W_SIGNAL(groupChanged, g);
 
-    public Q_SLOTS:
-        void setGroup(const Id<Group>& id);
+        void setGroup(const Id<Group>& id); W_SLOT(setGroup);
 
     private:
         Id<Group> m_id;

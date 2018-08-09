@@ -2,6 +2,8 @@
 #include <QObject>
 #include <QString>
 #include <Network/Communication/NetworkMessage.hpp>
+#include <Network/Client/LocalClient.hpp>
+#include <wobjectdefs.h>
 class QWebSocket;
 
 namespace Network
@@ -11,7 +13,7 @@ namespace Network
 // et le serveur écrit dedans avec le NetworkSerializationSocket
 class NetworkSocket : public QObject
 {
-        Q_OBJECT
+        W_OBJECT(NetworkSocket)
     public:
         NetworkSocket(QWebSocket* sock, QObject* parent);
         NetworkSocket(QString ip, int port, QObject* parent);
@@ -20,9 +22,9 @@ class NetworkSocket : public QObject
 
         QWebSocket& socket() const { return *m_socket; }
 
-    Q_SIGNALS:
-        void connected();
-        void messageReceived(NetworkMessage);
+        void connected() W_SIGNAL(connected);
+        void messageReceived(NetworkMessage m) W_SIGNAL(messageReceived, m);
+
 
     private:
         void init();

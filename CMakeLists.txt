@@ -133,7 +133,6 @@ set(SRCS
 )
 
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
-score_moc_headers(${PROJECT_NAME} "${HDRS}")
 score_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
 # target_sources(ossia PRIVATE $<TARGET_OBJECTS:Servus>)
 # get_target_property(SERVUS_LINK_LIBRARIES Servus INTERFACE_LINK_LIBRARIES)

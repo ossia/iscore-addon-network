@@ -4,6 +4,8 @@
 
 #include "GroupTableCheckbox.hpp"
 
+#include <wobjectimpl.h>
+W_OBJECT_IMPL(Network::GroupTableCheckbox)
 namespace Network
 {
 GroupTableCheckbox::GroupTableCheckbox()

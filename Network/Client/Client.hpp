@@ -1,19 +1,12 @@
 #pragma once
 #include <score/model/IdentifiedObject.hpp>
 
-#include <score/serialization/DataStreamVisitor.hpp>
-#include <score/serialization/JSONVisitor.hpp>
-
 namespace Network
 {
 class Client : public IdentifiedObject<Client>
 {
-        Q_OBJECT
-        Q_PROPERTY(QString name
-                   READ name
-                   WRITE setName
-                   NOTIFY nameChanged)
-    public:
+        W_OBJECT(Client)
+        public:
         Client(Id<Client> id, QObject* parent = nullptr):
             IdentifiedObject<Client>{id, "Client", parent}
         {
@@ -32,7 +25,6 @@ class Client : public IdentifiedObject<Client>
             return m_name;
         }
 
-    public Q_SLOTS:
         void setName(QString arg)
         {
             if (m_name == arg)
@@ -41,13 +33,15 @@ class Client : public IdentifiedObject<Client>
             m_name = arg;
             nameChanged(arg);
         }
+        W_SLOT(setName)
 
-    Q_SIGNALS:
-        void nameChanged(QString arg);
+        void nameChanged(QString arg) W_SIGNAL(nameChanged, arg);
 
+        W_PROPERTY(QString, name READ name WRITE setName NOTIFY nameChanged)
     private:
         QString m_name;
 };
 }
 
 Q_DECLARE_METATYPE(Id<Network::Client>)
+W_REGISTER_ARGTYPE(Id<Network::Client>)

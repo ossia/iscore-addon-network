@@ -6,7 +6,7 @@ namespace Network
 // Has a TCP socket for exchange with this client.
 class RemoteClient : public Client
 {
-        Q_OBJECT
+        W_OBJECT(RemoteClient)
     public:
         RemoteClient(NetworkSocket* socket,
                      Id<Client> id,
@@ -33,8 +33,8 @@ class RemoteClient : public Client
 
         QString m_clientServerAddress;
         int m_clientServerPort{};
-    Q_SIGNALS:
-        void messageReceived(NetworkMessage);
+
+        void messageReceived(NetworkMessage m) W_SIGNAL(messageReceived, m);
 
     private:
         NetworkSocket* m_socket{};

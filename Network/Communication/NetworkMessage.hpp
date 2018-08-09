@@ -3,6 +3,7 @@
 #include <QString>
 #include <QMetaType>
 #include <score/model/Identifier.hpp>
+#include <wobjectdefs.h>
 
 class QDataStream;
 namespace Network
@@ -26,3 +27,4 @@ struct NetworkMessage
 }
 
 Q_DECLARE_METATYPE(Network::NetworkMessage)
+W_REGISTER_ARGTYPE(Network::NetworkMessage)
