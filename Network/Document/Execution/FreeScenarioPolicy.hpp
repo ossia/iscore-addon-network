@@ -1,6 +1,9 @@
 #pragma once
 #include <Network/Document/Execution/Context.hpp>
-namespace Scenario { class ScenarioInterface; }
+namespace Scenario
+{
+class ScenarioInterface;
+}
 
 namespace Network
 {
@@ -14,5 +17,4 @@ struct FreeScenarioPolicy
       Scenario::ScenarioInterface& ip,
       const Group& cur);
 };
-
 }

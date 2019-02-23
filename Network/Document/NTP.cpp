@@ -30,27 +30,26 @@ struct NTP::ntp_impl
 };
 
 NTP::NTP()
-  : resolver{io_service}
-  , query{udp::v4(), "ntp.midway.ovh", "ntp"}
-  , receiver_endpoint{*resolver.resolve(query)}
-  , socket{io_service}
+    : resolver{io_service}
+    , query{udp::v4(), "ntp.midway.ovh", "ntp"}
+    , receiver_endpoint{*resolver.resolve(query)}
+    , socket{io_service}
 {
   socket.open(udp::v4());
 }
 
-NTP::~NTP()
-{
-
-}
+NTP::~NTP() {}
 
 NTP::duration_t NTP::get_synchronous()
 {
   ntp_impl sending;
-  socket.send_to(network::buffer(&sending, sizeof(ntp_impl)), receiver_endpoint);
+  socket.send_to(
+      network::buffer(&sending, sizeof(ntp_impl)), receiver_endpoint);
 
   ntp_impl packet;
   udp::endpoint sender_endpoint;
-  socket.receive_from(network::buffer(&packet, sizeof(ntp_impl)), sender_endpoint);
+  socket.receive_from(
+      network::buffer(&packet, sizeof(ntp_impl)), sender_endpoint);
 
   packet.txTm_s = ntohl(packet.txTm_s);
   packet.txTm_f = ntohl(packet.txTm_f);
@@ -60,15 +59,14 @@ NTP::duration_t NTP::get_synchronous()
 
 NTP::duration_t NTP::ntp_to_duration(const NTP::ntp_impl& packet)
 {
-  using std::chrono::seconds;
   using std::chrono::nanoseconds;
+  using std::chrono::seconds;
   using namespace std;
 
   duration_t t{
-    seconds{packet.txTm_s - ntp_delta}
-    + nanoseconds{int64_t(packet.txTm_f * pow(10., 9.) / pow(2., 32.))}};
+      seconds{packet.txTm_s - ntp_delta}
+      + nanoseconds{int64_t(packet.txTm_f * pow(10., 9.) / pow(2., 32.))}};
 
   return t;
 }
-
 }

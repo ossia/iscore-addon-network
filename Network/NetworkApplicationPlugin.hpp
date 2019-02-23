@@ -1,6 +1,8 @@
 #pragma once
 #include <score/plugins/application/GUIApplicationPlugin.hpp>
+
 #include <wobjectdefs.h>
+
 #include <memory>
 
 #ifdef OSSIA_DNSSD
@@ -11,28 +13,35 @@ namespace Network
 {
 class ClientSession;
 class ClientSessionBuilder;
-class NetworkApplicationPlugin :
-        public QObject,
-        public score::GUIApplicationPlugin
+class NetworkApplicationPlugin : public QObject,
+                                 public score::GUIApplicationPlugin
 {
-        W_OBJECT(NetworkApplicationPlugin)
+  W_OBJECT(NetworkApplicationPlugin)
 
-    public:
-        NetworkApplicationPlugin(const score::GUIApplicationContext& app);
-        ~NetworkApplicationPlugin();
+public:
+  NetworkApplicationPlugin(const score::GUIApplicationContext& app);
+  ~NetworkApplicationPlugin();
 
-        void setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
-        W_SLOT(setupClientConnection)
-        void setupPlayerConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
-        W_SLOT(setupPlayerConnection)
+  void setupClientConnection(
+      QString name,
+      QString ip,
+      int port,
+      QMap<QString, QByteArray>);
+  W_SLOT(setupClientConnection)
+  void setupPlayerConnection(
+      QString name,
+      QString ip,
+      int port,
+      QMap<QString, QByteArray>);
+  W_SLOT(setupPlayerConnection)
 
-    private:
-        GUIElements makeGUIElements() override;
-        std::unique_ptr<ClientSessionBuilder> m_sessionBuilder;
+private:
+  GUIElements makeGUIElements() override;
+  std::unique_ptr<ClientSessionBuilder> m_sessionBuilder;
 
 #if defined(OSSIA_DNSSD)
-        ZeroconfBrowser* m_serverBrowser{};
-        ZeroconfBrowser* m_playerBrowser{};
+  ZeroconfBrowser* m_serverBrowser{};
+  ZeroconfBrowser* m_playerBrowser{};
 #endif
 };
 }

@@ -4,38 +4,34 @@ namespace Network
 {
 class GroupManager;
 class Session;
-class PanelDelegate final :
-        public QObject,
-        public score::PanelDelegate
+class PanelDelegate final : public QObject, public score::PanelDelegate
 {
-    public:
-        PanelDelegate(
-                const score::GUIApplicationContext& ctx);
+public:
+  PanelDelegate(const score::GUIApplicationContext& ctx);
 
-        void networkPluginReady();
-    private:
-        QWidget *widget() override;
+  void networkPluginReady();
 
-        const score::PanelStatus& defaultPanelStatus() const override;
+private:
+  QWidget* widget() override;
 
-        void on_modelChanged(
-                score::MaybeDocument oldm,
-                score::MaybeDocument newm) override;
+  const score::PanelStatus& defaultPanelStatus() const override;
 
+  void on_modelChanged(score::MaybeDocument oldm, score::MaybeDocument newm)
+      override;
 
-        void setView(
-            const score::DocumentContext& ctx,
-            const GroupManager& mgr,
-            const Session* session);
+  void setView(
+      const score::DocumentContext& ctx,
+      const GroupManager& mgr,
+      const Session* session);
 
-        void setEmptyView();
+  void setEmptyView();
 
-        void on_update();
-        void scanPlugins(const score::DocumentContext& ctx);
+  void on_update();
+  void scanPlugins(const score::DocumentContext& ctx);
 
-        QWidget* m_widget{};
-        QWidget* m_subWidget{};
+  QWidget* m_widget{};
+  QWidget* m_subWidget{};
 
-        QMetaObject::Connection m_con;
+  QMetaObject::Connection m_con;
 };
 }

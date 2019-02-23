@@ -1,41 +1,41 @@
 #include "NetworkApplicationPlugin.hpp"
+
+#include "IpDialog.hpp"
+
+#include <score/actions/ActionManager.hpp>
+#include <score/actions/Menu.hpp>
+#include <score/actions/MenuManager.hpp>
+#include <score/application/ApplicationContext.hpp>
+#include <score/model/Identifier.hpp>
 #include <score/plugins/application/GUIApplicationPlugin.hpp>
+#include <score/tools/IdentifierGeneration.hpp>
 #include <score/tools/std/Optional.hpp>
+
+#include <core/command/CommandStack.hpp>
 #include <core/document/Document.hpp>
+#include <core/document/DocumentModel.hpp>
+#include <core/presenter/DocumentManager.hpp>
+
 #include <QAction>
 #include <QApplication>
 #include <QDebug>
+#include <QMessageBox>
+#include <QPair>
+#include <QTcpSocket>
 #include <qnamespace.h>
 
-#include <QPair>
-#include <algorithm>
-#include <vector>
-
+#include <Network/Client/LocalClient.hpp>
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/MasterPolicy.hpp>
 #include <Network/Document/MasterPolicy.hpp>
 #include <Network/Group/NetworkActions.hpp>
-#include <Network/Session/ClientSessionBuilder.hpp>
-#include <score/tools/IdentifierGeneration.hpp>
-
-#include <score/application/ApplicationContext.hpp>
-#include <core/command/CommandStack.hpp>
-#include <core/document/DocumentModel.hpp>
-#include <core/presenter/DocumentManager.hpp>
-#include <score/actions/MenuManager.hpp>
-#include <score/actions/Menu.hpp>
-#include <score/plugins/application/GUIApplicationPlugin.hpp>
-#include <score/model/Identifier.hpp>
-#include <score/actions/Menu.hpp>
-#include <Network/Client/LocalClient.hpp>
-#include <Network/Session/MasterSession.hpp>
-#include <score/actions/ActionManager.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
-#include <QMessageBox>
-#include <QTcpSocket>
-#include "IpDialog.hpp"
+#include <Network/Session/ClientSessionBuilder.hpp>
+#include <Network/Session/MasterSession.hpp>
 
+#include <algorithm>
+#include <vector>
 
 #if defined(OSSIA_DNSSD)
 #include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
@@ -50,39 +50,41 @@ namespace Network
 class Client;
 class Session;
 
-NetworkApplicationPlugin::NetworkApplicationPlugin(const score::GUIApplicationContext& app) :
-  GUIApplicationPlugin {app}
+NetworkApplicationPlugin::NetworkApplicationPlugin(
+    const score::GUIApplicationContext& app)
+    : GUIApplicationPlugin{app}
 {
 }
 
-NetworkApplicationPlugin::~NetworkApplicationPlugin()
+NetworkApplicationPlugin::~NetworkApplicationPlugin() {}
+
+void NetworkApplicationPlugin::setupClientConnection(
+    QString name,
+    QString ip,
+    int port,
+    QMap<QString, QByteArray>)
 {
+  m_sessionBuilder = std::make_unique<ClientSessionBuilder>(context, ip, port);
 
-}
+  connect(
+      m_sessionBuilder.get(),
+      &ClientSessionBuilder::sessionReady,
+      this,
+      [&]() {
+        auto& panel = context.panel<Network::PanelDelegate>();
+        panel.networkPluginReady();
 
-void NetworkApplicationPlugin::setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>)
-{
-  m_sessionBuilder = std::make_unique<ClientSessionBuilder>(
-        context,
-        ip,
-        port);
-
-  connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady,
-          this, [&] () {
-    auto& panel = context.panel<Network::PanelDelegate>();
-    panel.networkPluginReady();
-
-    m_sessionBuilder.reset();
-  });
-  connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed,
-          this, [&] () {
-    m_sessionBuilder.reset();
-  });
-  connect(m_sessionBuilder.get(), &ClientSessionBuilder::connected,
-          this, [&] () {
-    m_sessionBuilder->initiateConnection();
-  });
-
+        m_sessionBuilder.reset();
+      });
+  connect(
+      m_sessionBuilder.get(),
+      &ClientSessionBuilder::sessionFailed,
+      this,
+      [&]() { m_sessionBuilder.reset(); });
+  connect(
+      m_sessionBuilder.get(), &ClientSessionBuilder::connected, this, [&]() {
+        m_sessionBuilder->initiateConnection();
+      });
 }
 
 void NetworkApplicationPlugin::setupPlayerConnection(
@@ -92,31 +94,34 @@ void NetworkApplicationPlugin::setupPlayerConnection(
     QMap<QString, QByteArray>)
 {
   auto cur = currentDocument();
-  if(!cur)
+  if (!cur)
     return;
 
-  NetworkDocumentPlugin* plug = cur->context().findPlugin<NetworkDocumentPlugin>();
-  if(!plug)
+  NetworkDocumentPlugin* plug
+      = cur->context().findPlugin<NetworkDocumentPlugin>();
+  if (!plug)
     return;
 
   auto session = plug->policy().session();
   auto ms = dynamic_cast<MasterSession*>(session);
-  if(!ms)
+  if (!ms)
     return;
 
   auto s = new QTcpSocket;
 
   s->connectToHost(ip, port);
-  connect(s, &QTcpSocket::connected,
-          this, [=] {
+  connect(s, &QTcpSocket::connected, this, [=] {
     s->write(QString::number(ms->localClient().localPort()).toUtf8());
-    //s->deleteLater();
+    // s->deleteLater();
   });
-  connect(s, qOverload<QAbstractSocket::SocketError>(&QTcpSocket::error),
-          this, [=] (auto) {
-    qDebug("Socket error");
-    s->deleteLater();
-  });
+  connect(
+      s,
+      qOverload<QAbstractSocket::SocketError>(&QTcpSocket::error),
+      this,
+      [=](auto) {
+        qDebug("Socket error");
+        s->deleteLater();
+      });
 }
 
 score::GUIElements NetworkApplicationPlugin::makeGUIElements()
@@ -126,14 +131,21 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 
 #ifdef OSSIA_DNSSD
   m_serverBrowser = new ZeroconfBrowser{"_score._tcp", qApp->activeWindow()};
-  connect(m_serverBrowser, &ZeroconfBrowser::sessionSelected,
-          this, &NetworkApplicationPlugin::setupClientConnection);
+  connect(
+      m_serverBrowser,
+      &ZeroconfBrowser::sessionSelected,
+      this,
+      &NetworkApplicationPlugin::setupClientConnection);
   auto serveract = m_serverBrowser->makeAction();
   serveract->setText("Browse for server");
 
-  m_playerBrowser = new ZeroconfBrowser{"_score_player._tcp", qApp->activeWindow()};
-  connect(m_playerBrowser, &ZeroconfBrowser::sessionSelected,
-          this, &NetworkApplicationPlugin::setupPlayerConnection);
+  m_playerBrowser
+      = new ZeroconfBrowser{"_score_player._tcp", qApp->activeWindow()};
+  connect(
+      m_playerBrowser,
+      &ZeroconfBrowser::sessionSelected,
+      this,
+      &NetworkApplicationPlugin::setupPlayerConnection);
   auto playeract = m_playerBrowser->makeAction();
   playeract->setText("Browse for players");
 
@@ -141,17 +153,16 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
   fileMenu->addAction(playeract);
 #endif
 
-  QAction* makeServer = new QAction {tr("Make Server"), this};
-  connect(makeServer, &QAction::triggered, this,
-          [&] ()
-  {
-    if(auto doc = currentDocument())
+  QAction* makeServer = new QAction{tr("Make Server"), this};
+  connect(makeServer, &QAction::triggered, this, [&]() {
+    if (auto doc = currentDocument())
     {
       const auto& ctx = doc->context();
       NetworkDocumentPlugin* plug = ctx.findPlugin<NetworkDocumentPlugin>();
-      if(plug)
+      if (plug)
       {
-        auto clt = new LocalClient(Id<Client>(0)); clt->setName(tr("Master"));
+        auto clt = new LocalClient(Id<Client>(0));
+        clt->setName(tr("Master"));
         auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
         auto editpol = new MasterEditionPolicy{serv, ctx};
         plug->setEditPolicy(editpol);
@@ -160,10 +171,12 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
       }
       else
       {
-        auto clt = new LocalClient(Id<Client>(0)); clt->setName(tr("Master"));
+        auto clt = new LocalClient(Id<Client>(0));
+        clt->setName(tr("Master"));
         auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
         auto policy = new MasterEditionPolicy{serv, ctx};
-        auto plug = new NetworkDocumentPlugin{ctx, policy, getStrongId(doc->model().pluginModels()), doc};
+        auto plug = new NetworkDocumentPlugin{
+            ctx, policy, getStrongId(doc->model().pluginModels()), doc};
         auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
 
         plug->setExecPolicy(execpol);
@@ -179,12 +192,11 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 
   fileMenu->addAction(makeServer);
 
-  QAction* connectLocal = new QAction {tr("Join local"), this};
-  connect(connectLocal, &QAction::triggered, this,
-          [&] () {
+  QAction* connectLocal = new QAction{tr("Join local"), this};
+  connect(connectLocal, &QAction::triggered, this, [&]() {
     IpDialog dial{QApplication::activeWindow()};
 
-    if(dial.exec())
+    if (dial.exec())
     {
       // Default is 127.0.0.1 : 9090
       setupClientConnection(QString{}, dial.ip(), dial.port(), {});
@@ -208,5 +220,4 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 
   return g;
 }
-
 }

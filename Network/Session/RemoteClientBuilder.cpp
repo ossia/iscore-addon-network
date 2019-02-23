@@ -1,26 +1,29 @@
-#include <Network/Communication/NetworkSocket.hpp>
-#include <core/document/Document.hpp>
+#include "RemoteClientBuilder.hpp"
+
+#include "MasterSession.hpp"
+
+#include <score/command/Command.hpp>
+#include <score/command/CommandData.hpp>
+#include <score/plugins/StringFactoryKey.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
 #include <score/tools/IdentifierGeneration.hpp>
+
+#include <core/command/CommandStack.hpp>
+#include <core/document/Document.hpp>
+
 #include <QByteArray>
 #include <QDataStream>
 #include <QIODevice>
+#include <QJsonDocument>
 #include <QList>
 #include <QPair>
-#include <QJsonDocument>
-#include <sys/types.h>
 
-#include "MasterSession.hpp"
-#include "RemoteClientBuilder.hpp"
-#include <Network/Communication/NetworkMessage.hpp>
-#include <core/command/CommandStack.hpp>
-#include <score/command/Command.hpp>
-#include <score/command/CommandData.hpp>
-#include <score/plugins/customfactory/StringFactoryKey.hpp>
-#include <score/serialization/DataStreamVisitor.hpp>
-#include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
-
+#include <Network/Communication/NetworkMessage.hpp>
+#include <Network/Communication/NetworkSocket.hpp>
+#include <Network/Document/Execution/SyncMode.hpp>
+#include <sys/types.h>
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::RemoteClientBuilder)
 
@@ -28,18 +31,23 @@ namespace Network
 {
 class Client;
 
-RemoteClientBuilder::RemoteClientBuilder(MasterSession& session, QWebSocket* sock):
-  m_session{session}
+RemoteClientBuilder::RemoteClientBuilder(
+    MasterSession& session,
+    QWebSocket* sock)
+    : m_session{session}
 {
   m_socket = new NetworkSocket(sock, nullptr);
-  connect(m_socket, &NetworkSocket::messageReceived,
-          this, &RemoteClientBuilder::on_messageReceived);
+  connect(
+      m_socket,
+      &NetworkSocket::messageReceived,
+      this,
+      &RemoteClientBuilder::on_messageReceived);
 }
 
 void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
 {
   auto& mapi = MessagesAPI::instance();
-  if(m.address == mapi.session_askNewId)
+  if (m.address == mapi.session_askNewId)
   {
     QDataStream s{m.data};
     s >> m_clientName;
@@ -59,9 +67,8 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
     }
 
     m_socket->sendMessage(idOffer);
-
   }
-  else if(m.address == mapi.session_join)
+  else if (m.address == mapi.session_join)
   {
     // TODO validation
     NetworkMessage doc;
@@ -69,9 +76,10 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
 
     // Data is the serialized command stack, and the document models.
     {
-    DataStreamReader vr{&doc.data};
-    vr.m_stream << QJsonDocument(m_session.document().document.saveAsJson()).toBinaryData();
-    vr.readFrom(m_session.document().document.commandStack());
+      DataStreamReader vr{&doc.data};
+      vr.m_stream << QJsonDocument(m_session.document().document.saveAsJson())
+                         .toBinaryData();
+      vr.readFrom(m_session.document().document.commandStack());
     }
 
     m_socket->sendMessage(doc);

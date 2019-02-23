@@ -1,17 +1,21 @@
 
-#include <score/tools/std/Optional.hpp>
-#include <QJsonObject>
-#include <QJsonValue>
-#include <algorithm>
-
 #include "GroupMetadata.hpp"
+
+#include <score/model/Identifier.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONValueVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
-#include <score/model/Identifier.hpp>
+#include <score/tools/std/Optional.hpp>
 
-template <typename T> class Reader;
-template <typename T> class Writer;
+#include <QJsonObject>
+#include <QJsonValue>
+
+#include <algorithm>
+
+template <typename T>
+class Reader;
+template <typename T>
+class Writer;
 /* TODO
 template<>
 void DataStreamReader::read(

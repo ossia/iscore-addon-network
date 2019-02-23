@@ -2,13 +2,15 @@
 #include <QByteArray>
 namespace Network
 {
-enum class ExpressionPolicy {
+enum class ExpressionPolicy
+{
   OnFirst,
   OnMajority,
   OnAll
 };
 
-enum class SyncMode {
+enum class SyncMode
+{
   NonCompensatedSync,
   CompensatedSync,
   NonCompensatedAsync,

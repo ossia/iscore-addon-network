@@ -1,11 +1,11 @@
 #pragma once
 /*
-#include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
-#include <score/tools/std/Optional.hpp>
 #include <score/command/Command.hpp>
-#include <score/model/path/ObjectPath.hpp>
-
 #include <score/model/Identifier.hpp>
+#include <score/model/path/ObjectPath.hpp>
+#include <score/tools/std/Optional.hpp>
+
+#include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
 
 struct DataStreamInput;
 struct DataStreamOutput;
@@ -17,7 +17,8 @@ namespace Command
 {
 class ChangeGroup : public score::Command
 {
-        score_ COMMAND_DECL(DistributedScenarioCommandFactoryName(), ChangeGroup, "Change the group of an element")
+        score_ COMMAND_DECL(DistributedScenarioCommandFactoryName(),
+ChangeGroup, "Change the group of an element")
 
     public:
         ChangeGroup(ObjectPath&& path, Id<Group> newGroup);

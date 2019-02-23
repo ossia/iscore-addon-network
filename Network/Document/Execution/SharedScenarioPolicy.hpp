@@ -1,6 +1,9 @@
 #pragma once
 #include <Network/Document/Execution/Context.hpp>
-namespace Scenario { class ScenarioInterface; }
+namespace Scenario
+{
+class ScenarioInterface;
+}
 namespace Network
 {
 
@@ -17,9 +20,10 @@ struct SharedScenarioPolicy
   void operator()(Execution::EventComponent& cst, const Group& cur);
 
   //! Todo isn't this the code for the mixed mode actually ?
-  //! In the "shared" mode we could assume that evaluation entering / leaving is the same
-  //! for everyone...
-  void operator()(Execution::TimeSyncComponent& comp, const Group& parent_group);
+  //! In the "shared" mode we could assume that evaluation entering / leaving
+  //! is the same for everyone...
+  void
+  operator()(Execution::TimeSyncComponent& comp, const Group& parent_group);
 
   void setupMaster(
       Execution::TimeSyncComponent& comp,
@@ -27,5 +31,4 @@ struct SharedScenarioPolicy
       const Group& parent_group,
       SyncMode sync);
 };
-
 }

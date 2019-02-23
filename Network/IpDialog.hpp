@@ -10,20 +10,20 @@ namespace Network
 class IpWidget;
 class IpDialog final : public QDialog
 {
-    public:
-        explicit IpDialog(QWidget* parent);
+public:
+  explicit IpDialog(QWidget* parent);
 
-        int port() const;
-        const QString& ip() const;
+  int port() const;
+  const QString& ip() const;
 
-    private:
-        void accepted();
-        void rejected();
+private:
+  void accepted();
+  void rejected();
 
-        QSpinBox* m_portBox{};
-        IpWidget* m_ipBox{};
+  QSpinBox* m_portBox{};
+  IpWidget* m_ipBox{};
 
-        int m_port{};
-        QString m_ip;
+  int m_port{};
+  QString m_ip;
 };
 }

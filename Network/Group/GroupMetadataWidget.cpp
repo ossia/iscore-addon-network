@@ -1,25 +1,27 @@
 /*
-#include <score/tools/std/Optional.hpp>
-#include <score/command/Dispatchers/CommandDispatcher.hpp>
-#include <score/document/DocumentInterface.hpp>
-#include <QBoxLayout>
-#include <QComboBox>
-#include <QLabel>
-#include <QLayout>
-
-#include <QString>
-#include <QVariant>
-#include <vector>
+#include "GroupMetadataWidget.hpp"
 
 #include "Commands/ChangeGroup.hpp"
 #include "Group.hpp"
 #include "GroupManager.hpp"
 #include "GroupMetadata.hpp"
-#include "GroupMetadataWidget.hpp"
+
+#include <score/command/Dispatchers/CommandDispatcher.hpp>
+#include <score/document/DocumentContext.hpp>
+#include <score/document/DocumentInterface.hpp>
 #include <score/model/Identifier.hpp>
 #include <score/tools/Todo.hpp>
-#include <score/document/DocumentContext.hpp>
+#include <score/tools/std/Optional.hpp>
 #include <score/widgets/SignalUtils.hpp>
+
+#include <QBoxLayout>
+#include <QComboBox>
+#include <QLabel>
+#include <QLayout>
+#include <QString>
+#include <QVariant>
+
+#include <vector>
 
 Q_DECLARE_METATYPE(Id<Network::Group>)
 
@@ -66,8 +68,9 @@ void GroupMetadataWidget::on_indexChanged(int)
     auto data = m_combo->currentData().value<Id<Group>>();
     if(m_object.group() != data)
     {
-        CommandDispatcher<> dispatcher{score::IDocument::documentContext(*m_groups).commandStack};
-        dispatcher.submitCommand(
+        CommandDispatcher<>
+dispatcher{score::IDocument::documentContext(*m_groups).commandStack};
+        dispatcher.submit(
                     new Command::ChangeGroup{
                         score::IDocument::unsafe_path(m_object.element()),
                                                 data});

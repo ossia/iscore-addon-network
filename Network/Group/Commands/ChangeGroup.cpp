@@ -1,20 +1,23 @@
 /*
-#include <boost/concept/usage.hpp>
-
-#include <boost/range/algorithm/find_if.hpp>
-#include <QObject>
-
-#include <QString>
-#include <vector>
-
 #include "ChangeGroup.hpp"
-#include <Network/Group/GroupMetadata.hpp"
-#include <Scenario/Document/Interval/IntervalModel.hpp>
+
 #include <Scenario/Document/Event/EventModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
+
+#include <score/model/path/ObjectPath.hpp>
 #include <score/plugins/documentdelegate/plugin/ElementPluginModel.hpp>
 #include <score/plugins/documentdelegate/plugin/ElementPluginModelList.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
-#include <score/model/path/ObjectPath.hpp>
+
+#include <boost/concept/usage.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+
+#include <QObject>
+#include <QString>
+
+#include <vector>
+
+#include <Network/Group/GroupMetadata.hpp"
 
 
 namespace Network
@@ -29,8 +32,8 @@ static GroupMetadata* getGroupMetadata(QObject* obj)
     {
         auto& plugs = cstr->pluginModelList.list();
         auto plug_it = find_if(plugs, [] (score::ElementPluginModel* elt)
-        { return elt->metaObject()->className() == QString{"GroupMetadata"}; });
-        SCORE_ASSERT(plug_it != plugs.end());
+        { return elt->metaObject()->className() == QString{"GroupMetadata"};
+}); SCORE_ASSERT(plug_it != plugs.end());
 
         return static_cast<GroupMetadata*>(*plug_it);
     }
@@ -38,8 +41,8 @@ static GroupMetadata* getGroupMetadata(QObject* obj)
     {
         auto& plugs = ev->pluginModelList.list();
         auto plug_it = find_if(plugs, [] (score::ElementPluginModel* elt)
-        { return elt->metaObject()->className() == QString{"GroupMetadata"}; });
-        SCORE_ASSERT(plug_it != plugs.end());
+        { return elt->metaObject()->className() == QString{"GroupMetadata"};
+}); SCORE_ASSERT(plug_it != plugs.end());
 
         return static_cast<GroupMetadata*>(*plug_it);
     }

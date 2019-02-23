@@ -1,13 +1,14 @@
 #pragma once
 #include <QFrame>
-#include <array>
+
 #include <wobjectdefs.h>
+
+#include <array>
 
 class QEvent;
 class QLineEdit;
 class QObject;
 class QWidget;
-
 
 namespace Network
 {
@@ -15,29 +16,30 @@ namespace Network
 // http://stackoverflow.com/questions/9306335/an-ip-address-widget-for-qt-similar-to-mfcs-ip-address-control
 class IpWidget : public QFrame
 {
-        W_OBJECT(IpWidget)
+  W_OBJECT(IpWidget)
 
-        enum
-        {
-            QTUTL_IP_SIZE   = 4,
-            MAX_DIGITS      = 3
-        };
-    public:
-        explicit IpWidget(QWidget *parent = 0);
-        ~IpWidget();
+  enum
+  {
+    QTUTL_IP_SIZE = 4,
+    MAX_DIGITS = 3
+  };
 
-        bool eventFilter( QObject *obj, QEvent *event ) override;
+public:
+  explicit IpWidget(QWidget* parent = 0);
+  ~IpWidget();
 
-        std::array<QLineEdit*, QTUTL_IP_SIZE> lineEdits;
+  bool eventFilter(QObject* obj, QEvent* event) override;
 
-        void slotTextChanged( QLineEdit* pEdit ); W_SLOT(slotTextChanged)
+  std::array<QLineEdit*, QTUTL_IP_SIZE> lineEdits;
 
-        void signalTextChanged( QLineEdit* pEdit ) W_SIGNAL(signalTextChanged, pEdit);
+  void slotTextChanged(QLineEdit* pEdit);
+  W_SLOT(slotTextChanged)
 
-    private:
-        void MoveNextLineEdit (int i);
-        void MovePrevLineEdit (int i);
+  void signalTextChanged(QLineEdit* pEdit) W_SIGNAL(signalTextChanged, pEdit);
+
+private:
+  void MoveNextLineEdit(int i);
+  void MovePrevLineEdit(int i);
 };
-
 }
 W_REGISTER_ARGTYPE(QLineEdit*)

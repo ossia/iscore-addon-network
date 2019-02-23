@@ -1,26 +1,29 @@
+#include "DocumentPlugin.hpp"
+
+#include <Process/Process.hpp>
+#include <Scenario/Document/Event/EventModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
+
+#include <score/model/EntityMap.hpp>
+#include <score/model/Identifier.hpp>
+#include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
+#include <score/serialization/VisitorCommon.hpp>
 #include <score/tools/std/Optional.hpp>
+
 #include <core/document/Document.hpp>
 #include <core/document/DocumentModel.hpp>
-#include <score/serialization/VisitorCommon.hpp>
 
 #include <QString>
 
+#include <Network/Client/LocalClient.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
 #include <Network/Group/GroupMetadata.hpp>
 #include <Network/Group/GroupMetadataWidget.hpp>
-#include "DocumentPlugin.hpp"
-#include <Process/Process.hpp>
-#include <Network/Session/Session.hpp>
-#include <Scenario/Document/Interval/IntervalModel.hpp>
-#include <Scenario/Document/Event/EventModel.hpp>
-#include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
-#include <score/model/EntityMap.hpp>
-#include <score/model/Identifier.hpp>
-#include <Network/Client/LocalClient.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
+#include <Network/Session/Session.hpp>
 class QWidget;
 struct VisitorVariant;
 
@@ -28,34 +31,37 @@ struct VisitorVariant;
 W_OBJECT_IMPL(Network::NetworkDocumentPlugin)
 namespace Network
 {
-MessagesAPI::MessagesAPI():
-  command_new{QByteArrayLiteral("/command/new")},
-  command_undo{QByteArrayLiteral("/command/undo")},
-  command_redo{QByteArrayLiteral("/command/redo")},
-  command_index{QByteArrayLiteral("/command/index")},
-  lock{QByteArrayLiteral("/lock")},
-  unlock{QByteArrayLiteral("/unlock")},
+MessagesAPI::MessagesAPI()
+    : command_new{QByteArrayLiteral("/command/new")}
+    , command_undo{QByteArrayLiteral("/command/undo")}
+    , command_redo{QByteArrayLiteral("/command/redo")}
+    , command_index{QByteArrayLiteral("/command/index")}
+    , lock{QByteArrayLiteral("/lock")}
+    , unlock{QByteArrayLiteral("/unlock")}
+    ,
 
-  ping{QByteArrayLiteral("/ping")},
-  pong{QByteArrayLiteral("/pong")},
-  play{QByteArrayLiteral("/play")},
-  stop{QByteArrayLiteral("/stop")},
+    ping{QByteArrayLiteral("/ping")}
+    , pong{QByteArrayLiteral("/pong")}
+    , play{QByteArrayLiteral("/play")}
+    , stop{QByteArrayLiteral("/stop")}
+    ,
 
-  session_portinfo{QByteArrayLiteral("/session/portinfo")},
-  session_askNewId{QByteArrayLiteral("/session/askNewId")},
-  session_idOffer{QByteArrayLiteral("/session/idOffer")},
-  session_join{QByteArrayLiteral("/session/join")},
-  session_document{QByteArrayLiteral("/session/document")},
+    session_portinfo{QByteArrayLiteral("/session/portinfo")}
+    , session_askNewId{QByteArrayLiteral("/session/askNewId")}
+    , session_idOffer{QByteArrayLiteral("/session/idOffer")}
+    , session_join{QByteArrayLiteral("/session/join")}
+    , session_document{QByteArrayLiteral("/session/document")}
+    ,
 
-  trigger_expression_true{QByteArrayLiteral("/trigger/expression_true")},
-  trigger_previous_completed{QByteArrayLiteral("/trigger/previous_completed")},
-  trigger_entered{QByteArrayLiteral("/trigger/entered")},
-  trigger_left{QByteArrayLiteral("/trigger/left")},
-  trigger_finished{QByteArrayLiteral("/trigger/finished")},
-  trigger_triggered{QByteArrayLiteral("/trigger/triggered")},
-  interval_speed{QByteArrayLiteral("/interval/speed")}
+    trigger_expression_true{QByteArrayLiteral("/trigger/expression_true")}
+    , trigger_previous_completed{QByteArrayLiteral(
+          "/trigger/previous_completed")}
+    , trigger_entered{QByteArrayLiteral("/trigger/entered")}
+    , trigger_left{QByteArrayLiteral("/trigger/left")}
+    , trigger_finished{QByteArrayLiteral("/trigger/finished")}
+    , trigger_triggered{QByteArrayLiteral("/trigger/triggered")}
+    , interval_speed{QByteArrayLiteral("/interval/speed")}
 {
-
 }
 
 const MessagesAPI& MessagesAPI::instance()
@@ -66,12 +72,15 @@ const MessagesAPI& MessagesAPI::instance()
 
 NetworkDocumentPlugin::NetworkDocumentPlugin(
     const score::DocumentContext& ctx,
-    EditionPolicy *policy,
+    EditionPolicy* policy,
     Id<score::DocumentPlugin> id,
-    QObject* parent):
-  score::SerializableDocumentPlugin{ctx, std::move(id), "NetworkDocumentPlugin", parent},
-  m_policy{policy},
-  m_groups{new GroupManager{this}}
+    QObject* parent)
+    : score::SerializableDocumentPlugin{ctx,
+                                        std::move(id),
+                                        "NetworkDocumentPlugin",
+                                        parent}
+    , m_policy{policy}
+    , m_groups{new GroupManager{this}}
 {
   SCORE_ASSERT(policy);
   m_policy->setParent(this);
@@ -82,12 +91,9 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   groupManager().addGroup(allGroup);
 }
 
-NetworkDocumentPlugin::~NetworkDocumentPlugin()
-{
+NetworkDocumentPlugin::~NetworkDocumentPlugin() {}
 
-}
-
-void NetworkDocumentPlugin::setEditPolicy(EditionPolicy * pol)
+void NetworkDocumentPlugin::setEditPolicy(EditionPolicy* pol)
 {
   SCORE_ASSERT(pol);
 
@@ -119,24 +125,17 @@ void NetworkDocumentPlugin::on_stop()
   compensated.trigger_triggered.clear();
 }
 
-score::DocumentPlugin*DocumentPluginFactory::load(
+score::DocumentPlugin* DocumentPluginFactory::load(
     const VisitorVariant& var,
     score::DocumentContext& doc,
     QObject* parent)
 {
-  return score::deserialize_dyn(var, [&] (auto&& deserializer)
-  { return new NetworkDocumentPlugin{doc, deserializer, parent}; });
+  return score::deserialize_dyn(var, [&](auto&& deserializer) {
+    return new NetworkDocumentPlugin{doc, deserializer, parent};
+  });
 }
 
-ExecutionPolicy::~ExecutionPolicy()
-{
+ExecutionPolicy::~ExecutionPolicy() {}
 
+EditionPolicy::~EditionPolicy() {}
 }
-
-EditionPolicy::~EditionPolicy()
-{
-
-}
-
-}
-

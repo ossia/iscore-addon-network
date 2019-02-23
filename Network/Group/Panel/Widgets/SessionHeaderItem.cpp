@@ -4,10 +4,8 @@
 
 namespace Network
 {
-SessionHeaderItem::SessionHeaderItem(const Client& clt):
-    QTableWidgetItem{clt.name()},
-    client{clt.id()}
+SessionHeaderItem::SessionHeaderItem(const Client& clt)
+    : QTableWidgetItem{clt.name()}, client{clt.id()}
 {
-
 }
 }

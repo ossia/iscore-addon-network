@@ -9,13 +9,13 @@ struct NetworkMessage;
 
 class MessageValidator
 {
-    public:
-        MessageValidator(Id<Session> s, MessageMapper& map);
+public:
+  MessageValidator(Id<Session> s, MessageMapper& map);
 
-        bool validate(const NetworkMessage& m);
+  bool validate(const NetworkMessage& m);
 
-    private:
-        Id<Session> m_session;
-        MessageMapper& m_mapper;
+private:
+  Id<Session> m_session;
+  MessageMapper& m_mapper;
 };
 }

@@ -1,6 +1,9 @@
 #pragma once
 #include <Network/Document/Execution/Context.hpp>
-namespace Scenario { class ScenarioInterface; }
+namespace Scenario
+{
+class ScenarioInterface;
+}
 namespace Network
 {
 
@@ -13,8 +16,7 @@ struct MixedScenarioPolicy
       Scenario::ScenarioInterface& ip,
       const Group& cur);
 
-  void operator()(Execution::TimeSyncComponent& comp, const Group& parent_group);
+  void
+  operator()(Execution::TimeSyncComponent& comp, const Group& parent_group);
 };
-
-
 }
