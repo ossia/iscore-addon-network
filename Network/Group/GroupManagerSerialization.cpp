@@ -4,6 +4,7 @@
 
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
+#include <score/tools/std/IndirectContainer.hpp>
 
 #include <QJsonArray>
 #include <QJsonObject>
@@ -40,18 +41,22 @@ void DataStreamWriter::write(Network::GroupManager& elt)
 }
 
 template <>
-void JSONObjectReader::read(const Network::GroupManager& elt)
+void JSONReader::read(const Network::GroupManager& elt)
 {
-  obj["GroupList"] = toJsonArray(elt.groups());
+  obj.self.stream.Key("GroupList");
+  obj.self.stream.StartArray();
+  for(auto& e : elt.groups())
+    readFrom(*e);
+  obj.self.stream.EndArray();
 }
 
 template <>
-void JSONObjectWriter::write(Network::GroupManager& elt)
+void JSONWriter::write(Network::GroupManager& elt)
 {
   auto arr = obj["GroupList"].toArray();
   for (const auto& json_vref : arr)
   {
-    JSONObject::Deserializer deserializer{json_vref.toObject()};
+    JSONObject::Deserializer deserializer{json_vref};
     elt.addGroup(new Network::Group{deserializer, &elt});
   }
 }

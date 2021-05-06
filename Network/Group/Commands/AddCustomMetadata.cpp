@@ -1,3 +1,4 @@
+/*
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
@@ -15,9 +16,9 @@ namespace Network
 namespace Command
 {
 AddCustomMetadata::AddCustomMetadata(
-    const QList<const Scenario::IntervalModel*>& c,
-    const QList<const Scenario::EventModel*>& e,
-    const QList<const Scenario::TimeSyncModel*>& n,
+    const std::vector<const Scenario::IntervalModel*>& c,
+    const std::vector<const Scenario::EventModel*>& e,
+    const std::vector<const Scenario::TimeSyncModel*>& n,
     const std::vector<std::pair<QString, QString>>& meta)
 {
   m_intervals.reserve(c.size());
@@ -109,17 +110,17 @@ void SetCustomMetadata(
 {
   auto sel = ctx.selectionStack.currentSelection();
 
-  QList<const Scenario::TimeSyncModel*> l;
-  l += filterSelectionByType<Scenario::TimeSyncModel>(sel);
+  std::vector<const Scenario::TimeSyncModel*> l;
+  l = filterSelectionByType<Scenario::TimeSyncModel>(sel);
 
   auto states = filterSelectionByType<Scenario::StateModel>(sel);
   if (!states.empty())
   {
-    auto& s = Scenario::parentScenario(*states.first());
+    auto& s = Scenario::parentScenario(*states.front());
     for (auto e : filterSelectionByType<Scenario::StateModel>(sel))
-      l.append(&Scenario::parentTimeSync(*e, s));
+      l.push_back(&Scenario::parentTimeSync(*e, s));
   }
-  l = l.toSet().toList();
+  ossia::remove_duplicates(l);
 
   auto cmd = new Command::AddCustomMetadata{
       filterSelectionByType<Scenario::IntervalModel>(sel),
@@ -148,3 +149,4 @@ struct TSerializer<DataStream, Network::Command::MetadataUndoRedo<T>>
     s.stream() >> obj.path >> obj.before >> obj.after;
   }
 };
+*/

@@ -9,7 +9,7 @@ namespace Network
 {
 
 GroupMetadata::GroupMetadata(Id<Component> self, Id<Group> id, QObject* parent)
-    : score::SerializableComponent{self, "GroupMetadata", parent}, m_id{id}
+    : score::Component{self, "GroupMetadata", parent}, m_id{id}
 {
 }
 

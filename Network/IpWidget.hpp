@@ -1,7 +1,7 @@
 #pragma once
 #include <QFrame>
 
-#include <wobjectdefs.h>
+#include <verdigris>
 
 #include <array>
 

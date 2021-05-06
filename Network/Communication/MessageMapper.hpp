@@ -10,14 +10,6 @@
 
 #include <functional>
 
-namespace std
-{
-template <>
-struct hash<QByteArray>
-{
-  std::size_t operator()(const QByteArray& id) const { return qHash(id); }
-};
-}
 namespace Network
 {
 struct NetworkMessage;

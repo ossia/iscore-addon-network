@@ -77,8 +77,9 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
     // Data is the serialized command stack, and the document models.
     {
       DataStreamReader vr{&doc.data};
-      vr.m_stream << QJsonDocument(m_session.document().document.saveAsJson())
-                         .toBinaryData();
+      JSONObject::Serializer wr{};
+      m_session.document().document.saveAsJson(wr);
+      vr.m_stream << wr.toByteArray();
       vr.readFrom(m_session.document().document.commandStack());
     }
 

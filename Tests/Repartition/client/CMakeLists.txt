@@ -29,4 +29,4 @@ ${API_HEADERS_FOLDER}/Repartition/session/ZeroConfClientThread.h)
 add_executable(Client ${SRC} ${HEADERS})
 
 target_link_libraries(Client PRIVATE dns_sd pthread)
-target_link_libraries(Client PRIVATE Qt5::Core Qt5::Network)
+target_link_libraries(Client PRIVATE ${QT_PREFIX}::Core ${QT_PREFIX}::Network)

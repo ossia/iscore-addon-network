@@ -1,7 +1,7 @@
 #pragma once
 #include <score/plugins/application/GUIApplicationPlugin.hpp>
 
-#include <wobjectdefs.h>
+#include <verdigris>
 
 #include <memory>
 

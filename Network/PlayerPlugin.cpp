@@ -3,6 +3,7 @@
 #include <Network/PlayerPlugin.hpp>
 #include <Network/Session/PlayerSessionBuilder.hpp>
 #include <Network/Settings/NetworkSettingsModel.hpp>
+#include <score/tools/Bind.hpp>
 #undef OSSIA_DNSSD
 #if defined(OSSIA_DNSSD)
 #include <servus/servus.h>

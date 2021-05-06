@@ -1,5 +1,6 @@
 #include <Scenario/Application/ScenarioActions.hpp>
 
+#include <score/tools/Bind.hpp>
 #include <score/actions/ActionManager.hpp>
 
 #include <Engine/ApplicationPlugin.hpp>
@@ -156,9 +157,8 @@ void GUIClientEditionPolicy::play()
   {
     auto& plug = score::GUIAppContext()
                      .guiApplicationPlugin<Engine::ApplicationPlugin>();
-    plug.on_play(
+    plug.execution().request_play_interval(
         sm->baseInterval(),
-        true,
         BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
         TimeVal{});
   }

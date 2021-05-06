@@ -133,7 +133,7 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
     }
 
     score::loadCommandStack(
-        m_context.components, writer, doc->commandStack(), [](auto) {});
+        m_context.components, writer, doc->commandStack(), [](auto) { return true; });
     // No redo.
     auto& ctx = doc->context();
     NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();

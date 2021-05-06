@@ -43,8 +43,10 @@ struct NetworkPrunerContext
 };
 
 template <typename T, typename Obj>
-optional<T> get_metadata(Obj& obj, const QString& s)
+std::optional<T> get_metadata(Obj& obj, const QString& s)
 {
+  SCORE_TODO;
+  /*
   auto& m = obj.metadata().getExtendedMetadata();
   auto it = m.constFind(s);
   if (it != m.constEnd())
@@ -53,6 +55,7 @@ optional<T> get_metadata(Obj& obj, const QString& s)
     if (var.canConvert<T>())
       return var.value<T>();
   }
+*/
   return {};
 }
 

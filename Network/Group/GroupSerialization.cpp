@@ -39,15 +39,15 @@ void DataStreamWriter::write(Network::Group& elt)
 }
 
 template <>
-void JSONObjectReader::read(const Network::Group& elt)
+void JSONReader::read(const Network::Group& elt)
 {
   obj[strings.Name] = elt.name();
-  obj["Clients"] = toJsonArray(elt.clients());
+  obj["Clients"] = elt.clients();
 }
 
 template <>
-void JSONObjectWriter::write(Network::Group& elt)
+void JSONWriter::write(Network::Group& elt)
 {
   elt.m_name = obj[strings.Name].toString();
-  fromJsonValueArray(obj["Clients"].toArray(), elt.m_executingClients);
+  elt.m_executingClients <<= obj["Clients"];
 }

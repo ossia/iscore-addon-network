@@ -96,7 +96,7 @@ void ExprNotInGroup::cleanTriggerCallback()
   if (it_triggered)
   {
     node.triggered.remove_callback(*it_triggered);
-    it_triggered = ossia::none;
+    it_triggered = std::nullopt;
   }
 }
 }

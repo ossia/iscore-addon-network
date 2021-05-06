@@ -25,7 +25,7 @@ struct NonCompensatedExpressionInGroup
     std::shared_ptr<expression_with_callback> shared_expr;
     AsyncExpression* async_expr{};
 
-    optional<ossia::callback_container<std::function<void()>>::iterator>
+    std::optional<ossia::callback_container<std::function<void()>>::iterator>
         it_triggered;
   };
 
@@ -105,7 +105,7 @@ struct SharedNonCompensatedAsyncInGroup
           if (e->it_triggered)
           {
             e->node.triggered.remove_callback(*e->it_triggered);
-            e->it_triggered = ossia::none;
+            e->it_triggered = std::nullopt;
           }
 
           if (e->shared_expr->it_finished)
@@ -113,7 +113,7 @@ struct SharedNonCompensatedAsyncInGroup
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = ossia::none;
+            e->shared_expr->it_finished = std::nullopt;
           }
 
           e->async_expr
@@ -127,7 +127,7 @@ struct SharedNonCompensatedAsyncInGroup
           if (e->it_triggered)
           {
             e->node.triggered.remove_callback(*e->it_triggered);
-            e->it_triggered = ossia::none;
+            e->it_triggered = std::nullopt;
           }
 
           if (e->shared_expr->it_finished)
@@ -135,7 +135,7 @@ struct SharedNonCompensatedAsyncInGroup
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = ossia::none;
+            e->shared_expr->it_finished = std::nullopt;
           }
 
           e->async_expr->ping();
@@ -193,7 +193,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
           if (e->it_triggered)
           {
             e->node.triggered.remove_callback(*e->it_triggered);
-            e->it_triggered = ossia::none;
+            e->it_triggered = std::nullopt;
           }
 
           if (e->shared_expr->it_finished)
@@ -201,7 +201,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = ossia::none;
+            e->shared_expr->it_finished = std::nullopt;
           }
           e->async_expr
               ->ping(); // TODO how to transmit the max bound information ??
@@ -219,7 +219,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
           if (e->it_triggered)
           {
             e->node.triggered.remove_callback(*e->it_triggered);
-            e->it_triggered = ossia::none;
+            e->it_triggered = std::nullopt;
           }
 
           if (e->shared_expr->it_finished)
@@ -227,7 +227,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = ossia::none;
+            e->shared_expr->it_finished = std::nullopt;
           }
           e->async_expr->ping();
 

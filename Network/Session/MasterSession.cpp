@@ -1,8 +1,8 @@
 #include "MasterSession.hpp"
 
 #include <score/model/Identifier.hpp>
-#include <score/tools/Todo.hpp>
 #include <score/tools/std/Optional.hpp>
+#include <score/tools/Bind.hpp>
 
 #include <QHostAddress>
 #include <qnamespace.h>

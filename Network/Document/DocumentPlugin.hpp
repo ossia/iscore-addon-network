@@ -21,6 +21,9 @@
 #include <functional>
 #include <vector>
 
+#include <score/serialization/DataStreamFwd.hpp>
+SCORE_SERIALIZE_DATASTREAM_DECLARE(, score::CommandData)
+
 class DataStream;
 class JSONObject;
 class QWidget;
@@ -56,7 +59,7 @@ struct NetworkExpressionData
   Execution::TimeSyncComponent& component;
 
   //! Will fill itself with received messages
-  score::hash_map<Id<Client>, optional<bool>> values;
+  score::hash_map<Id<Client>, std::optional<bool>> values;
   tsl::hopscotch_set<Id<Client>> previousCompleted;
 
   Id<Group> thisGroup;

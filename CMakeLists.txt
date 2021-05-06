@@ -1,157 +1,148 @@
-cmake_minimum_required(VERSION 3.0)
 project(score_addon_network LANGUAGES CXX)
 
 score_common_setup()
 
 # Packages
-find_package(Qt5 5.3 REQUIRED COMPONENTS Core Widgets Network WebSockets Xml Test)
+find_package(Qt5 5.3 REQUIRED COMPONENTS Core Widgets Network WebSockets Xml)
 
 # Files & main target
 set(HDRS
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Client/Client.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Client/LocalClient.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Client/RemoteClient.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/MessageMapper.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/MessageValidator.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkMessage.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkServer.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkSocket.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/ClientPolicy.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/DocumentPlugin.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/MasterPolicy.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Timekeeper.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/NTP.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/PlaceholderPolicy.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/BasicPruner.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/DateExpression.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SyncMode.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/Context.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/FreeScenarioPolicy.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SharedScenarioPolicy.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SharedNonCompensatedExpressions.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SharedCompensatedExpressions.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/MixedScenarioPolicy.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/MasterPolicy.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SlavePolicy.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddClientToGroup.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/ChangeGroup.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/CreateGroup.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/DistributedScenarioCommandFactory.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/RemoveClientFromGroup.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/RemoveGroup.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddCustomMetadata.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Group.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/NetworkActions.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupManager.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadata.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadataWidget.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/GroupPanelDelegate.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/GroupPanelFactory.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupHeaderItem.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupListWidget.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupTableCheckbox.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupTableWidget.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupWidget.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/SessionHeaderItem.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpDialog.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpWidget.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/NetworkApplicationPlugin.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/PlayerPlugin.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSessionBuilder.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/PlayerSessionBuilder.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSession.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/MasterSession.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/RemoteClientBuilder.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/Session.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/commands/ClientNameChangedCommand.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/commands/ClientPortChangedCommand.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/commands/MasterPortChangedCommand.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettings.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsModel.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsPresenter.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsView.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/score_addon_network.hpp"
+    Network/Client/Client.hpp
+    Network/Client/LocalClient.hpp
+    Network/Client/RemoteClient.hpp
+    Network/Communication/MessageMapper.hpp
+    Network/Communication/MessageValidator.hpp
+    Network/Communication/NetworkMessage.hpp
+    Network/Communication/NetworkServer.hpp
+    Network/Communication/NetworkSocket.hpp
+    Network/Document/ClientPolicy.hpp
+    Network/Document/DocumentPlugin.hpp
+    Network/Document/MasterPolicy.hpp
+    Network/Document/Timekeeper.hpp
+    Network/Document/NTP.hpp
+    Network/Document/PlaceholderPolicy.hpp
+    Network/Document/Execution/BasicPruner.hpp
+    Network/Document/Execution/DateExpression.hpp
+    Network/Document/Execution/SyncMode.hpp
+    Network/Document/Execution/Context.hpp
+    Network/Document/Execution/FreeScenarioPolicy.hpp
+    Network/Document/Execution/SharedScenarioPolicy.hpp
+    Network/Document/Execution/SharedNonCompensatedExpressions.hpp
+    Network/Document/Execution/SharedCompensatedExpressions.hpp
+    Network/Document/Execution/MixedScenarioPolicy.hpp
+    Network/Document/Execution/MasterPolicy.hpp
+    Network/Document/Execution/SlavePolicy.hpp
+    Network/Group/Commands/AddClientToGroup.hpp
+    Network/Group/Commands/ChangeGroup.hpp
+    Network/Group/Commands/CreateGroup.hpp
+    Network/Group/Commands/DistributedScenarioCommandFactory.hpp
+    Network/Group/Commands/RemoveClientFromGroup.hpp
+    Network/Group/Commands/RemoveGroup.hpp
+    Network/Group/Commands/AddCustomMetadata.hpp
+    Network/Group/Group.hpp
+    Network/Group/NetworkActions.hpp
+    Network/Group/GroupManager.hpp
+    Network/Group/GroupMetadata.hpp
+    Network/Group/GroupMetadataWidget.hpp
+    Network/Group/Panel/GroupPanelDelegate.hpp
+    Network/Group/Panel/GroupPanelFactory.hpp
+    Network/Group/Panel/Widgets/GroupHeaderItem.hpp
+    Network/Group/Panel/Widgets/GroupListWidget.hpp
+    Network/Group/Panel/Widgets/GroupTableCheckbox.hpp
+    Network/Group/Panel/Widgets/GroupTableWidget.hpp
+    Network/Group/Panel/Widgets/GroupWidget.hpp
+    Network/Group/Panel/Widgets/SessionHeaderItem.hpp
+    Network/IpDialog.hpp
+    Network/IpWidget.hpp
+    Network/NetworkApplicationPlugin.hpp
+    Network/PlayerPlugin.hpp
+    Network/Session/ClientSessionBuilder.hpp
+    Network/Session/PlayerSessionBuilder.hpp
+    Network/Session/ClientSession.hpp
+    Network/Session/MasterSession.hpp
+    Network/Session/RemoteClientBuilder.hpp
+    Network/Session/Session.hpp
+    Network/Settings/commands/ClientNameChangedCommand.hpp
+    Network/Settings/commands/ClientPortChangedCommand.hpp
+    Network/Settings/commands/MasterPortChangedCommand.hpp
+    Network/Settings/NetworkSettings.hpp
+    Network/Settings/NetworkSettingsModel.hpp
+    Network/Settings/NetworkSettingsPresenter.hpp
+    Network/Settings/NetworkSettingsView.hpp
+    score_addon_network.hpp
 
     )
 set(SRCS
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Client/ClientSerialization.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupManagerSerialization.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadataSerialization.cpp"
+    Network/Client/ClientSerialization.cpp
+    Network/Group/GroupManagerSerialization.cpp
+    Network/Group/GroupMetadataSerialization.cpp
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/MessageMapper.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/MessageValidator.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkMessage.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkServer.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Communication/NetworkSocket.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/ClientPolicy.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/DocumentPlugin.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/DocumentPluginSerialization.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/PlaceholderPolicy.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/MasterPolicy.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/NTP.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/BasicPruner.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/DateExpression.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/FreeScenarioPolicy.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SharedScenarioPolicy.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/MixedScenarioPolicy.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/MasterPolicy.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Document/Execution/SlavePolicy.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddClientToGroup.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/ChangeGroup.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/CreateGroup.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/DistributedScenarioCommandFactory.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/RemoveClientFromGroup.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Commands/AddCustomMetadata.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Group.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupManager.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadata.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupMetadataWidget.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/GroupSerialization.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/GroupPanelDelegate.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/GroupPanelFactory.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupHeaderItem.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupListWidget.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupTableCheckbox.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupTableWidget.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/GroupWidget.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Group/Panel/Widgets/SessionHeaderItem.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpDialog.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/IpWidget.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/NetworkApplicationPlugin.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/PlayerPlugin.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSessionBuilder.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/PlayerSessionBuilder.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/ClientSession.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/MasterSession.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/RemoteClientBuilder.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Session/Session.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsModel.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsPresenter.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Network/Settings/NetworkSettingsView.cpp"
+    Network/Communication/MessageMapper.cpp
+    Network/Communication/MessageValidator.cpp
+    Network/Communication/NetworkMessage.cpp
+    Network/Communication/NetworkServer.cpp
+    Network/Communication/NetworkSocket.cpp
+    Network/Document/ClientPolicy.cpp
+    Network/Document/DocumentPlugin.cpp
+    Network/Document/DocumentPluginSerialization.cpp
+    Network/Document/PlaceholderPolicy.cpp
+    Network/Document/MasterPolicy.cpp
+    Network/Document/NTP.cpp
+    Network/Document/Execution/BasicPruner.cpp
+    Network/Document/Execution/DateExpression.cpp
+    Network/Document/Execution/FreeScenarioPolicy.cpp
+    Network/Document/Execution/SharedScenarioPolicy.cpp
+    Network/Document/Execution/MixedScenarioPolicy.cpp
+    Network/Document/Execution/MasterPolicy.cpp
+    Network/Document/Execution/SlavePolicy.cpp
+    Network/Group/Commands/AddClientToGroup.cpp
+    Network/Group/Commands/ChangeGroup.cpp
+    Network/Group/Commands/CreateGroup.cpp
+    Network/Group/Commands/DistributedScenarioCommandFactory.cpp
+    Network/Group/Commands/RemoveClientFromGroup.cpp
+    Network/Group/Commands/AddCustomMetadata.cpp
+    Network/Group/Group.cpp
+    Network/Group/GroupManager.cpp
+    Network/Group/GroupMetadata.cpp
+    Network/Group/GroupMetadataWidget.cpp
+    Network/Group/GroupSerialization.cpp
+    Network/Group/Panel/GroupPanelDelegate.cpp
+    Network/Group/Panel/GroupPanelFactory.cpp
+    Network/Group/Panel/Widgets/GroupHeaderItem.cpp
+    Network/Group/Panel/Widgets/GroupListWidget.cpp
+    Network/Group/Panel/Widgets/GroupTableCheckbox.cpp
+    Network/Group/Panel/Widgets/GroupTableWidget.cpp
+    Network/Group/Panel/Widgets/GroupWidget.cpp
+    Network/Group/Panel/Widgets/SessionHeaderItem.cpp
+    Network/IpDialog.cpp
+    Network/IpWidget.cpp
+    Network/NetworkApplicationPlugin.cpp
+    Network/PlayerPlugin.cpp
+    Network/Session/ClientSessionBuilder.cpp
+    Network/Session/PlayerSessionBuilder.cpp
+    Network/Session/ClientSession.cpp
+    Network/Session/MasterSession.cpp
+    Network/Session/RemoteClientBuilder.cpp
+    Network/Session/Session.cpp
+    Network/Settings/NetworkSettingsModel.cpp
+    Network/Settings/NetworkSettingsPresenter.cpp
+    Network/Settings/NetworkSettingsView.cpp
 
-    "${CMAKE_CURRENT_SOURCE_DIR}/score_addon_network.cpp"
+    score_addon_network.cpp
 )
 
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
 score_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
-# target_sources(ossia PRIVATE $<TARGET_OBJECTS:Servus>)
-# get_target_property(SERVUS_LINK_LIBRARIES Servus INTERFACE_LINK_LIBRARIES)
-# get_target_property(SERVUS_COMPILE_DEFINITIONS Servus INTERFACE_COMPILE_DEFINITIONS)
-# target_link_libraries(${PROJECT_NAME} PUBLIC ${SERVUS_LINK_LIBRARIES})
-# target_include_directories(${PROJECT_NAME} PUBLIC ${OSSIA_3RDPARTY_FOLDER}/Servus)
-# target_compile_definitions(${PROJECT_NAME} PUBLIC ${SERVUS_COMPILE_DEFINITIONS})
 
-#target_include_directories(${PROJECT_NAME} PRIVATE "${OSSIA_3RDPARY_DIRECTORY}/libzmq/include")
 target_link_libraries(${PROJECT_NAME} PUBLIC
                                     score_lib_base
                                     score_plugin_scenario
                                     score_lib_process
                                     score_plugin_engine
-                                    Qt5::Core
-                                    Qt5::Widgets
-                                    Qt5::Network
-                                    Qt5::WebSockets
-#                                    libzmq-static
+                                    ${QT_PREFIX}::Core
+                                    ${QT_PREFIX}::Widgets
+                                    ${QT_PREFIX}::Network
+                                    ${QT_PREFIX}::WebSockets
                                     )
 
 

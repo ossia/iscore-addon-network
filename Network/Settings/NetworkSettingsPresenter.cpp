@@ -5,7 +5,6 @@
 
 #include <score/command/Command.hpp>
 #include <score/plugins/settingsdelegate/SettingsDelegatePresenter.hpp>
-#include <score/tools/Todo.hpp>
 
 #include <QApplication>
 #include <QDebug>

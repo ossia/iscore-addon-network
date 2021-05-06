@@ -28,13 +28,13 @@ void DataStreamWriter::write(Network::Client& elt)
 }
 
 template <>
-void JSONObjectReader::read(const Network::Client& elt)
+void JSONReader::read(const Network::Client& elt)
 {
   obj[strings.Name] = elt.name();
 }
 
 template <>
-void JSONObjectWriter::write(Network::Client& elt)
+void JSONWriter::write(Network::Client& elt)
 {
   elt.setName(obj[strings.Name].toString());
 }

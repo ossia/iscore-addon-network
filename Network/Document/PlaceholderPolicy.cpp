@@ -2,6 +2,7 @@
 
 #include <score/plugins/documentdelegate/plugin/SerializableDocumentPlugin.hpp>
 #include <Network/Session/Session.hpp>
+#include <score/tools/Bind.hpp>
 
 template <>
 void DataStreamReader::read(const Network::EditionPolicy& elt)
@@ -19,18 +20,18 @@ void DataStreamReader::read(const Network::EditionPolicy& elt)
 }
 
 template <>
-void JSONObjectReader::read(const Network::EditionPolicy& elt)
+void JSONReader::read(const Network::EditionPolicy& elt)
 {
-  obj["SessionId"] = toJsonValue(elt.session()->id());
-  obj["LocalClient"] = toJsonObject(
-      static_cast<Network::Client&>(elt.session()->localClient()));
+  obj["SessionId"] = elt.session()->id();
+  obj["LocalClient"] = static_cast<Network::Client&>(elt.session()->localClient());
 
-  QJsonArray arr;
+  obj.self.stream.Key("RemoteClients");
+  obj.self.stream.StartArray();
   for (auto& clt : elt.session()->remoteClients())
   {
-    arr.push_back(toJsonObject(static_cast<Network::Client&>(*clt)));
+    read(static_cast<Network::Client&>(*clt));
   }
-  obj["RemoteClients"] = arr;
+  obj.self.stream.EndArray();
 }
 
 template <>
@@ -53,17 +54,19 @@ void DataStreamWriter::write(Network::PlaceholderEditionPolicy& elt)
 }
 
 template <>
-void JSONObjectWriter::write(Network::PlaceholderEditionPolicy& elt)
+void JSONWriter::write(Network::PlaceholderEditionPolicy& elt)
 {
-  JSONObject::Deserializer localClientDeser(obj["LocalClient"].toObject());
+  Id<Network::Session> session_id;
+  session_id <<= obj["SessionId"];
+  JSONObject::Deserializer localClientDeser(obj["LocalClient"]);
   elt.m_session = new Network::Session{
       new Network::LocalClient(localClientDeser, nullptr),
-      fromJsonValue<Id<Network::Session>>(obj["SessionId"]),
+      session_id,
       &elt};
 
   for (const auto& json_vref : obj["RemoteClients"].toArray())
   {
-    JSONObject::Deserializer deser(json_vref.toObject());
+    JSONObject::Deserializer deser(json_vref);
     elt.m_session->addClient(new Network::RemoteClient(deser, elt.m_session));
   }
 }

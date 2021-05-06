@@ -12,10 +12,6 @@
 
 #include <algorithm>
 
-template <typename T>
-class Reader;
-template <typename T>
-class Writer;
 /* TODO
 template<>
 void DataStreamReader::read(
@@ -38,14 +34,14 @@ void DataStreamWriter::write(
 
 
 template<>
-void JSONObjectReader::read(
+void JSONReader::read(
         const Network::GroupMetadata& elt)
 {
     obj["Group"] = toJsonValue(elt.group());
 }
 
 template<>
-void JSONObjectWriter::write(
+void JSONWriter::write(
         Network::GroupMetadata& elt)
 {
     elt.setGroup(fromJsonValue<Id<Network::Group>>(obj["Group"]));

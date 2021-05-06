@@ -1,7 +1,7 @@
 #pragma once
 #include <QObject>
 
-#include <wobjectdefs.h>
+#include <verdigris>
 class QWebSocketServer;
 class QWebSocket;
 

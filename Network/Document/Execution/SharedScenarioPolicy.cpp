@@ -1,5 +1,8 @@
 #include "SharedScenarioPolicy.hpp"
 
+#include <score/model/ComponentUtils.hpp>
+#include <score/tools/Bind.hpp>
+
 #include <Network/Document/Execution/SharedCompensatedExpressions.hpp>
 #include <Network/Document/Execution/SharedNonCompensatedExpressions.hpp>
 

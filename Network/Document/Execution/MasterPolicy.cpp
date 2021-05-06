@@ -2,6 +2,7 @@
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 
 #include <score/model/path/PathSerialization.hpp>
+#include <score/model/path/PathDebug.hpp>
 
 #include <ossia/detail/logger.hpp>
 
@@ -81,8 +82,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
           if (!grp->hasClient(m.clientId))
             return;
 
-          optional<bool>& opt = e.values[m.clientId];
-          if (bool(opt)) // Checks if the optional is initialized
+          std::optional<bool>& opt = e.values[m.clientId];
+          if (bool(opt)) // Checks if the std::optional is initialized
             return;
 
           opt = true; // Initialize and set it to true

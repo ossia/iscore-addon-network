@@ -120,7 +120,8 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     score::Document* doc = m_context.docManager.loadDocument(
         m_context,
         "Untitled",
-        QJsonDocument::fromBinaryData(m_documentData).object(),
+        m_documentData,
+        JSONObject::type(),
         *m_context.interfaces<score::DocumentDelegateList>()
              .begin()); // TODO id instead
 
@@ -135,8 +136,9 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     }
 
     score::loadCommandStack(
-        m_context.components, writer, doc->commandStack(), [](auto) {
-        }); // No redo.
+          m_context.components, writer, doc->commandStack(), [](auto) {
+      return true;
+    }); // No redo.
 
     auto& ctx = doc->context();
     NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();

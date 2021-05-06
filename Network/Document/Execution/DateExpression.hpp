@@ -66,14 +66,14 @@ struct expression_with_callback
 {
   expression_with_callback(ossia::expression* e) : expr{e} {}
   ossia::expression* expr{};
-  optional<ossia::expressions::expression_callback_iterator> it_finished;
+  std::optional<ossia::expressions::expression_callback_iterator> it_finished;
 };
 
 struct ExprNotInGroup
 {
   ExprNotInGroup(ossia::time_sync& n) : node{n} {}
   ossia::time_sync& node;
-  optional<ossia::callback_container<std::function<void()>>::iterator>
+  std::optional<ossia::callback_container<std::function<void()>>::iterator>
       it_triggered;
 
   void cleanTriggerCallback();

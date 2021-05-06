@@ -29,11 +29,11 @@ struct CompensatedExpressionInGroup
       if (it_triggered)
       {
         node.triggered.remove_callback(*it_triggered);
-        it_triggered = ossia::none;
+        it_triggered = std::nullopt;
       }
     }
 
-    optional<ossia::callback_container<std::function<void()>>::iterator>
+    std::optional<ossia::callback_container<std::function<void()>>::iterator>
         it_triggered;
   };
 
@@ -110,7 +110,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = ossia::none;
+            e->shared_expr->it_finished = std::nullopt;
           }
 
           e->date_expr->set_min_date(
@@ -128,7 +128,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = ossia::none;
+            e->shared_expr->it_finished = std::nullopt;
           }
 
           e->date_expr->set_min_date(std::chrono::nanoseconds(ns));
@@ -189,7 +189,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = ossia::none;
+            e->shared_expr->it_finished = std::nullopt;
           }
           e->date_expr->set_min_date(
               get_now()); // TODO how to transmit the max bound information ??
@@ -211,7 +211,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = ossia::none;
+            e->shared_expr->it_finished = std::nullopt;
           }
           e->date_expr->set_min_date(std::chrono::nanoseconds(ns));
 

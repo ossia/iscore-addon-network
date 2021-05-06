@@ -4,6 +4,7 @@
 
 #include <score/model/Identifier.hpp>
 #include <score/tools/std/Optional.hpp>
+#include <score/tools/Bind.hpp>
 
 #include <QBoxLayout>
 #include <QLayout>

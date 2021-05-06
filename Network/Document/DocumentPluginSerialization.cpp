@@ -1,6 +1,7 @@
 #include "DocumentPlugin.hpp"
 #include "PlaceholderPolicy.hpp"
 
+#include <score/tools/Bind.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
 
@@ -28,21 +29,21 @@ void DataStreamWriter::write(Network::NetworkDocumentPlugin& elt)
 }
 
 template <>
-void JSONObjectReader::read(const Network::NetworkDocumentPlugin& elt)
+void JSONReader::read(const Network::NetworkDocumentPlugin& elt)
 {
-  obj["Groups"] = toJsonObject(elt.groupManager());
-  obj["Policy"] = toJsonObject(elt.policy());
+  obj["Groups"] = elt.groupManager();
+  obj["Policy"] = elt.policy();
 }
 
 template <>
-void JSONObjectWriter::write(Network::NetworkDocumentPlugin& elt)
+void JSONWriter::write(Network::NetworkDocumentPlugin& elt)
 {
   {
-    JSONObjectWriter w(obj["Groups"].toObject());
+    JSONWriter w(obj["Groups"]);
     elt.m_groups = new Network::GroupManager{w, &elt};
   }
   {
-    JSONObjectWriter w(obj["Policy"].toObject());
+    JSONWriter w(obj["Policy"]);
     elt.m_policy = new Network::PlaceholderEditionPolicy{w, &elt};
   }
 }

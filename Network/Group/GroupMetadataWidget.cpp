@@ -10,7 +10,6 @@
 #include <score/document/DocumentContext.hpp>
 #include <score/document/DocumentInterface.hpp>
 #include <score/model/Identifier.hpp>
-#include <score/tools/Todo.hpp>
 #include <score/tools/std/Optional.hpp>
 #include <score/widgets/SignalUtils.hpp>
 

@@ -36,10 +36,11 @@ QWidget* PanelDelegate::widget()
 
 const score::PanelStatus& PanelDelegate::defaultPanelStatus() const
 {
-  static const score::PanelStatus status{false,
+  static const score::PanelStatus status{false, false,
                                          Qt::RightDockWidgetArea,
                                          1,
                                          QObject::tr("Groups"),
+                                         QObject::tr("TODO"),
                                          QObject::tr("Ctrl+G")};
 
   return status;
@@ -85,9 +86,8 @@ public:
 
   void recompute()
   {
-    score::clearLayout(this->layout());
+    QWidget{}.setLayout(this->layout());
     m_clients.clear();
-    delete this->layout();
 
     auto lay = new score::MarginLess<QGridLayout>;
     this->setLayout(lay);
@@ -139,13 +139,14 @@ public:
     auto setup = [=](const QString& txt, const QString& k, const QString& v) {
       auto btn = new QPushButton{txt};
       connect(btn, &QPushButton::clicked, this, [=] {
-        SetCustomMetadata(m_ctx, {std::make_pair(k, v)});
+        SCORE_TODO;
+        //SetCustomMetadata(m_ctx, {std::make_pair(k, v)});
       });
       return btn;
     };
     if (auto l = this->layout())
     {
-      score::clearLayout(this->layout());
+      QWidget{}.setLayout(this->layout());
       delete l;
     }
 

@@ -4,7 +4,7 @@
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
-#include <wobjectdefs.h>
+#include <verdigris>
 class QWebSocket;
 
 namespace Network

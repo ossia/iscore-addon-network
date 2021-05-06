@@ -18,6 +18,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QMenu>
 #include <QDebug>
 #include <QMessageBox>
 #include <QPair>

@@ -1,7 +1,7 @@
 #include <score/command/CommandGeneratorMap.hpp>
 #include <score/plugins/FactorySetup.hpp>
 #include <score/plugins/qt_interfaces/GUIApplicationPlugin_QtInterface.hpp>
-#include <score/tools/ForEachType.hpp>
+
 
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>

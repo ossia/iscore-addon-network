@@ -1,6 +1,7 @@
 #include <Scenario/Application/ScenarioActions.hpp>
 
 #include <score/actions/ActionManager.hpp>
+#include <score/tools/Bind.hpp>
 
 #include <Engine/ApplicationPlugin.hpp>
 #include <Network/Communication/MessageMapper.hpp>
@@ -158,9 +159,8 @@ void MasterEditionPolicy::play()
   if (sm)
   {
     auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
-    plug.on_play(
+    plug.execution().request_play_interval(
         sm->baseInterval(),
-        true,
         BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
         TimeVal{});
   }

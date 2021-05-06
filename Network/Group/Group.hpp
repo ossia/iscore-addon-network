@@ -6,7 +6,7 @@
 #include <score/tools/std/Optional.hpp>
 
 #include <QString>
-#include <QVector>
+#include <vector>
 
 #include <Network/Client/Client.hpp>
 
@@ -47,7 +47,7 @@ public:
   void removeClient(Id<Client> clt);
   bool hasClient(const Id<Client>& clt) const;
 
-  const QVector<Id<Client>>& clients() const { return m_executingClients; }
+  const std::vector<Id<Client>>& clients() const { return m_executingClients; }
 
   void nameChanged(QString arg) W_SIGNAL(nameChanged, arg);
 
@@ -57,7 +57,7 @@ public:
 private:
   QString m_name;
 
-  QVector<Id<Client>> m_executingClients;
+  std::vector<Id<Client>> m_executingClients;
 };
 }
 W_REGISTER_ARGTYPE(Id<Network::Group>)

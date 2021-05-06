@@ -1,6 +1,7 @@
 #pragma once
-#include <score/tools/Todo.hpp>
 #include <score/tools/std/HashMap.hpp>
+#include <score/tools/Bind.hpp>
+#include <score/model/IdentifierDebug.hpp>
 
 #include <QObject>
 

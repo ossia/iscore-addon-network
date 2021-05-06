@@ -13,7 +13,7 @@ namespace Network
 {
 class Group;
 //! Goes into the intervals, events, etc.
-class GroupMetadata : public score::SerializableComponent
+class GroupMetadata : public score::Component
 {
   W_OBJECT(GroupMetadata)
 
@@ -24,7 +24,7 @@ public:
 
   template <typename DeserializerVisitor>
   GroupMetadata(DeserializerVisitor&& vis, QObject* parent)
-      : score::SerializableComponent{vis, parent}
+      : score::Component{vis, parent}
   {
     vis.writeTo(*this);
   }

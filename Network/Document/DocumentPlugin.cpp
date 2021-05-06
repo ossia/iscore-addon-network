@@ -29,6 +29,9 @@ struct VisitorVariant;
 
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::NetworkDocumentPlugin)
+
+SCORE_SERALIZE_DATASTREAM_DEFINE(score::CommandData)
+
 namespace Network
 {
 MessagesAPI::MessagesAPI()

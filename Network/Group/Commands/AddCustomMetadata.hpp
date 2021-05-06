@@ -3,7 +3,7 @@
 #include <score/selection/Selection.hpp>
 
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
-
+/*
 namespace Scenario
 {
 class IntervalModel;
@@ -31,15 +31,15 @@ struct MetadataUndoRedo
 
 class AddCustomMetadata : public score::Command
 {
-  SCORE_COMMAND_DECL(
+  SCORE_COMMAND_ DECL(
       DistributedScenarioCommandFactoryName(),
       AddCustomMetadata,
       "Change metadata")
 public:
   AddCustomMetadata(
-      const QList<const Scenario::IntervalModel*>& c,
-      const QList<const Scenario::EventModel*>& e,
-      const QList<const Scenario::TimeSyncModel*>& n,
+      const std::vector<const Scenario::IntervalModel*>& c,
+      const std::vector<const Scenario::EventModel*>& e,
+      const std::vector<const Scenario::TimeSyncModel*>& n,
       const std::vector<std::pair<QString, QString>>& meta);
 
   void undo(const score::DocumentContext& ctx) const override;
@@ -60,4 +60,4 @@ private:
 void SetCustomMetadata(
     const score::DocumentContext& ctx,
     std::vector<std::pair<QString, QString>> md);
-}
+}*/

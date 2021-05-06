@@ -10,6 +10,7 @@
 #include <score/model/Identifier.hpp>
 #include <score/model/path/ObjectPath.hpp>
 #include <score/tools/std/Optional.hpp>
+#include <score/tools/Bind.hpp>
 
 #include <QGridLayout>
 #include <QLabel>
@@ -142,7 +143,7 @@ void GroupTableWidget::on_checkboxChanged(int i, int j, int state)
       = static_cast<GroupHeaderItem*>(m_table->horizontalHeaderItem(j))->group;
 
   // Find if we have to perform the change.
-  auto client_is_in_group = m_mgr.group(group)->clients().contains(client);
+  auto client_is_in_group = ossia::contains(m_mgr.group(group)->clients(), client);
 
   if (state)
   {

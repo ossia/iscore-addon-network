@@ -5,7 +5,7 @@
 #include <QObject>
 #include <QString>
 
-#include <wobjectdefs.h>
+#include <verdigris>
 
 class QWebSocket;
 
