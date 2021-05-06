@@ -32,7 +32,6 @@ private:
   const GroupManager& m_mgr;
   const Session* m_session;
 
-  ObjectPath m_managerPath;
   CommandDispatcher<> m_dispatcher;
 };
 }

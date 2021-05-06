@@ -39,7 +39,6 @@ GroupTableWidget::GroupTableWidget(
     : QWidget{parent}
     , m_mgr{mgr}
     , m_session{session}
-    , m_managerPath{score::IDocument::unsafe_path(m_mgr)}
     , m_dispatcher{score::IDocument::documentContext(m_mgr).commandStack}
 {
   con(m_mgr, &GroupManager::groupAdded, this, &GroupTableWidget::setup);
@@ -149,16 +148,14 @@ void GroupTableWidget::on_checkboxChanged(int i, int j, int state)
   {
     if (client_is_in_group)
       return;
-    auto cmd = new Command::AddClientToGroup(
-        ObjectPath{m_managerPath}, client, group);
+    auto cmd = new Command::AddClientToGroup(client, group);
     m_dispatcher.submit(cmd);
   }
   else
   {
     if (!client_is_in_group)
       return;
-    auto cmd = new Command::RemoveClientFromGroup(
-        ObjectPath{m_managerPath}, client, group);
+    auto cmd = new Command::RemoveClientFromGroup(client, group);
     m_dispatcher.submit(cmd);
   }
 }

@@ -1,6 +1,7 @@
 
 #include "CreateGroup.hpp"
 
+#include <Network/Document/DocumentPlugin.hpp>
 #include <score/model/path/ObjectPath.hpp>
 #include <score/model/path/PathSerialization.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
@@ -16,30 +17,30 @@ namespace Network
 namespace Command
 {
 CreateGroup::CreateGroup(const GroupManager& mgr, QString groupName)
-    : m_path{mgr}, m_name{groupName}
+    : m_name{groupName}
 {
   m_newGroupId = getStrongId(mgr.groups());
 }
 
 void CreateGroup::undo(const score::DocumentContext& ctx) const
 {
-  m_path.find(ctx).removeGroup(m_newGroupId);
+  ctx.plugin<Network::NetworkDocumentPlugin>().groupManager().removeGroup(m_newGroupId);
 }
 
 void CreateGroup::redo(const score::DocumentContext& ctx) const
 {
-  auto& mgr = m_path.find(ctx);
+  auto& mgr = ctx.plugin<Network::NetworkDocumentPlugin>().groupManager();
   mgr.addGroup(new Group{m_name, m_newGroupId, &mgr});
 }
 
 void CreateGroup::serializeImpl(DataStreamInput& s) const
 {
-  s << m_path << m_name << m_newGroupId;
+  s << m_name << m_newGroupId;
 }
 
 void CreateGroup::deserializeImpl(DataStreamOutput& s)
 {
-  s >> m_path >> m_name >> m_newGroupId;
+  s >> m_name >> m_newGroupId;
 }
 }
 }

@@ -37,10 +37,10 @@ QWidget* PanelDelegate::widget()
 const score::PanelStatus& PanelDelegate::defaultPanelStatus() const
 {
   static const score::PanelStatus status{false, false,
-                                         Qt::RightDockWidgetArea,
+                                         Qt::LeftDockWidgetArea,
                                          1,
                                          QObject::tr("Groups"),
-                                         QObject::tr("TODO"),
+                                         "device_explorer",
                                          QObject::tr("Ctrl+G")};
 
   return status;
@@ -147,7 +147,6 @@ public:
     if (auto l = this->layout())
     {
       QWidget{}.setLayout(this->layout());
-      delete l;
     }
 
     auto lay = new QVBoxLayout{this};

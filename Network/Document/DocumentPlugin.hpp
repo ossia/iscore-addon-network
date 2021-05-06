@@ -120,19 +120,25 @@ public:
   NetworkDocumentPlugin(
       const score::DocumentContext& ctx,
       EditionPolicy* policy,
-      Id<score::DocumentPlugin> id,
       QObject* parent);
 
   virtual ~NetworkDocumentPlugin();
 
   // Loading has to be in two steps since the plugin policy is different from
   // the client and server.
-  template <typename Impl>
   NetworkDocumentPlugin(
       const score::DocumentContext& ctx,
-      Impl& vis,
+      JSONObject::Deserializer& vis,
       QObject* parent)
       : score::SerializableDocumentPlugin{ctx, vis, parent}
+  {
+    vis.writeTo(*this);
+  }
+  NetworkDocumentPlugin(
+        const score::DocumentContext& ctx,
+        DataStream::Deserializer& vis,
+        QObject* parent)
+    : score::SerializableDocumentPlugin{ctx, vis, parent}
   {
     vis.writeTo(*this);
   }

@@ -177,7 +177,7 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
         auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
         auto policy = new MasterEditionPolicy{serv, ctx};
         auto plug = new NetworkDocumentPlugin{
-            ctx, policy, getStrongId(doc->model().pluginModels()), doc};
+            ctx, policy, doc};
         auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
 
         plug->setExecPolicy(execpol);

@@ -18,7 +18,7 @@ class GroupMetadata : public score::Component
   W_OBJECT(GroupMetadata)
 
 public:
-  GroupMetadata(Id<Component> self, Id<Group> id, QObject* parent);
+  GroupMetadata(Id<Group> id, QObject* parent);
 
   ~GroupMetadata();
 

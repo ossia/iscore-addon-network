@@ -10,7 +10,7 @@ namespace Network
 class Group;
 class Client;
 class RemoteClient;
-class GroupManager : public IdentifiedObject<GroupManager>
+class GroupManager : public QObject
 {
   W_OBJECT(GroupManager)
 public:
@@ -18,7 +18,7 @@ public:
 
   template <typename Deserializer>
   GroupManager(Deserializer&& vis, QObject* parent)
-      : IdentifiedObject{vis, parent}
+      : QObject{parent}
   {
     vis.writeTo(*this);
   }

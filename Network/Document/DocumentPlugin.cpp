@@ -76,10 +76,8 @@ const MessagesAPI& MessagesAPI::instance()
 NetworkDocumentPlugin::NetworkDocumentPlugin(
     const score::DocumentContext& ctx,
     EditionPolicy* policy,
-    Id<score::DocumentPlugin> id,
     QObject* parent)
     : score::SerializableDocumentPlugin{ctx,
-                                        std::move(id),
                                         "NetworkDocumentPlugin",
                                         parent}
     , m_policy{policy}

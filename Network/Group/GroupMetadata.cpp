@@ -8,8 +8,8 @@ struct VisitorVariant;
 namespace Network
 {
 
-GroupMetadata::GroupMetadata(Id<Component> self, Id<Group> id, QObject* parent)
-    : score::Component{self, "GroupMetadata", parent}, m_id{id}
+GroupMetadata::GroupMetadata(Id<Group> id, QObject* parent)
+    : score::Component{"GroupMetadata", parent}, m_id{id}
 {
 }
 

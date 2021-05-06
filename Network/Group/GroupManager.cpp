@@ -16,9 +16,7 @@ W_OBJECT_IMPL(Network::GroupManager)
 namespace Network
 {
 GroupManager::GroupManager(QObject* parent)
-    : IdentifiedObject<GroupManager>{Id<GroupManager>{0},
-                                     "GroupManager",
-                                     parent}
+    : QObject{parent}
 {
 }
 
