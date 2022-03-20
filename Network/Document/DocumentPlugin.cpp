@@ -1,5 +1,28 @@
 #include "DocumentPlugin.hpp"
 
+#include <score/actions/Action.hpp>
+#include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
+#include <score/plugins/documentdelegate/plugin/DocumentPluginCreator.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/JSONVisitor.hpp>
+
+#include <core/document/Document.hpp>
+
+#include <ossia/editor/expression/expression.hpp>
+
+#include <QObject>
+
+#include <Network/Client/Client.hpp>
+#include <Network/Document/Execution/SyncMode.hpp>
+#include <Network/Group/Group.hpp>
+#include <Network/Group/GroupManager.hpp>
+#include <tsl/hopscotch_set.h>
+
+#include <functional>
+#include <vector>
+
+
+
 #include <Process/Process.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
@@ -94,6 +117,18 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
 
 NetworkDocumentPlugin::~NetworkDocumentPlugin() {}
 
+NetworkDocumentPlugin::NetworkDocumentPlugin(const score::DocumentContext& ctx, JSONObject::Deserializer& vis, QObject* parent)
+  : score::SerializableDocumentPlugin{ctx, vis, parent}
+{
+  vis.writeTo(*this);
+}
+
+NetworkDocumentPlugin::NetworkDocumentPlugin(const score::DocumentContext& ctx, DataStream::Deserializer& vis, QObject* parent)
+  : score::SerializableDocumentPlugin{ctx, vis, parent}
+{
+  vis.writeTo(*this);
+}
+
 void NetworkDocumentPlugin::setEditPolicy(EditionPolicy* pol)
 {
   SCORE_ASSERT(pol);
@@ -115,6 +150,10 @@ void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
   m_exec = pol;
 }
 
+GroupManager& NetworkDocumentPlugin::groupManager() const { return *m_groups; }
+
+EditionPolicy& NetworkDocumentPlugin::policy() const { return *m_policy; }
+
 void NetworkDocumentPlugin::on_stop()
 {
   noncompensated.trigger_evaluation_entered.clear();
@@ -126,15 +165,50 @@ void NetworkDocumentPlugin::on_stop()
   compensated.trigger_triggered.clear();
 }
 
-score::DocumentPlugin* DocumentPluginFactory::load(
-    const VisitorVariant& var,
-    score::DocumentContext& doc,
-    QObject* parent)
+const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj)
 {
-  return score::deserialize_dyn(var, [&](auto&& deserializer) {
-    return new NetworkDocumentPlugin{doc, deserializer, parent};
-  });
+  if(auto it = intervalMetadatas().find(&obj); it != intervalMetadatas().end())
+    return &it->second;
+  return {};
 }
+
+const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj)
+{
+  if(auto it = eventMetadatas().find(&obj); it != eventMetadatas().end())
+    return &it->second;
+  return {};
+}
+
+const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj)
+{
+  if(auto it = syncMetadatas().find(&obj); it != syncMetadatas().end())
+    return &it->second;
+  return {};
+}
+
+const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj)
+{
+  if(auto it = processMetadatas().find(&obj); it != processMetadatas().end())
+    return &it->second;
+  return {};
+}
+
+void NetworkDocumentPlugin::set_metadata(const Scenario::IntervalModel& obj, const ObjectMetadata& m)
+{
+
+}
+
+const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& NetworkDocumentPlugin::intervalMetadatas() const noexcept
+{ return m_intervalsGroups; }
+
+const std::unordered_map<const Scenario::EventModel*, ObjectMetadata>& NetworkDocumentPlugin::eventMetadatas() const noexcept
+{ return m_eventGroups; }
+
+const std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>& NetworkDocumentPlugin::syncMetadatas() const noexcept
+{ return m_syncGroups; }
+
+const std::unordered_map<const Process::ProcessModel*, ObjectMetadata>& NetworkDocumentPlugin::processMetadatas() const noexcept
+{ return m_processGroups; }
 
 ExecutionPolicy::~ExecutionPolicy() {}
 

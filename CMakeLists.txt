@@ -77,6 +77,7 @@ set(SRCS
     Network/Group/GroupManagerSerialization.cpp
     Network/Group/GroupMetadataSerialization.cpp
 
+    Network/Client/LocalClient.cpp
     Network/Communication/MessageMapper.cpp
     Network/Communication/MessageValidator.cpp
     Network/Communication/NetworkMessage.cpp

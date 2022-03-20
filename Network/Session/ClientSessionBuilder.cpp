@@ -16,6 +16,8 @@
 #include <QIODevice>
 #include <QJsonDocument>
 
+#include <Network/Group/Group.hpp>
+#include <Network/Group/GroupManager.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Communication/NetworkMessage.hpp>

@@ -1,5 +1,6 @@
-#pragma once
 /*
+#pragma once
+
 #include <score/command/Command.hpp>
 #include <score/model/Identifier.hpp>
 #include <score/model/path/ObjectPath.hpp>
@@ -17,11 +18,10 @@ namespace Command
 {
 class ChangeGroup : public score::Command
 {
-        score_ COMMAND_DECL(DistributedScenarioCommandFactoryName(),
-ChangeGroup, "Change the group of an element")
+        SCORE_ COMMAND_DECL(DistributedScenarioCommandFactoryName(), ChangeGroup, "Change the group of an element")
 
     public:
-        ChangeGroup(ObjectPath&& path, Id<Group> newGroup);
+        ChangeGroup(QObject& object, Id<Group> newGroup);
 
         void undo(const score::DocumentContext& ctx) const override;
         void redo(const score::DocumentContext& ctx) const override;
@@ -35,4 +35,5 @@ ChangeGroup, "Change the group of an element")
 };
 }
 }
+
 */

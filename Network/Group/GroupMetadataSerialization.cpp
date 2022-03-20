@@ -1,4 +1,5 @@
 
+/*
 #include "GroupMetadata.hpp"
 
 #include <score/model/Identifier.hpp>
@@ -12,7 +13,6 @@
 
 #include <algorithm>
 
-/* TODO
 template<>
 void DataStreamReader::read(
         const Network::GroupMetadata& elt)
@@ -37,13 +37,14 @@ template<>
 void JSONReader::read(
         const Network::GroupMetadata& elt)
 {
-    obj["Group"] = toJsonValue(elt.group());
+    obj["Group"] = elt.group().val();
 }
 
 template<>
 void JSONWriter::write(
         Network::GroupMetadata& elt)
 {
-    elt.setGroup(fromJsonValue<Id<Network::Group>>(obj["Group"]));
+    elt.setGroup(Id<Network::Group>(obj["Group"].toInt()));
 }
+
 */

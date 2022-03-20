@@ -3,6 +3,7 @@
 #include <score/plugins/qt_interfaces/GUIApplicationPlugin_QtInterface.hpp>
 
 
+#include <score/plugins/documentdelegate/plugin/DocumentPluginCreator.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
 #include <Network/Group/Panel/GroupPanelFactory.hpp>
@@ -13,6 +14,24 @@
 #include <score_addon_network_commands_files.hpp>
 
 #include <unordered_map>
+namespace Network
+{
+class DocumentPluginFactory : public score::DocumentPluginFactory
+{
+  SCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
+
+public:
+  score::DocumentPlugin* load(
+      const VisitorVariant& var,
+      score::DocumentContext& doc,
+      QObject* parent) override
+  {
+    return score::deserialize_dyn(var, [&](auto&& deserializer) {
+      return new NetworkDocumentPlugin{doc, deserializer, parent};
+    });
+  }
+};
+}
 namespace score
 {
 

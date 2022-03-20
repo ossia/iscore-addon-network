@@ -1,4 +1,5 @@
 #pragma once
+/*
 
 #include <score/model/ComponentSerialization.hpp>
 #include <score/model/Identifier.hpp>
@@ -41,3 +42,4 @@ private:
 };
 }
 
+*/

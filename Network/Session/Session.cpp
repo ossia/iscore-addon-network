@@ -1,6 +1,8 @@
 
 #include "Session.hpp"
 
+#include <QWebSocket>
+
 #include <ossia/detail/algorithms.hpp>
 #include <score/tools/std/Optional.hpp>
 

@@ -1,35 +1,24 @@
 #pragma once
-#include <score/actions/Action.hpp>
+
 #include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
-#include <score/plugins/documentdelegate/plugin/DocumentPluginCreator.hpp>
-#include <score/serialization/DataStreamVisitor.hpp>
-#include <score/serialization/JSONVisitor.hpp>
-
-#include <core/document/Document.hpp>
-
-#include <ossia/editor/expression/expression.hpp>
-
-#include <QObject>
-
-#include <Network/Client/Client.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
-#include <Network/Group/Group.hpp>
-#include <Network/Group/GroupManager.hpp>
 #include <score_addon_network_export.h>
 #include <tsl/hopscotch_set.h>
-
-#include <functional>
-#include <vector>
-
 #include <score/serialization/DataStreamFwd.hpp>
+#include <score/command/CommandData.hpp>
 SCORE_SERIALIZE_DATASTREAM_DECLARE(, score::CommandData)
 
 class DataStream;
 class JSONObject;
 class QWidget;
 struct VisitorVariant;
+namespace Process
+{
+class ProcessModel;
+}
 namespace Scenario
 {
+class EventModel;
 class IntervalModel;
 class TimeSyncModel;
 }
@@ -42,6 +31,7 @@ class TimeSyncComponent;
 namespace Network
 {
 class Group;
+class Client;
 class NetworkDocumentPlugin;
 }
 UUID_METADATA(
@@ -52,6 +42,14 @@ UUID_METADATA(
 
 namespace Network
 {
+
+struct ObjectMetadata
+{
+    SyncMode syncmode{SyncMode::NonCompensatedAsync};
+    ShareMode sharemode{};
+    bool ordered{};
+    QString group;
+};
 
 struct NetworkExpressionData
 {
@@ -129,26 +127,18 @@ public:
   NetworkDocumentPlugin(
       const score::DocumentContext& ctx,
       JSONObject::Deserializer& vis,
-      QObject* parent)
-      : score::SerializableDocumentPlugin{ctx, vis, parent}
-  {
-    vis.writeTo(*this);
-  }
+      QObject* parent);
   NetworkDocumentPlugin(
         const score::DocumentContext& ctx,
         DataStream::Deserializer& vis,
-        QObject* parent)
-    : score::SerializableDocumentPlugin{ctx, vis, parent}
-  {
-    vis.writeTo(*this);
-  }
+        QObject* parent);
 
   void setEditPolicy(EditionPolicy*);
   void setExecPolicy(ExecutionPolicy* e);
 
-  GroupManager& groupManager() const { return *m_groups; }
+  GroupManager& groupManager() const;
 
-  EditionPolicy& policy() const { return *m_policy; }
+  EditionPolicy& policy() const;
 
   struct NonCompensated
   {
@@ -184,20 +174,37 @@ public:
 
   void sessionChanged() W_SIGNAL(sessionChanged);
 
+
+  const ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj);
+  const ObjectMetadata* get_metadata(const Scenario::EventModel& obj);
+  const ObjectMetadata* get_metadata(const Scenario::TimeSyncModel& obj);
+  const ObjectMetadata* get_metadata(const Process::ProcessModel& obj);
+  void set_metadata(const Scenario::IntervalModel& obj, const ObjectMetadata& m);
+  void set_metadata(const Scenario::EventModel& obj, const ObjectMetadata& m);
+  void set_metadata(const Scenario::TimeSyncModel& obj, const ObjectMetadata& m);
+  void set_metadata(const Process::ProcessModel& obj, const ObjectMetadata& m);
+
+
+ const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& intervalMetadatas() const noexcept;
+ const std::unordered_map<const Scenario::EventModel*, ObjectMetadata>& eventMetadatas() const noexcept;
+ const std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>& syncMetadatas() const noexcept;
+ const std::unordered_map<const Process::ProcessModel*, ObjectMetadata>& processMetadatas() const noexcept;
+ // std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& intervalMetadatas() noexcept
+ // { return m_intervalsGroups; }
+ // std::unordered_map<const Scenario::EventModel*, ObjectMetadata>& eventMetadatas() noexcept
+ // { return m_eventGroups; }
+ // std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>& syncMetadatas() noexcept
+ // { return m_syncGroups; }
+ // std::unordered_map<const Process::ProcessModel*, ObjectMetadata>& processMetadatas() noexcept
+ // { return m_processGroups; }
 private:
   EditionPolicy* m_policy{};
   ExecutionPolicy* m_exec{};
   GroupManager* m_groups{};
-};
 
-class DocumentPluginFactory : public score::DocumentPluginFactory
-{
-  SCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
-
-public:
-  score::DocumentPlugin* load(
-      const VisitorVariant& var,
-      score::DocumentContext& doc,
-      QObject* parent) override;
+  std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata> m_intervalsGroups;
+  std::unordered_map<const Scenario::EventModel*, ObjectMetadata> m_eventGroups;
+  std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata> m_syncGroups;
+  std::unordered_map<const Process::ProcessModel*, ObjectMetadata> m_processGroups;
 };
 }

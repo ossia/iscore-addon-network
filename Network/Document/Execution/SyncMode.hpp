@@ -17,6 +17,13 @@ enum class SyncMode
   CompensatedAsync
 };
 
+enum class ShareMode
+{
+  Shared,
+  Mixed,
+  Free
+};
+
 struct MessagesAPI
 {
   MessagesAPI();

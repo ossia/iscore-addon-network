@@ -2,6 +2,8 @@
 
 #include <score/actions/ActionManager.hpp>
 #include <score/tools/Bind.hpp>
+#include <core/document/Document.hpp>
+#include <core/command/CommandStack.hpp>
 
 #include <Engine/ApplicationPlugin.hpp>
 #include <Network/Communication/MessageMapper.hpp>

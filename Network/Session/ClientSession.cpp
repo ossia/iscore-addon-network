@@ -1,5 +1,7 @@
 #include "ClientSession.hpp"
 
+#include <QWebSocket>
+
 #include <score/model/Identifier.hpp>
 #include <score/tools/Bind.hpp>
 

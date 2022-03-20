@@ -1,3 +1,6 @@
+
+#include "GroupMetadata.hpp"
+
 /*
 #include "GroupMetadataWidget.hpp"
 
@@ -11,6 +14,7 @@
 #include <score/document/DocumentInterface.hpp>
 #include <score/model/Identifier.hpp>
 #include <score/tools/std/Optional.hpp>
+#include <score/tools/Bind.hpp>
 #include <score/widgets/SignalUtils.hpp>
 
 #include <QBoxLayout>
@@ -48,7 +52,7 @@ GroupMetadataWidget::GroupMetadataWidget(
     connect(m_groups, &GroupManager::groupRemoved,
             this, &GroupMetadataWidget::on_groupRemoved);
 
-    updateLabel(groupmetadata().group());
+    updateLabel(groupmetadata.group());
 }
 
 void GroupMetadataWidget::on_groupAdded(const Id<Group>& id)
@@ -67,12 +71,12 @@ void GroupMetadataWidget::on_indexChanged(int)
     auto data = m_combo->currentData().value<Id<Group>>();
     if(m_object.group() != data)
     {
-        CommandDispatcher<>
-dispatcher{score::IDocument::documentContext(*m_groups).commandStack};
-        dispatcher.submit(
-                    new Command::ChangeGroup{
-                        score::IDocument::unsafe_path(m_object.element()),
-                                                data});
+      auto& ctx = score::IDocument::documentContext(*m_groups);
+      CommandDispatcher<> dispatcher{ctx.commandStack};
+      dispatcher.submit(
+            new Command::ChangeGroup{
+              score::IDocument::unsafe_path(m_object.element()),
+              data});
     }
 }
 
@@ -98,4 +102,5 @@ void GroupMetadataWidget::updateLabel(const Id<Group>& currentGroup)
     this->layout()->addWidget(m_combo);
 }
 }
+
 */

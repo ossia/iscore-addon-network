@@ -42,58 +42,26 @@ struct NetworkPrunerContext
   const MessagesAPI& mapi = MessagesAPI::instance();
 };
 
-template <typename T, typename Obj>
-std::optional<T> get_metadata(Obj& obj, const QString& s)
-{
-  SCORE_TODO;
-  /*
-  auto& m = obj.metadata().getExtendedMetadata();
-  auto it = m.constFind(s);
-  if (it != m.constEnd())
-  {
-    const QVariant& var = *it;
-    if (var.canConvert<T>())
-      return var.value<T>();
-  }
-*/
-  return {};
-}
 
 template <typename T>
-SyncMode getInfos(const T& obj)
+SyncMode getInfos(NetworkDocumentPlugin& doc, const T& obj)
 {
-  const auto& str = Constants::instance();
-
-  auto syncmode = get_metadata<QString>(obj, str.syncmode);
-  if (!syncmode || syncmode->isEmpty())
-    syncmode = QString(str.async);
-  auto order = get_metadata<QString>(obj, str.order);
-  if (!order || order->isEmpty())
-    order = str.unordered;
-
-  if (syncmode == str.async && order == str.ordered)
-    return SyncMode::NonCompensatedSync;
-  else if (syncmode == str.async && order == str.unordered)
-    return SyncMode::NonCompensatedAsync;
-  else if (syncmode == str.sync && order == str.ordered)
-    return SyncMode::CompensatedSync;
-  else if (syncmode == str.sync && order == str.unordered)
-    return SyncMode::CompensatedAsync;
-
+  if(const ObjectMetadata* meta = doc.get_metadata(obj))
+    return meta->syncmode;
+  else
   return SyncMode::NonCompensatedAsync;
 }
 
 template <typename T>
-const Group& getGroup(const GroupManager& gm, const Group& cur, const T& obj)
+const Group& getGroup(NetworkDocumentPlugin& doc, const GroupManager& gm, const Group& cur, const T& obj)
 {
-  const auto& cst = Constants::instance();
-
+  const ObjectMetadata* meta = doc.get_metadata(obj);
   const Group* cur_group = &cur;
-  auto ostr = get_metadata<QString>(obj, cst.group);
-  if (!ostr)
+  if(!meta)
     return *cur_group;
 
-  auto& str = *ostr;
+  auto& str = meta->group;
+  const auto& cst = Constants::instance();
   if (str == cst.all)
   {
     cur_group = gm.group(gm.defaultGroup());

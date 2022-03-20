@@ -4,8 +4,8 @@
 #include <score/model/path/PathSerialization.hpp>
 #include <score/model/path/PathDebug.hpp>
 
-#include <ossia/detail/logger.hpp>
-
+#include <Network/Group/Group.hpp>
+#include <Network/Group/GroupManager.hpp>
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/Execution/MasterPolicy.hpp>
 #include <Network/Document/MasterPolicy.hpp>
@@ -24,7 +24,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(
       mapi.trigger_entered,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
-        ossia::logger().info("master << trigger_entered");
+        qDebug("master << trigger_entered");
         s.broadcastToOthers(m.clientId, m);
 
         // if(m.clientId != s.master().id())
@@ -43,7 +43,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(
       mapi.trigger_left,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
-        ossia::logger().info("master << trigger_left");
+        qDebug("master << trigger_left");
         // TODO there should be a consensus on this point.
         qDebug() << m.address << p;
       });
@@ -51,7 +51,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(
       mapi.trigger_finished,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val) {
-        ossia::logger().info("master << trigger_finished");
+        qDebug("master << trigger_finished");
 
         if (m.clientId != s.master().id())
         {
@@ -70,7 +70,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(
       mapi.trigger_expression_true,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
-        ossia::logger().info("master << trigger_expr_true");
+        qDebug("master << trigger_expr_true");
         auto it = doc.noncompensated.network_expressions.find(p);
         if (it != doc.noncompensated.network_expressions.end())
         {
@@ -176,7 +176,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(
       mapi.trigger_previous_completed,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
-        ossia::logger().info("master << trigger_prev_completed");
+        qDebug("master << trigger_prev_completed");
         auto it = doc.noncompensated.network_expressions.find(p);
         if (it != doc.noncompensated.network_expressions.end())
         {
@@ -210,7 +210,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
   s.mapper().addHandler_(
       mapi.trigger_triggered,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val) {
-        ossia::logger().info("master << noncompensated.trigger_triggered");
+        qDebug("master << noncompensated.trigger_triggered");
         if (m.clientId != s.master().id())
         {
           auto it = doc.noncompensated.trigger_triggered.find(p);
@@ -229,7 +229,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
           Path<Scenario::TimeSyncModel> p,
           qint64 ns,
           bool val) {
-        ossia::logger().info("master << compensated.trigger_triggered");
+        qDebug("master << compensated.trigger_triggered");
         if (m.clientId != s.master().id())
         {
           auto it = doc.compensated.trigger_triggered.find(p);
@@ -248,7 +248,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       [&](const NetworkMessage& m,
           Path<Scenario::IntervalModel> p,
           double val) {
-        ossia::logger().info("master << constraint_speed");
+        qDebug("master << constraint_speed");
         if (m.clientId != s.master().id())
         {
           auto it = doc.noncompensated.interval_speed_changed.find(p);

@@ -50,7 +50,7 @@ operator()(Execution::IntervalComponent& cst, const Group& cur)
 
   Scenario::IntervalModel& interval = cst.scoreInterval();
 
-  const Group& cur_group = getGroup(ctx.gm, cur, interval);
+  const Group& cur_group = getGroup(ctx.doc, ctx.gm, cur, interval);
 
   // Execution speed
   {
@@ -98,9 +98,8 @@ operator()(Execution::IntervalComponent& cst, const Group& cur)
 
   // Recursion
   {
-    auto interval_sharemode = get_metadata<QString>(interval, str.sharemode);
-    if (!interval_sharemode || interval_sharemode->isEmpty())
-      interval_sharemode = str.shared;
+    auto interval_meta = ctx.doc.get_metadata(interval);
+    auto interval_sharemode = interval_meta ? interval_meta->sharemode : ShareMode::Shared;
 
     for (const auto& process : cst.processes())
     {
@@ -108,22 +107,20 @@ operator()(Execution::IntervalComponent& cst, const Group& cur)
           &process.second->process());
       if (ip)
       {
-        auto sharemode
-            = get_metadata<QString>(process.second->process(), str.sharemode);
-        if (!sharemode || sharemode->isEmpty())
-          sharemode = interval_sharemode;
+        auto process_meta = ctx.doc.get_metadata(process.second->process());
+        auto sharemode = process_meta ? process_meta->sharemode : interval_sharemode;
 
-        if (*sharemode == str.shared)
+        switch(sharemode)
         {
-          SharedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
-        }
-        else if (*sharemode == str.mixed)
-        {
-          MixedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
-        }
-        else if (*sharemode == str.free)
-        {
-          FreeScenarioPolicy{ctx}(*process.second, *ip, cur_group);
+          case ShareMode::Shared:
+            SharedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
+            break;
+          case ShareMode::Mixed:
+            MixedScenarioPolicy{ctx}(*process.second, *ip, cur_group);
+            break;
+          case ShareMode::Free:
+            FreeScenarioPolicy{ctx}(*process.second, *ip, cur_group);
+            break;
         }
       }
     }
@@ -140,9 +137,9 @@ operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
 {
   auto& mapi = ctx.mapi;
   // First fetch the required variables.
-  const Group& tn_group = getGroup(ctx.gm, parent_group, comp.scoreTimeSync());
+  const Group& tn_group = getGroup(ctx.doc, ctx.gm, parent_group, comp.scoreTimeSync());
 
-  auto sync = getInfos(comp.scoreTimeSync());
+  auto sync = getInfos(ctx.doc, comp.scoreTimeSync());
   Path<Scenario::TimeSyncModel> path{comp.scoreTimeSync()};
 
   if (comp.scoreTimeSync().active())
@@ -232,7 +229,7 @@ void SharedScenarioPolicy::setupMaster(
 
     auto interval_group = [&](const Id<Scenario::IntervalModel>& cst_id) {
       auto& cst = scenar->interval(cst_id);
-      auto& grp = getGroup(ctx.gm, tn_group, cst);
+      auto& grp = getGroup(ctx.doc, ctx.gm, tn_group, cst);
       return grp.id();
     };
 

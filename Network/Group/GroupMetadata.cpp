@@ -1,5 +1,5 @@
 #include "GroupMetadata.hpp"
-
+/*
 #include <score/serialization/VisitorCommon.hpp>
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::GroupMetadata)
@@ -24,3 +24,5 @@ void GroupMetadata::setGroup(const Id<Group>& id)
   }
 }
 }
+
+*/

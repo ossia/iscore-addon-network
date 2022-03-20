@@ -12,6 +12,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
+#include <score/application/GUIApplicationContext.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/Context.hpp>
 #include <Network/Group/Commands/AddCustomMetadata.hpp>
@@ -140,6 +141,7 @@ public:
       auto btn = new QPushButton{txt};
       connect(btn, &QPushButton::clicked, this, [=] {
         SCORE_TODO;
+        qDebug() << k << v;
         //SetCustomMetadata(m_ctx, {std::make_pair(k, v)});
       });
       return btn;
