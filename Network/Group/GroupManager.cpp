@@ -5,6 +5,8 @@
 #include <score/model/IdentifiedObject.hpp>
 #include <score/tools/std/Optional.hpp>
 
+#include <ossia/detail/algorithms.hpp>
+
 #include <QSignalBlocker>
 
 #include <Network/Client/RemoteClient.hpp>

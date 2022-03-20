@@ -4,14 +4,21 @@
 #include <score/model/Identifier.hpp>
 #include <score/tools/std/Optional.hpp>
 
+#include <verdigris>
+
 #include <QByteArray>
 #include <QList>
 #include <QObject>
 #include <QPair>
 #include <QString>
+
+#include <functional>
+
 namespace score
 {
 struct GUIApplicationContext;
+class Document;
+
 }
 
 namespace Network

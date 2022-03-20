@@ -2,6 +2,8 @@
 
 #include <score/model/IdentifiedObject.hpp>
 
+#include <ossia/detail/algorithms.hpp>
+
 #include <algorithm>
 #include <iterator>
 

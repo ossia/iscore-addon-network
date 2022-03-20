@@ -1,6 +1,7 @@
 
 #include "Session.hpp"
 
+#include <ossia/detail/algorithms.hpp>
 #include <score/tools/std/Optional.hpp>
 
 #include <Network/Client/LocalClient.hpp>

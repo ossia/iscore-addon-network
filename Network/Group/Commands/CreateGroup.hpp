@@ -1,7 +1,7 @@
 #pragma once
 #include <score/command/Command.hpp>
 #include <score/model/Identifier.hpp>
-#include <score/model/path/ObjectPath.hpp>
+#include <score/model/path/Path.hpp>
 #include <score/tools/std/Optional.hpp>
 
 #include <QString>

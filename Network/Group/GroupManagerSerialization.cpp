@@ -43,11 +43,13 @@ void DataStreamWriter::write(Network::GroupManager& elt)
 template <>
 void JSONReader::read(const Network::GroupManager& elt)
 {
-  obj.self.stream.Key("GroupList");
-  obj.self.stream.StartArray();
+  stream.StartObject();
+  stream.Key("GroupList");
+  stream.StartArray();
   for(auto& e : elt.groups())
     readFrom(*e);
-  obj.self.stream.EndArray();
+  stream.EndArray();
+  stream.EndObject();
 }
 
 template <>

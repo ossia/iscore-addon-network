@@ -1,4 +1,5 @@
 #include "MessageMapper.hpp"
+#include <score/tools/Debug.hpp>
 
 
 #include <QDataStream>

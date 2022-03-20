@@ -22,16 +22,20 @@ void DataStreamReader::read(const Network::EditionPolicy& elt)
 template <>
 void JSONReader::read(const Network::EditionPolicy& elt)
 {
-  obj["SessionId"] = elt.session()->id();
-  obj["LocalClient"] = static_cast<Network::Client&>(elt.session()->localClient());
-
-  obj.self.stream.Key("RemoteClients");
-  obj.self.stream.StartArray();
-  for (auto& clt : elt.session()->remoteClients())
+  stream.StartObject();
   {
-    read(static_cast<Network::Client&>(*clt));
+    obj["SessionId"] = elt.session()->id();
+    obj["LocalClient"] = static_cast<Network::Client&>(elt.session()->localClient());
+
+    stream.Key("RemoteClients");
+    stream.StartArray();
+    for (auto& clt : elt.session()->remoteClients())
+    {
+      read(static_cast<Network::Client&>(*clt));
+    }
+    stream.EndArray();
   }
-  obj.self.stream.EndArray();
+  stream.EndObject();
 }
 
 template <>

@@ -2,8 +2,6 @@
 
 #include "ClientSession.hpp"
 
-#include <score/application/ApplicationContext.hpp>
-#include <score/command/Command.hpp>
 #include <score/model/Identifier.hpp>
 #include <score/plugins/StringFactoryKey.hpp>
 #include <score/plugins/documentdelegate/DocumentDelegateFactory.hpp>
@@ -17,7 +15,6 @@
 #include <QDataStream>
 #include <QIODevice>
 #include <QJsonDocument>
-#include <QTcpServer>
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
@@ -26,7 +23,6 @@
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/SlavePolicy.hpp>
-#include <Network/Document/MasterPolicy.hpp>
 #include <sys/types.h>
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::ClientSessionBuilder)
