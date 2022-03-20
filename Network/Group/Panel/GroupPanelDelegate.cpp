@@ -1,15 +1,20 @@
 #include "GroupPanelDelegate.hpp"
+#include <score/selection/SelectionStack.hpp>
 
 #include <score/actions/ActionManager.hpp>
 #include <score/document/DocumentInterface.hpp>
 #include <score/widgets/ClearLayout.hpp>
 #include <score/widgets/MarginLess.hpp>
 #include <score/widgets/Separator.hpp>
+#include <core/document/Document.hpp>
 
+
+#include <QButtonGroup>
 #include <QGridLayout>
 #include <QInputDialog>
 #include <QLabel>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QVBoxLayout>
 
 #include <score/application/GUIApplicationContext.hpp>
@@ -22,6 +27,10 @@
 #include <Network/Group/Panel/Widgets/GroupListWidget.hpp>
 #include <Network/Group/Panel/Widgets/GroupTableWidget.hpp>
 #include <Network/Session/Session.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
+#include <Scenario/Document/Event/EventModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
+#include <Process/Process.hpp>
 namespace Network
 {
 PanelDelegate::PanelDelegate(const score::GUIApplicationContext& ctx)
@@ -121,29 +130,64 @@ class NetworkMetadataWidget : public QWidget
 {
   const score::DocumentContext& m_ctx;
   const GroupManager& m_mgr;
+  NetworkDocumentPlugin& m_plug;
+  CommandDispatcher<> disp{m_ctx.commandStack};
 
 public:
   NetworkMetadataWidget(
       const score::DocumentContext& ctx,
       const GroupManager& mgr,
       QWidget* parent)
-      : QWidget{parent}, m_ctx{ctx}, m_mgr{mgr}
+      : QWidget{parent}
+      , m_ctx{ctx}
+      , m_mgr{mgr}
+      , m_plug{m_ctx.plugin<NetworkDocumentPlugin>()}
   {
     connect(&mgr, &GroupManager::groupAdded, this, [=] { recompute(); });
     connect(&mgr, &GroupManager::groupRemoved, this, [=] { recompute(); });
+    connect(&m_ctx.selectionStack, &score::SelectionStack::currentSelectionChanged,
+            this, [=] { recompute(); });
     recompute();
   }
 
   void recompute()
   {
+    const Selection& sel = m_ctx.selectionStack.currentSelection();
+    if(sel.empty())
+      return;
+
+    QObject* obj = *sel.begin();
+    ObjectMetadata init{};
+    enum { Other, Interval, Event, Sync, Process } selectedType{Other};
+    if(auto itv = qobject_cast<Scenario::IntervalModel*>(obj)) {
+      if(auto m = m_plug.get_metadata(*itv))
+        init = *m;
+      selectedType = Interval;
+    }
+    else if(auto e = qobject_cast<Scenario::EventModel*>(obj)) {
+      if(auto m = m_plug.get_metadata(*e))
+        init = *m;
+      selectedType = Event;
+    }
+    else if(auto ts = qobject_cast<Scenario::TimeSyncModel*>(obj)) {
+      if(auto m = m_plug.get_metadata(*ts))
+        init = *m;
+      selectedType = Sync;
+    }
+    else if(auto p = qobject_cast<Process::ProcessModel*>(obj)) {
+      if(auto m = m_plug.get_metadata(*p))
+        init = *m;
+      selectedType = Process;
+    }
+    if(selectedType == Other)
+      return;
+
     const auto& str = Network::Constants::instance();
-    auto setup = [=](const QString& txt, const QString& k, const QString& v) {
-      auto btn = new QPushButton{txt};
-      connect(btn, &QPushButton::clicked, this, [=] {
-        SCORE_TODO;
-        qDebug() << k << v;
-        //SetCustomMetadata(m_ctx, {std::make_pair(k, v)});
-      });
+    auto setup = [=](const QString& txt, auto l, auto g, auto func) {
+      auto btn = new QRadioButton{txt};
+      g->addButton(btn);
+      l->addWidget(btn);
+      connect(btn, &QRadioButton::clicked, this, func);
       return btn;
     };
     if (auto l = this->layout())
@@ -151,27 +195,76 @@ public:
       QWidget{}.setLayout(this->layout());
     }
 
+    using namespace Command;
     auto lay = new QVBoxLayout{this};
 
     auto l1 = new QHBoxLayout{};
-    l1->addWidget(setup(tr("Async"), str.syncmode, str.async));
-    l1->addWidget(setup(tr("Sync"), str.syncmode, str.sync));
+    {
+      auto g = new QButtonGroup{this};
+      auto async = setup("Async", l1, g, [=] {
+        disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::NonCompensatedAsync});
+      });
+      auto sync = setup("Sync", l1, g, [=] {
+        disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::NonCompensatedSync});
+      });
+      if(init.syncmode==SyncMode::CompensatedAsync || init.syncmode==SyncMode::NonCompensatedAsync)
+        async->toggle();
+      else
+        sync->toggle();
+    }
 
     auto l2 = new QHBoxLayout{};
-    l2->addWidget(setup(tr("Shared"), str.sharemode, str.shared));
-    l2->addWidget(setup(tr("Mixed"), str.sharemode, str.mixed));
-    l2->addWidget(setup(tr("Free"), str.sharemode, str.free));
+    {
+      auto g = new QButtonGroup{this};
+      auto shared = setup("Shared", l2, g, [=] {
+        disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Shared});
+      });
+      auto mixed = setup("Mixed", l2, g, [=] {
+        disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Mixed});
+      });
+      auto free = setup("Free", l2, g, [=] {
+        disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Free});
+      });
+      if(init.sharemode==ShareMode::Shared)
+        shared->toggle();
+      else if(init.sharemode==ShareMode::Mixed)
+        mixed->toggle();
+      else if(init.sharemode==ShareMode::Free)
+        free->toggle();
+    }
 
     auto l3 = new QHBoxLayout{};
-    l3->addWidget(setup(tr("Ordered"), str.order, str.ordered));
-    l3->addWidget(setup(tr("Unordered"), str.order, str.unordered));
+    {
+      auto g = new QButtonGroup{this};
+      auto ordered = setup("Ordered", l3, g, [=] {
+        disp.submit(new SetOrderedMode{this->m_plug, m_ctx.selectionStack.currentSelection(), true});
+      });
+      auto unordered = setup("Unordered", l3, g, [=] {
+        disp.submit(new SetOrderedMode{this->m_plug, m_ctx.selectionStack.currentSelection(), false});
+      });
+      if(init.ordered)
+        ordered->toggle();
+      else
+        unordered->toggle();
+    }
 
     auto l4 = new QVBoxLayout{};
-    l4->addWidget(setup(tr("Parent"), str.group, str.parent));
-
-    for (Group* group : m_mgr.groups())
     {
-      l4->addWidget(setup(group->name(), str.group, group->name()));
+      auto g = new QButtonGroup{this};
+      auto parent_g = setup("Parent", l4, g, [=] {
+        disp.submit(new SetGroup{this->m_plug, m_ctx.selectionStack.currentSelection(), "parent"});
+      });
+      if(init.group == "parent")
+        parent_g->toggle();
+
+      for (Group* group : m_mgr.groups())
+      {
+        auto child_g = setup(group->name(), l4, g, [=, n = group->name()] {
+          disp.submit(new SetGroup{this->m_plug, m_ctx.selectionStack.currentSelection(), n});
+        });
+        if(init.group == group->name())
+          child_g->toggle();
+      }
     }
 
     lay->addLayout(l1);

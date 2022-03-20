@@ -165,37 +165,118 @@ void NetworkDocumentPlugin::on_stop()
   compensated.trigger_triggered.clear();
 }
 
-const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj)
+const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj) const noexcept
 {
-  if(auto it = intervalMetadatas().find(&obj); it != intervalMetadatas().end())
+  if(auto it = m_intervalsGroups.find(&obj); it != m_intervalsGroups.end())
     return &it->second;
   return {};
 }
 
-const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj)
+const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj) const noexcept
 {
-  if(auto it = eventMetadatas().find(&obj); it != eventMetadatas().end())
+  if(auto it = m_eventGroups.find(&obj); it != m_eventGroups.end())
     return &it->second;
   return {};
 }
 
-const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj)
+const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj) const noexcept
 {
-  if(auto it = syncMetadatas().find(&obj); it != syncMetadatas().end())
+  if(auto it = m_syncGroups.find(&obj); it != m_syncGroups.end())
     return &it->second;
   return {};
 }
 
-const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj)
+const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) const noexcept
 {
-  if(auto it = processMetadatas().find(&obj); it != processMetadatas().end())
+  if(auto it = m_processGroups.find(&obj); it != m_processGroups.end())
+    return &it->second;
+  return {};
+}
+ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj) noexcept
+{
+  if(auto it = m_intervalsGroups.find(&obj); it != m_intervalsGroups.end())
+    return &it->second;
+  return {};
+}
+
+ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj) noexcept
+{
+  if(auto it = m_eventGroups.find(&obj); it != m_eventGroups.end())
+    return &it->second;
+  return {};
+}
+
+ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj) noexcept
+{
+  if(auto it = m_syncGroups.find(&obj); it != m_syncGroups.end())
+    return &it->second;
+  return {};
+}
+
+ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) noexcept
+{
+  if(auto it = m_processGroups.find(&obj); it != m_processGroups.end())
     return &it->second;
   return {};
 }
 
 void NetworkDocumentPlugin::set_metadata(const Scenario::IntervalModel& obj, const ObjectMetadata& m)
 {
+  m_intervalsGroups[&obj] = m;
+  connect(&obj, &IdentifiedObjectAbstract::identified_object_destroying,
+          this, [this, ptr=&obj] {
+    m_intervalsGroups.erase(ptr);
+  });
+}
 
+void NetworkDocumentPlugin::set_metadata(const Scenario::EventModel& obj, const ObjectMetadata& m)
+{
+  m_eventGroups[&obj] = m;
+  connect(&obj, &IdentifiedObjectAbstract::identified_object_destroying,
+          this, [this, ptr=&obj] {
+    m_eventGroups.erase(ptr);
+  });
+}
+
+void NetworkDocumentPlugin::set_metadata(const Scenario::TimeSyncModel& obj, const ObjectMetadata& m)
+{
+  m_syncGroups[&obj] = m;
+  connect(&obj, &IdentifiedObjectAbstract::identified_object_destroying,
+          this, [this, ptr=&obj] {
+    m_syncGroups.erase(ptr);
+  });
+}
+
+void NetworkDocumentPlugin::set_metadata(const Process::ProcessModel& obj, const ObjectMetadata& m)
+{
+  m_processGroups[&obj] = m;
+  connect(&obj, &IdentifiedObjectAbstract::identified_object_destroying,
+          this, [this, ptr=&obj] {
+    m_processGroups.erase(ptr);
+  });
+}
+void NetworkDocumentPlugin::unset_metadata(const Scenario::IntervalModel& obj)
+{
+  m_intervalsGroups.erase(&obj);
+  disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+}
+
+void NetworkDocumentPlugin::unset_metadata(const Scenario::EventModel& obj)
+{
+  m_eventGroups.erase(&obj);
+  disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+}
+
+void NetworkDocumentPlugin::unset_metadata(const Scenario::TimeSyncModel& obj)
+{
+  m_syncGroups.erase(&obj);
+  disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+}
+
+void NetworkDocumentPlugin::unset_metadata(const Process::ProcessModel& obj)
+{
+  m_processGroups.erase(&obj);
+  disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
 }
 
 const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& NetworkDocumentPlugin::intervalMetadatas() const noexcept

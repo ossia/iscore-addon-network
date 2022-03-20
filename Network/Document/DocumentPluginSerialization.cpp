@@ -47,3 +47,37 @@ void JSONWriter::write(Network::NetworkDocumentPlugin& elt)
     elt.m_policy = new Network::PlaceholderEditionPolicy{w, &elt};
   }
 }
+
+template <>
+void DataStreamReader::read(const Network::ObjectMetadata& elt)
+{
+  m_stream << elt.syncmode << elt.sharemode << elt.ordered << elt.group;
+  insertDelimiter();
+}
+
+template <>
+void DataStreamWriter::write(Network::ObjectMetadata& elt)
+{
+  m_stream >> elt.syncmode >> elt.sharemode >> elt.ordered >> elt.group;
+  checkDelimiter();
+}
+
+template <>
+void JSONReader::read(const Network::ObjectMetadata& elt)
+{
+  stream.StartObject();
+  obj["Sync"] = (int)elt.syncmode;
+  obj["Share"] = (int)elt.sharemode;
+  obj["Ordered"] = elt.ordered;
+  obj["Group"] = elt.group;
+  stream.EndObject();
+}
+
+template <>
+void JSONWriter::write(Network::ObjectMetadata& elt)
+{
+  elt.syncmode = (Network::SyncMode) obj["Sync"].toInt();
+  elt.sharemode = (Network::ShareMode) obj["Share"].toInt();
+  elt.ordered = obj["Ordered"].toBool();
+  elt.group = obj["Group"].toString();
+}

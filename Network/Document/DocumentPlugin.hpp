@@ -46,8 +46,8 @@ namespace Network
 struct ObjectMetadata
 {
     SyncMode syncmode{SyncMode::NonCompensatedAsync};
-    ShareMode sharemode{};
-    bool ordered{};
+    ShareMode sharemode{ShareMode::Shared};
+    bool ordered{false};
     QString group;
 };
 
@@ -175,14 +175,22 @@ public:
   void sessionChanged() W_SIGNAL(sessionChanged);
 
 
-  const ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj);
-  const ObjectMetadata* get_metadata(const Scenario::EventModel& obj);
-  const ObjectMetadata* get_metadata(const Scenario::TimeSyncModel& obj);
-  const ObjectMetadata* get_metadata(const Process::ProcessModel& obj);
+  const ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj) const noexcept;
+  const ObjectMetadata* get_metadata(const Scenario::EventModel& obj) const noexcept;
+  const ObjectMetadata* get_metadata(const Scenario::TimeSyncModel& obj) const noexcept;
+  const ObjectMetadata* get_metadata(const Process::ProcessModel& obj) const noexcept;
+  ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj) noexcept;
+  ObjectMetadata* get_metadata(const Scenario::EventModel& obj) noexcept;
+  ObjectMetadata* get_metadata(const Scenario::TimeSyncModel& obj) noexcept;
+  ObjectMetadata* get_metadata(const Process::ProcessModel& obj) noexcept;
   void set_metadata(const Scenario::IntervalModel& obj, const ObjectMetadata& m);
   void set_metadata(const Scenario::EventModel& obj, const ObjectMetadata& m);
   void set_metadata(const Scenario::TimeSyncModel& obj, const ObjectMetadata& m);
   void set_metadata(const Process::ProcessModel& obj, const ObjectMetadata& m);
+  void unset_metadata(const Scenario::IntervalModel& obj);
+  void unset_metadata(const Scenario::EventModel& obj);
+  void unset_metadata(const Scenario::TimeSyncModel& obj);
+  void unset_metadata(const Process::ProcessModel& obj);
 
 
  const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& intervalMetadatas() const noexcept;
