@@ -134,7 +134,7 @@ set(SRCS
 
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
 score_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
-target_compile_options(${PROJECT_NAME} PRIVATE -ftime-trace)
+# target_compile_options(${PROJECT_NAME} PRIVATE -ftime-trace)
 target_link_libraries(${PROJECT_NAME} PUBLIC
                                     score_lib_base
                                     score_plugin_scenario

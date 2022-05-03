@@ -52,6 +52,7 @@ operator()(Execution::IntervalComponent& cst, const Group& cur)
 
   const Group& cur_group = getGroup(ctx.doc, ctx.gm, cur, interval);
 
+  qDebug() << "Interval: " << interval.metadata().getName() << ":" << cur_group.name() << cur_group.hasClient(ctx.self);
   // Execution speed
   {
     auto& session = ctx.session;
