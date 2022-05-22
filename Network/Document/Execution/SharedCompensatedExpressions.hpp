@@ -46,7 +46,7 @@ struct CompensatedExpressionInGroup
     e->date_expr = new DateExpression;
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        eggs::variants::in_place<ossia::expressions::expression_generic>,
+        ossia::in_place_type<ossia::expressions::expression_generic>,
         std::unique_ptr<ossia::expressions::expression_generic_base>(
             e->date_expr)));
 
@@ -267,7 +267,7 @@ struct SharedCompensatedAsyncOutOfGroup
         });
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        eggs::variants::in_place<ossia::expressions::expression_generic>,
+        ossia::in_place_type<ossia::expressions::expression_generic>,
         std::move(expr)));
   }
 };
@@ -322,7 +322,7 @@ struct SharedCompensatedSyncOutOfGroup
         });
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        eggs::variants::in_place<ossia::expressions::expression_generic>,
+        ossia::in_place_type<ossia::expressions::expression_generic>,
         std::move(expr)));
   }
 };

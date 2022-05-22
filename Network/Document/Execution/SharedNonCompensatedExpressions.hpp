@@ -40,7 +40,7 @@ struct NonCompensatedExpressionInGroup
     // ossia::expressions::expression_generic{
     //    std::unique_ptr<ossia::expressions::expression_generic_base>(e->async_expr)};
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        eggs::variants::in_place<ossia::expressions::expression_generic>,
+        ossia::in_place_type<ossia::expressions::expression_generic>,
         std::unique_ptr<ossia::expressions::expression_generic_base>(
             e->async_expr)));
 
@@ -283,7 +283,7 @@ struct SharedNonCompensatedAsyncOutOfGroup
         });
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        eggs::variants::in_place<ossia::expressions::expression_generic>,
+        ossia::in_place_type<ossia::expressions::expression_generic>,
         std::move(expr)));
   }
 };
@@ -338,7 +338,7 @@ struct SharedNonCompensatedSyncOutOfGroup
         });
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        eggs::variants::in_place<ossia::expressions::expression_generic>,
+        ossia::in_place_type<ossia::expressions::expression_generic>,
         std::move(expr)));
   }
 };
