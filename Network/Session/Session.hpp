@@ -66,6 +66,8 @@ public:
       const std::vector<Id<Client>>& clts,
       const NetworkMessage& m);
 
+  void clearClients();
+
   void clientAdded(RemoteClient* c) W_SIGNAL(clientAdded, c);
   void clientRemoving(RemoteClient* c) W_SIGNAL(clientRemoving, c);
   void clientRemoved(RemoteClient* c) W_SIGNAL(clientRemoved, c);

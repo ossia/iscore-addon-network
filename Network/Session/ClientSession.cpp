@@ -36,6 +36,11 @@ ClientSession::ClientSession(
       Qt::QueuedConnection);
 }
 
+ClientSession::~ClientSession()
+{
+  clearClients();
+}
+
 void ClientSession::on_createNewClient(QWebSocket*)
 {
   qDebug() << "createNewClient";

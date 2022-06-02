@@ -16,6 +16,7 @@ public:
       Id<Session> id,
       QObject* parent = nullptr);
 
+  ~ClientSession();
   RemoteClient& master() const override { return m_master; }
 
 private:

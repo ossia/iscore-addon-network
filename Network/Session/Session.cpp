@@ -101,6 +101,15 @@ void Session::broadcastToClients(
     sendMessage(id, m);
   }
 }
+
+void Session::clearClients()
+{
+  for (RemoteClient* client : remoteClients())
+  {
+    QObject::disconnect(client, nullptr, this, nullptr);
+    delete client;
+  }
+}
 void Session::broadcastToAllClients(const NetworkMessage& m)
 {
   for (RemoteClient* client : remoteClients())

@@ -42,7 +42,10 @@ MasterSession::MasterSession(
 #endif
 }
 
-MasterSession::~MasterSession() {}
+MasterSession::~MasterSession()
+{
+  clearClients();
+}
 
 void MasterSession::on_createNewClient(QWebSocket* sock)
 {
