@@ -1,14 +1,14 @@
 #pragma once
 #include <ossia/detail/config.hpp>
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 #include <chrono>
 #include <thread>
 
 namespace Network
 {
-namespace network = asio;
+namespace network = boost::asio;
 using udp = network::ip::udp;
 
 class NTP
