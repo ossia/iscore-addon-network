@@ -49,9 +49,9 @@ operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
 
          switch(sync)
          {
-           case SyncMode::AsyncOrdered:
+           case SyncMode::CompensatedAsync:
              break;
-           case SyncMode::AsyncUnordered:
+           case SyncMode::NonCompensatedAsync:
            {
              // Common case : set the expression
              auto expr = std::make_unique<AsyncExpression>();
@@ -94,9 +94,9 @@ operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
 
              break;
            }
-           case SyncMode::SyncOrdered:
+           case SyncMode::CompensatedSync:
              break;
-           case SyncMode::SyncUnordered:
+           case SyncMode::NonCompensatedSync:
              break;
          }
        }
@@ -104,9 +104,9 @@ operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
        {
          switch(sync)
          {
-           case SyncMode::AsyncOrdered:
+           case SyncMode::CompensatedAsync:
              break;
-           case SyncMode::AsyncUnordered:
+           case SyncMode::NonCompensatedAsync:
            {
              auto expr = std::make_unique<AsyncExpression>();
              auto expr_ptr = expr.get();
@@ -126,9 +126,9 @@ operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
 
              break;
            }
-           case SyncMode::SyncOrdered:
+           case SyncMode::CompensatedSync:
              break;
-           case SyncMode::SyncUnordered:
+           case SyncMode::NonCompensatedSync:
              break;
          }
 
@@ -147,7 +147,7 @@ operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
 
 /*
 
-struct MixedAsyncUnorderedInGroup : public ExpressionAsyncInGroup
+struct MixedNonCompensatedAsyncInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -195,7 +195,7 @@ orig) { if(e.shared_expr->it) ossia::expressions::remove_callback(
 };
 
 
-struct MixedAsyncOrderedInGroup : public ExpressionAsyncInGroup
+struct MixedCompensatedAsyncInGroup : public ExpressionAsyncInGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -252,7 +252,7 @@ session.makeMessage(ctx.mapi.trigger_previous_completed, path));
 };
 
 
-struct MixedAsyncUnorderedOutOfGroup
+struct MixedNonCompensatedAsyncOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -278,7 +278,7 @@ bound information ??
 };
 
 
-struct MixedAsyncOrderedOutOfGroup
+struct MixedCompensatedAsyncOutOfGroup
 {
   void operator()(
       NetworkPrunerContext& ctx,
@@ -352,16 +352,16 @@ session.makeMessage(ctx.mapi.trigger_triggered, path));
 
       switch(sync)
       {
-        case SyncMode::AsyncOrdered:
+        case SyncMode::CompensatedAsync:
           break;
-        case SyncMode::AsyncUnordered:
+        case SyncMode::NonCompensatedAsync:
         {
-          MixedAsyncUnorderedInGroup{}(ctx, comp, path);
+          MixedNonCompensatedAsyncInGroup{}(ctx, comp, path);
           break;
         }
-        case SyncMode::SyncOrdered:
+        case SyncMode::CompensatedSync:
           break;
-        case SyncMode::SyncUnordered:
+        case SyncMode::NonCompensatedSync:
           break;
       }
     }
@@ -370,14 +370,14 @@ session.makeMessage(ctx.mapi.trigger_triggered, path));
       // Not in the group : we wait.
       switch(sync)
       {
-        case SyncMode::AsyncOrdered:
+        case SyncMode::CompensatedAsync:
           break;
-        case SyncMode::AsyncUnordered:
-          MixedAsyncUnorderedOutOfGroup{}(ctx, comp, path);
+        case SyncMode::NonCompensatedAsync:
+          MixedNonCompensatedAsyncOutOfGroup{}(ctx, comp, path);
           break;
-        case SyncMode::SyncOrdered:
+        case SyncMode::CompensatedSync:
           break;
-        case SyncMode::SyncUnordered:
+        case SyncMode::NonCompensatedSync:
           break;
       }
     }

@@ -17,7 +17,7 @@
 namespace Network
 {
 GroupListWidget::GroupListWidget(const GroupManager& mgr, QWidget* parent)
-    : QWidget{parent}, m_mgr{mgr}
+    : QGroupBox{tr("Groups"), parent}, m_mgr{mgr}
 {
   this->setLayout(new QVBoxLayout);
   for (auto& group : m_mgr.groups())

@@ -247,7 +247,7 @@ struct SharedNonCompensatedAsyncOutOfGroup
       Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
-    qDebug() << "SharedAsyncUnorderedOutOfGroup";
+    qDebug() << "SharedNonCompensatedAsyncOutOfGroup";
     auto& session = ctx.session;
     auto& mapi = ctx.mapi;
     auto master = ctx.master;
@@ -295,7 +295,7 @@ struct SharedNonCompensatedSyncOutOfGroup
       Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
-    qDebug() << "SharedAsyncUnorderedOutOfGroup";
+    qDebug() << "SharedNonCompensatedSyncOutOfGroup";
     auto expr = std::make_unique<AsyncExpression>();
     auto expr_ptr = expr.get();
     auto& session = ctx.session;

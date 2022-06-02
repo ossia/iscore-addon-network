@@ -47,7 +47,6 @@ struct ObjectMetadata
 {
     SyncMode syncmode{SyncMode::NonCompensatedAsync};
     ShareMode sharemode{ShareMode::Shared};
-    bool ordered{false};
     QString group;
 };
 

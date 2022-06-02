@@ -1,5 +1,7 @@
 #pragma once
 #include <score/plugins/panel/PanelDelegate.hpp>
+class QTabWidget;
+
 namespace Network
 {
 class GroupManager;
@@ -30,7 +32,7 @@ private:
   void scanPlugins(const score::DocumentContext& ctx);
 
   QWidget* m_widget{};
-  QWidget* m_subWidget{};
+  QTabWidget* m_subWidget{};
 
   QMetaObject::Connection m_con;
 };

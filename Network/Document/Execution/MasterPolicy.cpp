@@ -99,7 +99,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
 
             // Note : there is no problem for the ordered mode if we have
             // A--|--A because the i-score algorithm keeps this order. The
-            // 'Unordered' will still be ordered in this case (but
+            // 'NonCompensated' will still be ordered in this case (but
             // instantaneous). However we don't have a "global" order, only a
             // "local" order. We want a global order... this means splitting
             // the time_node execution.

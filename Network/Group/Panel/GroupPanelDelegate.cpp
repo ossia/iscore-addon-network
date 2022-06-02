@@ -16,6 +16,8 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QVBoxLayout>
+#include <QSpacerItem>
+#include <QTabWidget>
 
 #include <score/application/GUIApplicationContext.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
@@ -80,14 +82,14 @@ void PanelDelegate::on_modelChanged(
   }
 }
 
-class ClientListWidget : public QWidget
+class ClientListWidget : public QGroupBox
 {
   Session& m_session;
   QVector<QWidget*> m_clients;
 
 public:
   ClientListWidget(const Session& s, QWidget* p)
-      : QWidget{p}, m_session{const_cast<Session&>(s)}
+      : QGroupBox{tr("Clients"), p}, m_session{const_cast<Session&>(s)}
   {
     recompute();
     connect(&s, &Session::clientAdded, this, [=] { recompute(); });
@@ -182,7 +184,9 @@ public:
     if(selectedType == Other)
       return;
 
-    const auto& str = Network::Constants::instance();
+    if(init.group.isEmpty())
+      init.group = "all";
+
     auto setup = [=](const QString& txt, auto l, auto g, auto func) {
       auto btn = new QRadioButton{txt};
       g->addButton(btn);
@@ -197,58 +201,66 @@ public:
 
     using namespace Command;
     auto lay = new QVBoxLayout{this};
-
     auto l1 = new QHBoxLayout{};
+    auto l1bis = new QHBoxLayout{};
+
+    lay->addWidget(new QLabel{"Expression Synchronization"});
+    lay->addLayout(l1);
+    lay->addLayout(l1bis);
     {
       auto g = new QButtonGroup{this};
-      auto async = setup("Async", l1, g, [=] {
+      auto async_uc = setup("Async (Uncompensated)", l1, g, [=] {
         disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::NonCompensatedAsync});
       });
-      auto sync = setup("Sync", l1, g, [=] {
+      auto async_c = setup("Async (Compensated)", l1, g, [=] {
+        disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedAsync});
+      });
+      auto sync_uc = setup("Sync (Uncompensated)", l1bis, g, [=] {
         disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::NonCompensatedSync});
       });
-      if(init.syncmode==SyncMode::CompensatedAsync || init.syncmode==SyncMode::NonCompensatedAsync)
-        async->toggle();
-      else
-        sync->toggle();
+      auto sync_c = setup("Sync (Compensated)", l1bis, g, [=] {
+        disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedSync});
+      });
+      switch(init.syncmode)
+      {
+        case SyncMode::NonCompensatedAsync:
+          async_uc->toggle(); break;
+        case SyncMode::CompensatedAsync:
+          async_c->toggle(); break;
+        case SyncMode::NonCompensatedSync:
+          sync_uc->toggle(); break;
+        case SyncMode::CompensatedSync:
+          sync_c->toggle(); break;
+      }
     }
 
     auto l2 = new QHBoxLayout{};
+    lay->addWidget(new QLabel{"Scenario sharing"});
+    lay->addLayout(l2);
     {
       auto g = new QButtonGroup{this};
       auto shared = setup("Shared", l2, g, [=] {
         disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Shared});
       });
-      auto mixed = setup("Mixed", l2, g, [=] {
-        disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Mixed});
-      });
+      // auto mixed = setup("Mixed", l2, g, [=] {
+      //   disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Mixed});
+      // });
       auto free = setup("Free", l2, g, [=] {
         disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Free});
       });
       if(init.sharemode==ShareMode::Shared)
         shared->toggle();
-      else if(init.sharemode==ShareMode::Mixed)
-        mixed->toggle();
+      //else if(init.sharemode==ShareMode::Mixed)
+      //  mixed->toggle();
       else if(init.sharemode==ShareMode::Free)
         free->toggle();
     }
 
-    auto l3 = new QHBoxLayout{};
-    {
-      auto g = new QButtonGroup{this};
-      auto ordered = setup("Ordered", l3, g, [=] {
-        disp.submit(new SetOrderedMode{this->m_plug, m_ctx.selectionStack.currentSelection(), true});
-      });
-      auto unordered = setup("Unordered", l3, g, [=] {
-        disp.submit(new SetOrderedMode{this->m_plug, m_ctx.selectionStack.currentSelection(), false});
-      });
-      if(init.ordered)
-        ordered->toggle();
-      else
-        unordered->toggle();
-    }
 
     auto l4 = new QVBoxLayout{};
+    lay->addWidget(new QLabel{"Group"});
+    lay->addLayout(l4);
+    lay->addSpacing(10);
     {
       auto g = new QButtonGroup{this};
       auto parent_g = setup("Parent", l4, g, [=] {
@@ -262,16 +274,39 @@ public:
         auto child_g = setup(group->name(), l4, g, [=, n = group->name()] {
           disp.submit(new SetGroup{this->m_plug, m_ctx.selectionStack.currentSelection(), n});
         });
+
         if(init.group == group->name())
           child_g->toggle();
       }
     }
 
-    lay->addLayout(l1);
-    lay->addLayout(l2);
-    lay->addLayout(l3);
-    lay->addLayout(l4);
-    lay->addSpacing(1);
+
+    auto helplabel = new QLabel;
+    helplabel->setTextFormat(Qt::RichText);
+    helplabel->setText(tr(
+R"_(<b>Network configuration</b><br/><br/>
+
+<b>Async / sync</b>: relevant for triggers.<br/>
+- <b>Sync</b>: will wait until all clients in the group have finished.<br/>
+- <b>Async</b>: clients can trigger the trigger individually.<br/>
+- <b>Compensated</b>: when the trigger is ready, <br/>
+   set its execution date at a date in the future to ensure synchronisation.<br/>
+- <b>Uncompensated</b>: when the trigger is ready, go immediately.<br/>
+<br/><br/>
+<b>Shared / mixed / free</b>: relevant for Scenario processes.<br/>
+- If shared: the scenario's execution is shared across clients.<br/>
+- If free: for every client in the scenario's group, it executes independently.<br/>
+- If mixed:<br/>
+<br/><br/>
+<b>Group</b>: in which group the object executes.<br/>
+<br/>
+Two special groups are:<br/>
+<br/>
+- "parent" (the property is inherited from the parent)<br/>
+- "all" (executes on all groups)<br/>
+)_"));
+    lay->addWidget(helplabel);
+    lay->addStretch();
   }
 };
 
@@ -282,17 +317,15 @@ void PanelDelegate::setView(
 {
   // Make the containing widget
   delete m_subWidget;
-  m_subWidget = new QWidget;
-
-  auto lay = new QVBoxLayout;
-  m_subWidget->setLayout(lay);
-
+  m_subWidget = new QTabWidget;
   m_widget->layout()->addWidget(m_subWidget);
 
+  auto topology = new QWidget;
+  auto topology_layout = new QVBoxLayout{topology};
+  m_subWidget->addTab(topology, tr("Topology"));
   // The sub-widgets (group data presentation)
-  m_subWidget->layout()->addWidget(
-      new QLabel{session->metaObject()->className()});
-  m_subWidget->layout()->addWidget(new GroupListWidget{mgr, m_subWidget});
+  topology_layout->addWidget(new QLabel{session->metaObject()->className()});
+  topology_layout->addWidget(new GroupListWidget{mgr, m_subWidget});
 
   // Add group button
   auto button = new QPushButton{QObject::tr("Add group")};
@@ -316,10 +349,13 @@ void PanelDelegate::setView(
       }
     }
   });
-  m_subWidget->layout()->addWidget(button);
+  topology_layout->addWidget(button);
 
-  // Group table
-  m_subWidget->layout()->addWidget(new score::HSeparator{m_subWidget});
+  topology_layout->addWidget(new ClientListWidget{*session, m_widget});
+  topology_layout->addWidget(new GroupTableWidget{mgr, session, m_widget});
+
+  // Transport
+
   auto transport_widg = new QWidget;
   auto transport_lay = new QHBoxLayout{transport_widg};
   auto play = new QPushButton{tr("Play")};
@@ -337,13 +373,8 @@ void PanelDelegate::setView(
   transport_lay->addWidget(play);
   transport_lay->addWidget(stop);
 
-  m_subWidget->layout()->addWidget(transport_widg);
-  m_subWidget->layout()->addWidget(new ClientListWidget{*session, m_widget});
-  m_subWidget->layout()->addWidget(new score::HSeparator{m_subWidget});
-  m_subWidget->layout()->addWidget(
-      new NetworkMetadataWidget{ctx, mgr, m_widget});
-  m_subWidget->layout()->addWidget(
-      new GroupTableWidget{mgr, session, m_widget});
+  m_subWidget->addTab(transport_widg, tr("Transport"));
+  m_subWidget->addTab(new NetworkMetadataWidget{ctx, mgr, m_widget}, tr("Object"));
 }
 
 void PanelDelegate::setEmptyView()

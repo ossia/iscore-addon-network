@@ -59,19 +59,7 @@ void update_metadata(NetworkDocumentPlugin& plug, auto& obj, ShareMode m)
     plug.set_metadata(obj, std::move(meta));
   }
 }
-void update_metadata(NetworkDocumentPlugin& plug, auto& obj, bool ordered)
-{
-  if(auto p = plug.get_metadata(obj))
-  {
-    p->ordered = ordered;
-  }
-  else
-  {
-    ObjectMetadata meta;
-    meta.ordered = ordered;
-    plug.set_metadata(obj, std::move(meta));
-  }
-}
+
 void update_metadata(NetworkDocumentPlugin& plug, auto& obj, QString group)
 {
   if(auto p = plug.get_metadata(obj))
@@ -244,45 +232,6 @@ void SetShareMode::serializeImpl(DataStreamInput& s) const
 }
 
 void SetShareMode::deserializeImpl(DataStreamOutput& s)
-{
-  s >> m_intervals >> m_events >> m_nodes >> m_processes >> m_after;
-}
-
-SetOrderedMode::SetOrderedMode(
-    NetworkDocumentPlugin& plug,const Selection& s,
-    bool newMode)
-  : UpdateObjectMetadata{plug, s}
-  , m_after{newMode}
-{
-}
-
-void SetOrderedMode::redo(const score::DocumentContext& ctx) const
-{
-  auto& plug = ctx.plugin<NetworkDocumentPlugin>();
-  for (auto& elt : m_intervals)
-  {
-    update_metadata(plug, elt.path.find(ctx), m_after);
-  }
-  for (auto& elt : m_events)
-  {
-    update_metadata(plug, elt.path.find(ctx), m_after);
-  }
-  for (auto& elt : m_nodes)
-  {
-    update_metadata(plug, elt.path.find(ctx), m_after);
-  }
-  for (auto& elt : m_processes)
-  {
-    update_metadata(plug, elt.path.find(ctx), m_after);
-  }
-}
-
-void SetOrderedMode::serializeImpl(DataStreamInput& s) const
-{
-  s << m_intervals << m_events << m_nodes << m_processes << m_after;
-}
-
-void SetOrderedMode::deserializeImpl(DataStreamOutput& s)
 {
   s >> m_intervals >> m_events >> m_nodes >> m_processes >> m_after;
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <score/model/Identifier.hpp>
 
+#include <QGroupBox>
 #include <QList>
 #include <QWidget>
 
@@ -10,7 +11,7 @@ namespace Network
 class Group;
 class GroupManager;
 class GroupWidget;
-class GroupListWidget : public QWidget
+class GroupListWidget : public QGroupBox
 {
 public:
   GroupListWidget(const GroupManager& mgr, QWidget* parent);

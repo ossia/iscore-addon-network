@@ -87,26 +87,6 @@ class SetShareMode : public UpdateObjectMetadata
 };
 
 
-class SetOrderedMode : public UpdateObjectMetadata
-{
-    SCORE_COMMAND_DECL(
-        DistributedScenarioCommandFactoryName(),
-        SetOrderedMode,
-        "Set Ordered mode")
-
-    public:
-      SetOrderedMode(
-        NetworkDocumentPlugin& plug, const Selection& s,
-        bool newMode);
-
-    void redo(const score::DocumentContext& ctx) const override;
-
-  private:
-    void serializeImpl(DataStreamInput& s) const override;
-    void deserializeImpl(DataStreamOutput& s) override;
-    bool m_after{};
-};
-
 class SetGroup : public UpdateObjectMetadata
 {
     SCORE_COMMAND_DECL(

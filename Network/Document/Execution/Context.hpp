@@ -14,12 +14,10 @@ struct Constants
     return c;
   }
   const QString syncmode{QStringLiteral("syncmode")};
-  const QString async{QStringLiteral("async")};
-  const QString sync{QStringLiteral("sync")};
-
-  const QString order{QStringLiteral("order")};
-  const QString ordered{QStringLiteral("true")};
-  const QString unordered{QStringLiteral("false")};
+  const QString async_compensated{QStringLiteral("async_compensated")};
+  const QString async_uncompensated{QStringLiteral("async_uncompensated")};
+  const QString sync_compensated{QStringLiteral("sync_compensated")};
+  const QString sync_uncompensated{QStringLiteral("sync_uncompensated")};
 
   const QString group{QStringLiteral("group")};
   const QString parent{QStringLiteral("parent")};
