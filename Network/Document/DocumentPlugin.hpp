@@ -6,6 +6,8 @@
 #include <tsl/hopscotch_set.h>
 #include <score/serialization/DataStreamFwd.hpp>
 #include <score/command/CommandData.hpp>
+#include <unordered_map>
+
 SCORE_SERIALIZE_DATASTREAM_DECLARE(, score::CommandData)
 
 class DataStream;
