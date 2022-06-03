@@ -34,7 +34,6 @@ IpWidget::IpWidget(QWidget* parent) : QFrame(parent)
     if (i != 0)
     {
       QLabel* pDot = new QLabel(".", this);
-      pDot->setStyleSheet("background: white");
       pLayout->addWidget(pDot);
       pLayout->setStretch(pLayout->count(), 0);
     }

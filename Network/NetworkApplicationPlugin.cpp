@@ -184,8 +184,6 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
         doc->model().addPluginModel(plug);
       }
 
-      qApp->setStyleSheet("");
-
       auto& panel = context.panel<Network::PanelDelegate>();
       panel.networkPluginReady();
     }
