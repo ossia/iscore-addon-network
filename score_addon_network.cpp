@@ -10,6 +10,10 @@
 #include <Network/NetworkApplicationPlugin.hpp>
 #include <Network/PlayerPlugin.hpp>
 #include <Network/Settings/NetworkSettings.hpp>
+
+#include <Netpit/NetpitMessage.hpp>
+
+#include <Avnd/Factories.hpp>
 #include <score_addon_network.hpp>
 #include <score_addon_network_commands_files.hpp>
 
@@ -59,6 +63,8 @@ score_addon_network::factories(
     const score::ApplicationContext& ctx,
     const score::InterfaceKey& key) const
 {
+  if(auto res = oscr::instantiate_fx<Netpit::MessagePit>(ctx, key); !res.empty())
+    return res;
   return instantiate_factories<
       score::ApplicationContext,
       FW<score::DocumentPluginFactory, Network::DocumentPluginFactory>,

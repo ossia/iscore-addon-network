@@ -7,7 +7,7 @@
 #include <score/serialization/DataStreamFwd.hpp>
 #include <score/command/CommandData.hpp>
 #include <unordered_map>
-
+#include <Netpit/Netpit.hpp>
 SCORE_SERIALIZE_DATASTREAM_DECLARE(, score::CommandData)
 
 class DataStream;
@@ -29,6 +29,10 @@ namespace Execution
 class EventComponent;
 class IntervalComponent;
 class TimeSyncComponent;
+}
+namespace Netpit
+{
+struct MessageContext;
 }
 namespace Network
 {
@@ -103,9 +107,14 @@ public:
 
 class SCORE_ADDON_NETWORK_EXPORT ExecutionPolicy : public QObject
 {
+  W_OBJECT(ExecutionPolicy)
 public:
   using QObject::QObject;
   virtual ~ExecutionPolicy();
+  virtual void writeMessage(Netpit::Message m) = 0;
+
+  void on_message(uint64_t process, const std::vector<std::pair<Id<Client>, ossia::value>>& m)
+  W_SIGNAL(on_message, process, m);
 };
 
 class SCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final
@@ -194,6 +203,10 @@ public:
   void unset_metadata(const Process::ProcessModel& obj);
 
 
+  void register_message_context(std::shared_ptr<Netpit::MessageContext> ctx);
+  void unregister_message_context(std::shared_ptr<Netpit::MessageContext> ctx);
+
+
  const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& intervalMetadatas() const noexcept;
  const std::unordered_map<const Scenario::EventModel*, ObjectMetadata>& eventMetadatas() const noexcept;
  const std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>& syncMetadatas() const noexcept;
@@ -207,6 +220,7 @@ public:
  // std::unordered_map<const Process::ProcessModel*, ObjectMetadata>& processMetadatas() noexcept
  // { return m_processGroups; }
 private:
+  void timerEvent(QTimerEvent* event) override;
   EditionPolicy* m_policy{};
   ExecutionPolicy* m_exec{};
   GroupManager* m_groups{};
@@ -215,5 +229,12 @@ private:
   std::unordered_map<const Scenario::EventModel*, ObjectMetadata> m_eventGroups;
   std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata> m_syncGroups;
   std::unordered_map<const Process::ProcessModel*, ObjectMetadata> m_processGroups;
+
+  std::unordered_map<uint64_t, std::shared_ptr<Netpit::MessageContext>> m_messages;
+
+  int m_timer{};
 };
 }
+
+
+W_REGISTER_ARGTYPE(std::vector<std::pair<Id<Network::Client>, ossia::value>>)

@@ -57,5 +57,8 @@ struct MessagesAPI
   const QByteArray trigger_triggered_compensated;
 
   const QByteArray interval_speed;
+
+  const QByteArray netpit_in_message;
+  const QByteArray netpit_out_message;
 };
 }

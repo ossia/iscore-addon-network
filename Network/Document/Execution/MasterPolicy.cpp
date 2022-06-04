@@ -1,4 +1,4 @@
-#include <Scenario/Document/Interval/IntervalModel.hpp>
+﻿#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 
 #include <score/model/path/PathSerialization.hpp>
@@ -17,7 +17,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     Session& s,
     NetworkDocumentPlugin& doc,
     const score::DocumentContext& c)
-    : m_keep{dynamic_cast<MasterEditionPolicy&>(doc.policy()).timekeeper()}
+    : m_session{s}
+    , m_keep{dynamic_cast<MasterEditionPolicy&>(doc.policy()).timekeeper()}
 {
   qDebug("MasterExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
@@ -261,5 +262,32 @@ MasterExecutionPolicy::MasterExecutionPolicy(
 
         s.broadcastToOthers(m.clientId, m);
       });
+
+
+  s.mapper().addHandler_(
+        mapi.netpit_in_message, [&] (const NetworkMessage& m, uint64_t id, ossia::value v) {
+    // Got a message that updates a process value from a remote client
+    auto& messages = m_messages[id];
+    m_messages[id][m.clientId] = std::move(v);
+
+    m_session.broadcastToAll(m_session.makeMessage(mapi.netpit_out_message, messages.container));
+  });
+
+  s.mapper().addHandler_(
+        mapi.netpit_out_message,
+        [&] (const NetworkMessage& m, uint64_t process, std::vector<std::pair<Id<Client>, ossia::value>> vec) {
+    // Apply to the local process
+    this->on_message(process, std::move(vec));
+  });
+}
+
+void MasterExecutionPolicy::writeMessage(Netpit::Message m)
+{
+  // Local execution writes a message: it is applied to m_messages ; everyone is notified.
+  auto& messages = m_messages[m.instance];
+  messages[m_session.master().id()] = std::move(m.val);
+
+  auto& mapi = MessagesAPI::instance();
+  m_session.broadcastToAll(m_session.makeMessage(mapi.netpit_out_message, m.instance, messages.container));
 }
 }

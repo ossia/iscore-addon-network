@@ -22,18 +22,17 @@ NetworkServer::NetworkServer(int port, QObject* parent) : QObject{parent}
     port++;
   }
 
-  QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
-
+#if !defined(__EMSCRIPTEN__)
   // use the first non-localhost IPv4 address
-  for (int i = 0; i < ipAddressesList.size(); ++i)
+  for (auto ip : QNetworkInterface::allAddresses())
   {
-    if (ipAddressesList.at(i) != QHostAddress::LocalHost
-        && ipAddressesList.at(i).toIPv4Address())
+    if (ip != QHostAddress::LocalHost && ip.toIPv4Address())
     {
-      m_localAddress = ipAddressesList.at(i).toString();
+      m_localAddress = ip.toString();
       break;
     }
   }
+#endif
 
   // if we did not find one, use IPv4 localhost
   if (m_localAddress.isEmpty())

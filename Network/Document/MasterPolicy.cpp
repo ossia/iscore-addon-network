@@ -5,6 +5,7 @@
 #include <core/document/Document.hpp>
 #include <core/command/CommandStack.hpp>
 
+#include <Netpit/Netpit.hpp>
 #include <Engine/ApplicationPlugin.hpp>
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
@@ -160,6 +161,7 @@ void MasterEditionPolicy::play()
       m_ctx.document);
   if (sm)
   {
+    Netpit::setCurrentDocument(m_ctx);
     auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.execution().request_play_interval(
         sm->baseInterval(),

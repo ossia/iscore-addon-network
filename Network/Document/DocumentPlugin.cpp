@@ -40,6 +40,7 @@
 
 #include <QString>
 
+#include <Netpit/MessageContext.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
@@ -52,6 +53,7 @@ struct VisitorVariant;
 
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::NetworkDocumentPlugin)
+W_OBJECT_IMPL(Network::ExecutionPolicy)
 
 SCORE_SERALIZE_DATASTREAM_DEFINE(score::CommandData)
 
@@ -87,6 +89,9 @@ MessagesAPI::MessagesAPI()
     , trigger_finished{QByteArrayLiteral("/trigger/finished")}
     , trigger_triggered{QByteArrayLiteral("/trigger/triggered")}
     , interval_speed{QByteArrayLiteral("/interval/speed")}
+
+    , netpit_in_message{QByteArrayLiteral("/np/msg/in")}
+    , netpit_out_message{QByteArrayLiteral("/np/msg/out")}
 {
 }
 
@@ -146,8 +151,32 @@ void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
   SCORE_ASSERT(pol);
 
   delete m_exec;
-  pol->setParent(this);
-  m_exec = pol;
+  killTimer(m_timer);
+  if(pol)
+  {
+    pol->setParent(this);
+    m_exec = pol;
+
+    m_timer = startTimer(5);
+    connect(m_exec, &ExecutionPolicy::on_message,
+            this, [this] (uint64_t process, const std::vector<std::pair<Id<Client>, ossia::value>>& m)
+    {
+      auto it = m_messages.find(process);
+      if(it != m_messages.end())
+      {
+        auto& p = it->second;
+        if(p)
+        {
+          Netpit::Inbound vec;
+          for(auto& [i,v] : m)
+            vec.messages.push_back(std::move(v));
+          p->from_network.enqueue(std::move(vec));
+
+        }
+      }
+
+    });
+  }
 }
 
 GroupManager& NetworkDocumentPlugin::groupManager() const { return *m_groups; }
@@ -279,6 +308,16 @@ void NetworkDocumentPlugin::unset_metadata(const Process::ProcessModel& obj)
   disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
 }
 
+void NetworkDocumentPlugin::register_message_context(std::shared_ptr<Netpit::MessageContext> ctx)
+{
+  m_messages[ctx->instance] = ctx;
+}
+
+void NetworkDocumentPlugin::unregister_message_context(std::shared_ptr<Netpit::MessageContext> ctx)
+{
+  m_messages.erase(ctx->instance);
+}
+
 const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& NetworkDocumentPlugin::intervalMetadatas() const noexcept
 { return m_intervalsGroups; }
 
@@ -294,4 +333,24 @@ const std::unordered_map<const Process::ProcessModel*, ObjectMetadata>& NetworkD
 ExecutionPolicy::~ExecutionPolicy() {}
 
 EditionPolicy::~EditionPolicy() {}
+}
+
+
+void Network::NetworkDocumentPlugin::timerEvent(QTimerEvent* event)
+{
+  if(!m_exec)
+    return;
+
+  // Send all the messages written by the local processes to the network
+  for(auto& m : m_messages)
+  {
+    Netpit::MessageContext& ctx = *m.second;
+    Netpit::Outbound mm;
+    bool ok = false;
+    while(ctx.to_network.try_dequeue(mm)) ok = true;
+    if(ok)
+    {
+      m_exec->writeMessage(mm);
+    }
+  }
 }

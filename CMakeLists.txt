@@ -3,7 +3,8 @@ project(score_addon_network LANGUAGES CXX)
 score_common_setup()
 
 # Packages
-find_package(Qt5 5.3 REQUIRED COMPONENTS Core Widgets Network WebSockets Xml)
+
+find_package(${QT_VERSION} REQUIRED COMPONENTS Core Widgets Network WebSockets Xml)
 
 # Files & main target
 set(HDRS
@@ -129,6 +130,14 @@ set(SRCS
     Network/Settings/NetworkSettingsPresenter.cpp
     Network/Settings/NetworkSettingsView.cpp
 
+    Netpit/Netpit.hpp
+    Netpit/Netpit.cpp
+    Netpit/NetpitMessage.hpp
+
+    Netpit/MessageContext.hpp
+    Netpit/MessageContext.cpp
+
+
     score_addon_network.cpp
 )
 
@@ -140,6 +149,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     score_plugin_scenario
                                     score_lib_process
                                     score_plugin_engine
+                                    score_plugin_avnd
                                     ${QT_PREFIX}::Core
                                     ${QT_PREFIX}::Widgets
                                     ${QT_PREFIX}::Network

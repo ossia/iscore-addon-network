@@ -10,5 +10,10 @@ public:
       Session& s,
       NetworkDocumentPlugin& doc,
       const score::DocumentContext& c);
+
+  void writeMessage(Netpit::Message m);
+
+private:
+  Session& m_session;
 };
 }

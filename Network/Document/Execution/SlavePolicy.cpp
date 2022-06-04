@@ -11,6 +11,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     Session& s,
     NetworkDocumentPlugin& doc,
     const score::DocumentContext& c)
+  : m_session{s}
 {
   qDebug("SlaveExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
@@ -76,5 +77,20 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
             it.value()(m.clientId, val);
         }
       });
+
+  s.mapper().addHandler_(
+        mapi.netpit_out_message,
+        [&] (const NetworkMessage& m, uint64_t process, std::vector<std::pair<Id<Client>, ossia::value>> vec) {
+    // Apply to the local process
+    this->on_message(process, std::move(vec));
+  });
+}
+
+void SlaveExecutionPolicy::writeMessage(Netpit::Message m)
+{
+  auto& mapi = MessagesAPI::instance();
+  m_session.sendMessage(
+        m_session.master().id(),
+        m_session.makeMessage(mapi.netpit_in_message, m.instance, m.val));
 }
 }

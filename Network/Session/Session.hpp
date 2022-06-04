@@ -80,16 +80,11 @@ public:
   W_SLOT(validateMessage);
 
 private:
-  template <typename Arg>
-  void impl_makeMessage(QDataStream&& s, Arg&& arg)
+  template <typename... Args>
+  void impl_makeMessage(QDataStream&& s, Args&&... args)
   {
-    s << arg;
-  }
-
-  template <typename Arg, typename... Args>
-  void impl_makeMessage(QDataStream&& s, Arg&& arg, Args&&... args)
-  {
-    impl_makeMessage(std::move(s << arg), std::forward<Args&&>(args)...);
+    DataStreamInput ss{s};
+    ((ss << args), ...);
   }
 
   LocalClient* m_client{};

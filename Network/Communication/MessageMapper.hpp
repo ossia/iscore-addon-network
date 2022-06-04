@@ -1,5 +1,6 @@
 #pragma once
 #include <score/tools/std/HashMap.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
 
 #include <QDataStream>
 #include <QList>
@@ -25,7 +26,8 @@ public:
   void addHandler_(const QByteArray& data, Fun f)
   {
     addHandler(data, [fun = std::move(f)] (const NetworkMessage& m) mutable {
-      QDataStream s{m.data};
+      QDataStream ss{m.data};
+      DataStreamOutput s{ss};
       [&] <typename... Args>(void (Fun::*)(const NetworkMessage&, Args...) const) {
         tuplet::tuple<Args...> args;
         tuplet::apply([&] (auto&&... a) {
