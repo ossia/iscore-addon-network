@@ -206,6 +206,8 @@ public:
   void register_message_context(std::shared_ptr<Netpit::MessageContext> ctx);
   void unregister_message_context(std::shared_ptr<Netpit::MessageContext> ctx);
 
+  void finish_loading();
+
 
  const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& intervalMetadatas() const noexcept;
  const std::unordered_map<const Scenario::EventModel*, ObjectMetadata>& eventMetadatas() const noexcept;
@@ -229,6 +231,11 @@ private:
   std::unordered_map<const Scenario::EventModel*, ObjectMetadata> m_eventGroups;
   std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata> m_syncGroups;
   std::unordered_map<const Process::ProcessModel*, ObjectMetadata> m_processGroups;
+
+  std::vector<std::pair<Path<Scenario::IntervalModel>, ObjectMetadata>> m_loadIntervalsGroups;
+  std::vector<std::pair<Path<Scenario::EventModel>, ObjectMetadata>> m_loadEventGroups;
+  std::vector<std::pair<Path<Scenario::TimeSyncModel>, ObjectMetadata>> m_loadSyncGroups;
+  std::vector<std::pair<Path<Process::ProcessModel>, ObjectMetadata>> m_loadProcessGroups;
 
   std::unordered_map<uint64_t, std::shared_ptr<Netpit::MessageContext>> m_messages;
 

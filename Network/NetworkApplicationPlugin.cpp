@@ -59,6 +59,14 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(
 
 NetworkApplicationPlugin::~NetworkApplicationPlugin() {}
 
+void NetworkApplicationPlugin::on_loadedDocument(score::Document& doc)
+{
+  if(auto np = doc.context().findPlugin<NetworkDocumentPlugin>())
+  {
+    np->finish_loading();
+  }
+}
+
 void NetworkApplicationPlugin::setupClientConnection(
     QString name,
     QString ip,

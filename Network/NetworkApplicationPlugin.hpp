@@ -22,6 +22,8 @@ public:
   NetworkApplicationPlugin(const score::GUIApplicationContext& app);
   ~NetworkApplicationPlugin();
 
+  void on_loadedDocument(score::Document& doc) override;
+
   void setupClientConnection(
       QString name,
       QString ip,

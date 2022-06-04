@@ -318,6 +318,28 @@ void NetworkDocumentPlugin::unregister_message_context(std::shared_ptr<Netpit::M
   m_messages.erase(ctx->instance);
 }
 
+void NetworkDocumentPlugin::finish_loading()
+{
+  auto& ctx = this->context();
+  for(auto& [p, m] : m_loadIntervalsGroups)
+    m_intervalsGroups[&p.find(ctx)] = std::move(m);
+  for(auto& [p, m] : m_loadEventGroups)
+    m_eventGroups[&p.find(ctx)] = std::move(m);
+  for(auto& [p, m] : m_loadSyncGroups)
+    m_syncGroups[&p.find(ctx)] = std::move(m);
+  for(auto& [p, m] : m_loadProcessGroups)
+    m_processGroups[&p.find(ctx)] = std::move(m);
+
+  m_loadIntervalsGroups.clear();
+  m_loadIntervalsGroups.shrink_to_fit();
+  m_loadEventGroups.clear();
+  m_loadEventGroups.shrink_to_fit();
+  m_loadSyncGroups.clear();
+  m_loadSyncGroups.shrink_to_fit();
+  m_loadProcessGroups.clear();
+  m_loadProcessGroups.shrink_to_fit();
+}
+
 const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& NetworkDocumentPlugin::intervalMetadatas() const noexcept
 { return m_intervalsGroups; }
 

@@ -24,7 +24,7 @@ NetworkServer::NetworkServer(int port, QObject* parent) : QObject{parent}
 
 #if !defined(__EMSCRIPTEN__)
   // use the first non-localhost IPv4 address
-  for (auto ip : QNetworkInterface::allAddresses())
+  for (const auto& ip : QNetworkInterface::allAddresses())
   {
     if (ip != QHostAddress::LocalHost && ip.toIPv4Address())
     {
@@ -44,7 +44,9 @@ NetworkServer::NetworkServer(int port, QObject* parent) : QObject{parent}
   qDebug() << "Server: " << m_localAddress << ":" << m_localPort;
 
   connect(m_server, &QWebSocketServer::newConnection, this, [=]() {
-    newSocket(m_server->nextPendingConnection());
+    auto sock = m_server->nextPendingConnection();
+    sock->setOutgoingFrameSize(2000);
+    newSocket(sock);
   });
 }
 
