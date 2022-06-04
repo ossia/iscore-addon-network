@@ -157,6 +157,7 @@ void GUIClientEditionPolicy::play()
       m_ctx.document);
   if (sm)
   {
+    Netpit::setCurrentDocument(m_ctx);
     auto& plug = score::GUIAppContext()
                      .guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.execution().request_play_interval(
@@ -181,6 +182,7 @@ PlayerClientEditionPolicy::PlayerClientEditionPolicy(
 
 void PlayerClientEditionPolicy::play()
 {
+  Netpit::setCurrentDocument(m_ctx);
   if (onPlay)
     onPlay();
 }
