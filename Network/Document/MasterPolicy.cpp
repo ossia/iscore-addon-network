@@ -32,31 +32,43 @@ MasterEditionPolicy::MasterEditionPolicy(
       &score::CommandStack::localCommand,
       this,
       [&](score::Command* cmd) {
-        using namespace std::literals;
-        if(this->sendControls() || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
-          m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
-      });
+    using namespace std::literals;
+    if(!this->sendCommands())
+      return;
+    if(this->sendControls() || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
+      m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
+  });
 
   // Undo-redo
   con(stack, &score::CommandStack::localUndo, this, [&]() {
+    if(!this->sendCommands())
+      return;
     // FIXME if it's a control which wasn't sent, we mustn't send its undo either
     m_session->broadcastToAllClients(
         m_session->makeMessage(mapi.command_undo));
   });
   con(stack, &score::CommandStack::localRedo, this, [&]() {
+    if(!this->sendCommands())
+      return;
     m_session->broadcastToAllClients(
         m_session->makeMessage(mapi.command_redo));
   });
   con(stack, &score::CommandStack::localIndexChanged, this, [&](int32_t idx) {
+    if(!this->sendCommands())
+      return;
     m_session->broadcastToAllClients(
         m_session->makeMessage(mapi.command_index, idx));
   });
 
   // Lock - unlock
   con(c.objectLocker, &score::ObjectLocker::lock, this, [&](QByteArray arr) {
+    if(!this->sendCommands())
+      return;
     m_session->broadcastToAllClients(m_session->makeMessage(mapi.lock, arr));
   });
   con(c.objectLocker, &score::ObjectLocker::unlock, this, [&](QByteArray arr) {
+    if(!this->sendCommands())
+      return;
     m_session->broadcastToAllClients(m_session->makeMessage(mapi.unlock, arr));
   });
 

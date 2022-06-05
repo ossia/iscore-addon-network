@@ -107,8 +107,12 @@ public:
   bool sendControls() const noexcept
   { return m_sendControls; }
   void setSendControls(bool b);
+  bool sendCommands() const noexcept
+  { return m_sendCommands; }
+  void setSendCommands(bool b);
 private:
   bool m_sendControls{true};
+  bool m_sendCommands{true};
 };
 
 class SCORE_ADDON_NETWORK_EXPORT ExecutionPolicy : public QObject

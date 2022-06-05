@@ -27,31 +27,43 @@ ClientEditionPolicy::ClientEditionPolicy(
       &score::CommandStack::localCommand,
       this,
       [&](score::Command* cmd) {
-        using namespace std::literals;
-        if(this->sendControls() || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
-        m_session->master().sendMessage(m_session->makeMessage(
-            mapi.command_new, score::CommandData{*cmd}));
-      });
+    using namespace std::literals;
+    if(!this->sendCommands())
+      return;
+    if(this->sendControls() || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
+      m_session->master().sendMessage(m_session->makeMessage(
+                                        mapi.command_new, score::CommandData{*cmd}));
+  });
 
   // Undo-redo
   con(stack, &score::CommandStack::localUndo, this, [&]() {
+    if(!this->sendCommands())
+      return;
     m_session->master().sendMessage(m_session->makeMessage(mapi.command_undo));
   });
   con(stack, &score::CommandStack::localRedo, this, [&]() {
+    if(!this->sendCommands())
+      return;
     m_session->master().sendMessage(m_session->makeMessage(mapi.command_redo));
   });
   con(stack, &score::CommandStack::localIndexChanged, this, [&](int32_t idx) {
+    if(!this->sendCommands())
+      return;
     m_session->master().sendMessage(
-        m_session->makeMessage(mapi.command_index, idx));
+          m_session->makeMessage(mapi.command_index, idx));
   });
 
   // Lock-unlock
   con(locker, &score::ObjectLocker::lock, this, [&](QByteArray arr) {
     qDebug() << "client send lock";
+    if(!this->sendCommands())
+      return;
     m_session->master().sendMessage(m_session->makeMessage(mapi.lock, arr));
   });
   con(locker, &score::ObjectLocker::unlock, this, [&](QByteArray arr) {
     qDebug() << "client send unlock";
+    if(!this->sendCommands())
+      return;
     m_session->master().sendMessage(m_session->makeMessage(mapi.unlock, arr));
   });
 

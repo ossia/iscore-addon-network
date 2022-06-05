@@ -360,6 +360,10 @@ void EditionPolicy::setSendControls(bool b)
 {
   m_sendControls = b;
 }
+void EditionPolicy::setSendCommands(bool b)
+{
+  m_sendCommands = b;
+}
 }
 
 

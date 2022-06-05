@@ -370,8 +370,15 @@ void PanelDelegate::setView(
     act->trigger();
   });
 
-  auto enableControls = new QCheckBox{tr("Send control updates")};
   auto plug = ctx.findPlugin<NetworkDocumentPlugin>();
+
+  auto enableCommands = new QCheckBox{tr("Send edition commands (false: very dangerous!)")};
+  enableCommands->setChecked(plug && plug->policy().sendCommands());
+  connect(enableCommands, &QCheckBox::toggled, this, [&ctx] (bool state) {
+    if(auto plug = ctx.findPlugin<NetworkDocumentPlugin>())
+      plug->policy().setSendCommands(state);
+  });
+  auto enableControls = new QCheckBox{tr("Send control updates (false: dangerous!)")};
   enableControls->setChecked(plug && plug->policy().sendControls());
   connect(enableControls, &QCheckBox::toggled, this, [&ctx] (bool state) {
     if(auto plug = ctx.findPlugin<NetworkDocumentPlugin>())
@@ -380,7 +387,21 @@ void PanelDelegate::setView(
 
   transport_lay->addWidget(play);
   transport_lay->addWidget(stop);
+  transport_lay->addWidget(enableCommands);
   transport_lay->addWidget(enableControls);
+  transport_lay->addWidget(
+        new QLabel{tr(R"_(<br/><br/><b>Warning</b><br/><br/>
+Disabling commands means that this instance will not inform <br/>
+the server when its local state changes. <br/>
+If this is used anywhere in the network, undo<br/>
+must not be used at all by anyone.<br/>
+<br/>
+It is only (barely) safe for small things such as:<br/>
+- Changing the address of a port<br/>
+- Changing a control<br/>
+- Changing a curve's curvature<br/>
+<br/>
+But not for anything that adds / removes objects.)_")});
   transport_lay->addStretch();
 
   m_subWidget->addTab(transport_widg, tr("Transport"));
