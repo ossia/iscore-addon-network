@@ -1,7 +1,6 @@
 project(score_addon_network LANGUAGES CXX)
 
 score_common_setup()
-
 # Packages
 
 find_package(${QT_VERSION} REQUIRED COMPONENTS Core Widgets Network WebSockets Xml)

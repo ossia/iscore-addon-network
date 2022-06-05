@@ -93,10 +93,10 @@ void AsyncExpression::on_removing_last_callback(
 
 void ExprNotInGroup::cleanTriggerCallback()
 {
-  if (it_triggered)
-  {
-    node.triggered.remove_callback(*it_triggered);
-    it_triggered = std::nullopt;
-  }
+  // if (it_triggered)
+  // {
+  //   node.triggered.remove_callback(*it_triggered);
+  //   it_triggered = std::nullopt;
+  // }
 }
 }

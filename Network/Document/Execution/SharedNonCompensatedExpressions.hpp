@@ -68,17 +68,17 @@ struct SharedNonCompensatedAsyncInGroup
     ctx.doc.noncompensated.trigger_evaluation_entered.emplace(
         path, [=, &session, &mapi](const Id<Client>& orig) {
           qDebug() << "Trigger entered evaluation";
-          if (!e->it_triggered.has_value())
-          {
-            qDebug() << "Adding a 'triggered' callback";
-            e->it_triggered
-                = e->node.triggered.add_callback([=, &mapi, &session] {
-                    qDebug("SharedScenarioPolicy: trigger triggered");
-                    session.emitMessage(
-                        master,
-                        session.makeMessage(mapi.trigger_triggered, path));
-                  });
-          }
+          // if (!e->it_triggered.has_value())
+          // {
+          //   qDebug() << "Adding a 'triggered' callback";
+          //   e->it_triggered
+          //       = e->node.triggered.add_callback([=, &mapi, &session] {
+          //           qDebug("SharedScenarioPolicy: trigger triggered");
+          //           session.emitMessage(
+          //               master,
+          //               session.makeMessage(mapi.trigger_triggered, path));
+          //         });
+          // }
 
           if (!e->shared_expr->it_finished.has_value())
           {
@@ -102,11 +102,11 @@ struct SharedNonCompensatedAsyncInGroup
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(
         path, [=](const Id<Client>& orig, bool b) {
           qDebug() << "Evaluation finished" << b;
-          if (e->it_triggered)
-          {
-            e->node.triggered.remove_callback(*e->it_triggered);
-            e->it_triggered = std::nullopt;
-          }
+          // if (e->it_triggered)
+          // {
+          //   e->node.triggered.remove_callback(*e->it_triggered);
+          //   e->it_triggered = std::nullopt;
+          // }
 
           if (e->shared_expr->it_finished)
           {
@@ -124,11 +124,11 @@ struct SharedNonCompensatedAsyncInGroup
     ctx.doc.noncompensated.trigger_triggered.emplace(
         path, [=](const Id<Client>& orig) {
           qDebug() << "Triggered";
-          if (e->it_triggered)
-          {
-            e->node.triggered.remove_callback(*e->it_triggered);
-            e->it_triggered = std::nullopt;
-          }
+          // if (e->it_triggered)
+          // {
+          //   e->node.triggered.remove_callback(*e->it_triggered);
+          //   e->it_triggered = std::nullopt;
+          // }
 
           if (e->shared_expr->it_finished)
           {
@@ -161,16 +161,16 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
     // When the trigger enters evaluation
     ctx.doc.noncompensated.trigger_evaluation_entered.emplace(
         path, [=, &session, &mapi](const Id<Client>& orig) {
-          if (!e->it_triggered)
-          {
-            e->it_triggered
-                = e->node.triggered.add_callback([=, &mapi, &session] {
-                    qDebug("SharedScenarioPolicy: trigger triggered");
-                    session.emitMessage(
-                        master,
-                        session.makeMessage(mapi.trigger_triggered, path));
-                  });
-          }
+          // if (!e->it_triggered)
+          // {
+          //   e->it_triggered
+          //       = e->node.triggered.add_callback([=, &mapi, &session] {
+          //           qDebug("SharedScenarioPolicy: trigger triggered");
+          //           session.emitMessage(
+          //               master,
+          //               session.makeMessage(mapi.trigger_triggered, path));
+          //         });
+          // }
 
           if (!e->shared_expr->it_finished)
           {
@@ -190,11 +190,11 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
     // When the trigger finishes evaluation
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(
         path, [=, &session](const Id<Client>& orig, bool b) {
-          if (e->it_triggered)
-          {
-            e->node.triggered.remove_callback(*e->it_triggered);
-            e->it_triggered = std::nullopt;
-          }
+         // if (e->it_triggered)
+         // {
+         //   e->node.triggered.remove_callback(*e->it_triggered);
+         //   e->it_triggered = std::nullopt;
+         // }
 
           if (e->shared_expr->it_finished)
           {
@@ -216,11 +216,11 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
     // When the trigger can be triggered
     ctx.doc.noncompensated.trigger_triggered.emplace(
         path, [=, &session](const Id<Client>& orig) {
-          if (e->it_triggered)
-          {
-            e->node.triggered.remove_callback(*e->it_triggered);
-            e->it_triggered = std::nullopt;
-          }
+          // if (e->it_triggered)
+          // {
+          //   e->node.triggered.remove_callback(*e->it_triggered);
+          //   e->it_triggered = std::nullopt;
+          // }
 
           if (e->shared_expr->it_finished)
           {
@@ -258,16 +258,16 @@ struct SharedNonCompensatedAsyncOutOfGroup
 
     ctx.doc.noncompensated.trigger_evaluation_entered.emplace(
         path, [=, &session, &mapi](const Id<Client>& orig) {
-          if (!e->it_triggered)
-          {
-            e->it_triggered
-                = e->node.triggered.add_callback([=, &mapi, &session] {
-                    qDebug("SharedScenarioPolicy: trigger triggered");
-                    session.emitMessage(
-                        master,
-                        session.makeMessage(mapi.trigger_triggered, path));
-                  });
-          }
+          // if (!e->it_triggered)
+          // {
+          //   e->it_triggered
+          //       = e->node.triggered.add_callback([=, &mapi, &session] {
+          //           qDebug("SharedScenarioPolicy: trigger triggered");
+          //           session.emitMessage(
+          //               master,
+          //               session.makeMessage(mapi.trigger_triggered, path));
+          //         });
+          // }
         });
 
     ctx.doc.noncompensated.trigger_triggered.emplace(
@@ -305,16 +305,16 @@ struct SharedNonCompensatedSyncOutOfGroup
     auto e = std::make_shared<ExprNotInGroup>(*comp.OSSIATimeSync());
     ctx.doc.noncompensated.trigger_evaluation_entered.emplace(
         path, [=, &session, &mapi](const Id<Client>& orig) {
-          if (!e->it_triggered)
-          {
-            e->it_triggered
-                = e->node.triggered.add_callback([=, &mapi, &session] {
-                    qDebug("SharedScenarioPolicy: trigger triggered");
-                    session.emitMessage(
-                        master,
-                        session.makeMessage(mapi.trigger_triggered, path));
-                  });
-          }
+          // if (!e->it_triggered)
+          // {
+          //   e->it_triggered
+          //       = e->node.triggered.add_callback([=, &mapi, &session] {
+          //           qDebug("SharedScenarioPolicy: trigger triggered");
+          //           session.emitMessage(
+          //               master,
+          //               session.makeMessage(mapi.trigger_triggered, path));
+          //         });
+          // }
         });
 
     ctx.doc.noncompensated.trigger_triggered.emplace(

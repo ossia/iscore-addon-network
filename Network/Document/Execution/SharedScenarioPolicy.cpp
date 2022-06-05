@@ -133,6 +133,51 @@ operator()(Execution::EventComponent& cst, const Group& cur)
 {
 }
 
+struct SharedTimesyncCallbacks : public ossia::time_sync_callback
+{
+public:
+  SharedTimesyncCallbacks(Id<Client> m, const Path<Scenario::TimeSyncModel>& p, const MessagesAPI& ma, Session& s)
+    : master{m}
+    , path{p}
+    , mapi{ma}
+    , session{s}
+  {
+
+  }
+
+  ~SharedTimesyncCallbacks()
+  {
+
+  }
+
+  Id<Client> master;
+  Path<Scenario::TimeSyncModel> path;
+  const MessagesAPI& mapi;
+  Session& session;
+
+  void entered_evaluation() override
+  {
+    qDebug("SharedScenarioPolicy: trigger entered");
+    session.emitMessage(
+          master, session.makeMessage(mapi.trigger_entered, path));
+  }
+  void left_evaluation() override
+  {
+    qDebug("SharedScenarioPolicy: trigger left");
+    session.emitMessage(
+        master, session.makeMessage(mapi.trigger_left, path));
+  }
+
+  void triggered() override
+  {
+    qDebug("SharedScenarioPolicy: trigger triggered");
+    session.emitMessage(
+        master,
+        session.makeMessage(mapi.trigger_triggered, path));
+  }
+
+};
+
 void SharedScenarioPolicy::
 operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
 {
@@ -149,17 +194,7 @@ operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
     auto master = ctx.master;
     // Each trigger sends its own data, the master will choose the relevant
     // info
-    comp.OSSIATimeSync()->entered_evaluation.add_callback(
-        [=, &mapi, &session] {
-          qDebug("SharedScenarioPolicy: trigger entered");
-          session.emitMessage(
-              master, session.makeMessage(mapi.trigger_entered, path));
-        });
-    comp.OSSIATimeSync()->left_evaluation.add_callback([=, &mapi, &session] {
-      qDebug("SharedScenarioPolicy: trigger left");
-      session.emitMessage(
-          master, session.makeMessage(mapi.trigger_left, path));
-    });
+    comp.OSSIATimeSync()->callbacks.callbacks.push_back(new SharedTimesyncCallbacks{master, path, mapi, session});
 
     // If this group has this expression
     // Since we're in the SharedPolicy, everybody will get the same information
