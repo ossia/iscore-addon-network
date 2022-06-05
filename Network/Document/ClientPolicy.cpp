@@ -27,6 +27,8 @@ ClientEditionPolicy::ClientEditionPolicy(
       &score::CommandStack::localCommand,
       this,
       [&](score::Command* cmd) {
+        using namespace std::literals;
+        if(this->sendControls() || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
         m_session->master().sendMessage(m_session->makeMessage(
             mapi.command_new, score::CommandData{*cmd}));
       });

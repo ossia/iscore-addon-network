@@ -20,17 +20,10 @@ void MessageContext::push(const ossia::value& val)
     to_network.enqueue({instance, val});
 }
 
-bool MessageContext::read(std::vector<ossia::value>& vec)
+bool MessageContext::read(message_list& vec)
 {
-    Inbound b;
-
     bool ok = false;
-    while(from_network.try_dequeue(b)) ok = true;
-
-    if(ok)
-    {
-      vec = std::move(b.messages);
-    }
+    while(from_network.try_dequeue(vec)) ok = true;
     return ok;
 }
 

@@ -14,7 +14,7 @@ struct MessageContext : Context
   ~MessageContext();
 
   void push(const ossia::value& val);
-  bool read(std::vector<ossia::value>& vec);
+  bool read(message_list& vec);
 
   ossia::mpmc_queue<Outbound> to_network;
   ossia::mpmc_queue<Inbound> from_network;

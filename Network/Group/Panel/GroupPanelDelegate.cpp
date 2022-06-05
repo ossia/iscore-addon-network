@@ -18,6 +18,7 @@
 #include <QVBoxLayout>
 #include <QSpacerItem>
 #include <QTabWidget>
+#include <QCheckBox>
 
 #include <score/application/GUIApplicationContext.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
@@ -351,27 +352,35 @@ void PanelDelegate::setView(
   });
   topology_layout->addWidget(button);
 
-  topology_layout->addWidget(new ClientListWidget{*session, m_widget});
   topology_layout->addWidget(new GroupTableWidget{mgr, session, m_widget});
 
   // Transport
 
   auto transport_widg = new QWidget;
-  auto transport_lay = new QHBoxLayout{transport_widg};
-  auto play = new QPushButton{tr("Play")};
-  auto stop = new QPushButton{tr("Stop")};
-
+  auto transport_lay = new QVBoxLayout{transport_widg};
+  transport_lay->addWidget(new ClientListWidget{*session, m_widget});
+  auto play = new QPushButton{tr("Play (all)")};
   connect(play, &QPushButton::clicked, this, [=] {
     auto act = context().actions.action<Actions::NetworkPlay>().action();
     act->trigger();
   });
+
+  auto stop = new QPushButton{tr("Stop (all)")};
   connect(stop, &QPushButton::clicked, this, [=] {
     auto act = context().actions.action<Actions::NetworkStop>().action();
     act->trigger();
   });
 
+  auto enableControls = new QCheckBox{tr("Send control updates")};
+  connect(enableControls, &QCheckBox::toggled, this, [&ctx] (bool state) {
+    if(auto plug = ctx.findPlugin<NetworkDocumentPlugin>())
+      plug->policy().setSendControls(state);
+  });
+
   transport_lay->addWidget(play);
   transport_lay->addWidget(stop);
+  transport_lay->addWidget(enableControls);
+  transport_lay->addStretch();
 
   m_subWidget->addTab(transport_widg, tr("Transport"));
   m_subWidget->addTab(new NetworkMetadataWidget{ctx, mgr, m_widget}, tr("Object"));

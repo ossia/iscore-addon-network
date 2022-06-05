@@ -6,6 +6,8 @@
 #include <halp/messages.hpp>
 #include <halp/callback.hpp>
 
+#include <ossia/network/value/value_conversion.hpp>
+
 namespace Netpit
 {
 struct MessagePit
@@ -50,7 +52,7 @@ public:
     } bang;
   } outputs;
 
-  std::vector<ossia::value> current;
+  message_list current;
   void operator()()
   {
     // Push all our inputs to the network: done in message

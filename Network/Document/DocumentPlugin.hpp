@@ -103,6 +103,12 @@ public:
   virtual Session* session() const = 0;
   virtual void play() = 0;
   virtual void stop() = 0;
+
+  bool sendControls() const noexcept
+  { return m_sendControls; }
+  void setSendControls(bool b);
+private:
+  bool m_sendControls{};
 };
 
 class SCORE_ADDON_NETWORK_EXPORT ExecutionPolicy : public QObject

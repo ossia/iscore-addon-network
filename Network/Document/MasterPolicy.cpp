@@ -32,8 +32,9 @@ MasterEditionPolicy::MasterEditionPolicy(
       &score::CommandStack::localCommand,
       this,
       [&](score::Command* cmd) {
-        m_session->broadcastToAllClients(m_session->makeMessage(
-            mapi.command_new, score::CommandData{*cmd}));
+        using namespace std::literals;
+        if(this->sendControls() || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
+          m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
       });
 
   // Undo-redo

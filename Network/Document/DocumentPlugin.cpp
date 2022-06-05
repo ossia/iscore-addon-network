@@ -157,9 +157,9 @@ void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
     pol->setParent(this);
     m_exec = pol;
 
-    m_timer = startTimer(5);
+    m_timer = startTimer(4);
     connect(m_exec, &ExecutionPolicy::on_message,
-            this, [this] (uint64_t process, const std::vector<std::pair<Id<Client>, ossia::value>>& m)
+            this, [this] (uint64_t process, std::vector<std::pair<Id<Client>, ossia::value>> m)
     {
       auto it = m_messages.find(process);
       if(it != m_messages.end())
@@ -168,13 +168,13 @@ void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
         if(p)
         {
           Netpit::Inbound vec;
+          vec.reserve(m.size());
           for(auto& [i,v] : m)
-            vec.messages.push_back(std::move(v));
-          p->from_network.enqueue(std::move(vec));
+            vec.push_back(std::move(v));
 
+          p->from_network.enqueue(std::move(vec));
         }
       }
-
     });
   }
 }
@@ -310,7 +310,7 @@ void NetworkDocumentPlugin::unset_metadata(const Process::ProcessModel& obj)
 
 void NetworkDocumentPlugin::register_message_context(std::shared_ptr<Netpit::MessageContext> ctx)
 {
-  m_messages[ctx->instance] = ctx;
+  m_messages[ctx->instance] = std::move(ctx);
 }
 
 void NetworkDocumentPlugin::unregister_message_context(std::shared_ptr<Netpit::MessageContext> ctx)
@@ -355,6 +355,11 @@ const std::unordered_map<const Process::ProcessModel*, ObjectMetadata>& NetworkD
 ExecutionPolicy::~ExecutionPolicy() {}
 
 EditionPolicy::~EditionPolicy() {}
+
+void EditionPolicy::setSendControls(bool b)
+{
+  m_sendControls = b;
+}
 }
 
 

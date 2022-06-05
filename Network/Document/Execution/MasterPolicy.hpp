@@ -1,5 +1,7 @@
 #pragma once
 #include <Network/Document/DocumentPlugin.hpp>
+#include <unordered_map>
+#include <ossia/detail/flat_map.hpp>
 
 namespace Network
 {
