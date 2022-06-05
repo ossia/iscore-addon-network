@@ -210,28 +210,28 @@ public:
     lay->addLayout(l1bis);
     {
       auto g = new QButtonGroup{this};
-      auto async_uc = setup("Async (Uncompensated)", l1, g, [=] {
+      auto async_uc = setup("Async", l1, g, [=] {
         disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::NonCompensatedAsync});
       });
-      auto async_c = setup("Async (Compensated)", l1, g, [=] {
-        disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedAsync});
-      });
-      auto sync_uc = setup("Sync (Uncompensated)", l1bis, g, [=] {
+      // auto async_c = setup("Async (Compensated)", l1, g, [=] {
+      //   disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedAsync});
+      // });
+      auto sync_uc = setup("Sync", l1bis, g, [=] {
         disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::NonCompensatedSync});
       });
-      auto sync_c = setup("Sync (Compensated)", l1bis, g, [=] {
-        disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedSync});
-      });
+      // auto sync_c = setup("Sync (Compensated)", l1bis, g, [=] {
+      //   disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedSync});
+      // });
       switch(init.syncmode)
       {
         case SyncMode::NonCompensatedAsync:
           async_uc->toggle(); break;
-        case SyncMode::CompensatedAsync:
-          async_c->toggle(); break;
+        // case SyncMode::CompensatedAsync:
+        //   async_c->toggle(); break;
         case SyncMode::NonCompensatedSync:
           sync_uc->toggle(); break;
-        case SyncMode::CompensatedSync:
-          sync_c->toggle(); break;
+        // case SyncMode::CompensatedSync:
+        //   sync_c->toggle(); break;
       }
     }
 
@@ -287,17 +287,16 @@ public:
     helplabel->setText(tr(
 R"_(<b>Network configuration</b><br/><br/>
 
-<b>Async / sync</b>: relevant for triggers.<br/>
-- <b>Sync</b>: will wait until all clients in the group have finished.<br/>
-- <b>Async</b>: clients can trigger the trigger individually.<br/>
-- <b>Compensated</b>: when the trigger is ready, <br/>
-   set its execution date at a date in the future to ensure synchronisation.<br/>
-- <b>Uncompensated</b>: when the trigger is ready, go immediately.<br/>
-<br/><br/>
+<b>Async / sync</b>: relevant for triggers & conditions.<br/>
+- <b>Sync</b>: expression state is shared.<br/>
+- <b>Async</b>: expression can be different across clients.<br/>)_"
+// - <b>Compensated</b>: when the trigger is ready, <br/>
+//    set its execution date at a date in the future to ensure synchronisation.<br/>
+// - <b>Uncompensated</b>: when the trigger is ready, go immediately.<br/>
+R"_(<br/><br/>
 <b>Shared / mixed / free</b>: relevant for Scenario processes.<br/>
 - If shared: the scenario's execution is shared across clients.<br/>
 - If free: for every client in the scenario's group, it executes independently.<br/>
-- If mixed:<br/>
 <br/><br/>
 <b>Group</b>: in which group the object executes.<br/>
 <br/>
@@ -372,6 +371,8 @@ void PanelDelegate::setView(
   });
 
   auto enableControls = new QCheckBox{tr("Send control updates")};
+  auto plug = ctx.findPlugin<NetworkDocumentPlugin>();
+  enableControls->setChecked(plug && plug->policy().sendControls());
   connect(enableControls, &QCheckBox::toggled, this, [&ctx] (bool state) {
     if(auto plug = ctx.findPlugin<NetworkDocumentPlugin>())
       plug->policy().setSendControls(state);

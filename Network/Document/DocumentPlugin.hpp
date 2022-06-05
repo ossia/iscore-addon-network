@@ -108,7 +108,7 @@ public:
   { return m_sendControls; }
   void setSendControls(bool b);
 private:
-  bool m_sendControls{};
+  bool m_sendControls{true};
 };
 
 class SCORE_ADDON_NETWORK_EXPORT ExecutionPolicy : public QObject

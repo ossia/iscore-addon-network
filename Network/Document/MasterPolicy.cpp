@@ -39,6 +39,7 @@ MasterEditionPolicy::MasterEditionPolicy(
 
   // Undo-redo
   con(stack, &score::CommandStack::localUndo, this, [&]() {
+    // FIXME if it's a control which wasn't sent, we mustn't send its undo either
     m_session->broadcastToAllClients(
         m_session->makeMessage(mapi.command_undo));
   });
