@@ -21,7 +21,7 @@ IpDialog::IpDialog(QWidget* parent)
   layout()->addWidget(widg);
   widg->setLayout(new QHBoxLayout);
 
-  m_ipBox = new IpWidget{this};
+  m_ipBox = new QLineEdit{"127.0.0.1", this};
   widg->layout()->addWidget(m_ipBox);
 
   m_portBox = new QSpinBox;
@@ -50,9 +50,7 @@ const QString& IpDialog::ip() const
 
 void IpDialog::accepted()
 {
-  m_ip = m_ipBox->lineEdits[0]->text() + "." + m_ipBox->lineEdits[1]->text()
-         + "." + m_ipBox->lineEdits[2]->text() + "."
-         + m_ipBox->lineEdits[3]->text();
+  m_ip = m_ipBox->text();
 
   m_port = m_portBox->value();
   accept();

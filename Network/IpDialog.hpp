@@ -4,6 +4,7 @@
 
 class QSpinBox;
 class QWidget;
+class QLineEdit;
 
 namespace Network
 {
@@ -21,7 +22,7 @@ private:
   void rejected();
 
   QSpinBox* m_portBox{};
-  IpWidget* m_ipBox{};
+  QLineEdit* m_ipBox{};
 
   int m_port{};
   QString m_ip;
