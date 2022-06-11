@@ -18,7 +18,7 @@ public:
 
   int localPort();
 
-  NetworkServer& server() const;
+  NetworkServer* server() const noexcept;
 
   void createNewClient(QWebSocket* w) W_SIGNAL(createNewClient, w);
 

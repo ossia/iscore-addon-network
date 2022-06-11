@@ -146,12 +146,20 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
 
     // Send a message to the server with the ports that we opened :
-    auto& local_server = m_session->localClient().server();
-    m_session->master().sendMessage(m_session->makeMessage(
-        mapi.session_portinfo,
-        local_server.m_localAddress,
-        local_server.m_localPort));
-
+    if(auto local_server = m_session->localClient().server())
+    {
+      m_session->master().sendMessage(m_session->makeMessage(
+          mapi.session_portinfo,
+          local_server->m_localAddress,
+          local_server->m_localPort));
+    }
+    else
+    {
+      m_session->master().sendMessage(m_session->makeMessage(
+          mapi.session_portinfo,
+          QString("__web_client__"),
+          554433));
+    }
     sessionReady();
   }
 }

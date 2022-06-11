@@ -125,7 +125,7 @@ void NetworkApplicationPlugin::setupPlayerConnection(
   });
   connect(
       s,
-      qOverload<QAbstractSocket::SocketError>(&QTcpSocket::error),
+      qOverload<QAbstractSocket::SocketError>(&QTcpSocket::errorOccurred),
       this,
       [=](auto) {
         qDebug("Socket error");
