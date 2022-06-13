@@ -45,7 +45,9 @@ NetworkServer::NetworkServer(int port, QObject* parent) : QObject{parent}
 
   connect(m_server, &QWebSocketServer::newConnection, this, [=]() {
     auto sock = m_server->nextPendingConnection();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     sock->setOutgoingFrameSize(2000);
+#endif
     newSocket(sock);
   });
 }
