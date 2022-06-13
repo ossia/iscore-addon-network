@@ -1,5 +1,8 @@
 project(score_addon_network LANGUAGES CXX)
 
+if(NOT TARGET score_plugin_avnd)
+  return()
+endif()
 score_common_setup()
 # Packages
 
