@@ -137,6 +137,7 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 {
   using namespace score;
   QMenu* fileMenu = context.menus.get().at(score::Menus::File()).menu();
+  fileMenu->addSeparator();
 
 #ifdef OSSIA_DNSSD
   m_serverBrowser = new ZeroconfBrowser{"_score._tcp", qApp->activeWindow()};
@@ -199,7 +200,7 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 
   fileMenu->addAction(makeServer);
 
-  QAction* connectLocal = new QAction{tr("Join local"), this};
+  QAction* connectLocal = new QAction{tr("Join Server"), this};
   connect(connectLocal, &QAction::triggered, this, [&]() {
     IpDialog dial{QApplication::activeWindow()};
 
@@ -222,6 +223,7 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
   g.actions.add<Actions::NetworkPlay>(playAction);
   g.actions.add<Actions::NetworkStop>(stopAction);
 
+  playMenu->addSeparator();
   playMenu->addAction(playAction);
   playMenu->addAction(stopAction);
 
