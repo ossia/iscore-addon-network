@@ -14,6 +14,7 @@ struct MessagePit
 {
 public:
   halp_meta(name, "Message Pit")
+  halp_meta(category, "Network")
   halp_meta(c_name, "messagepit")
   halp_meta(uuid, "c97a22ee-76b0-4ced-acff-1ae8a814141f")
 
