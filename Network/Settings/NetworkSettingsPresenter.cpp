@@ -4,6 +4,7 @@
 #include "NetworkSettingsView.hpp"
 
 #include <score/command/Command.hpp>
+#include <score/widgets/SetIcons.hpp>
 #include <score/plugins/settingsdelegate/SettingsDelegatePresenter.hpp>
 
 #include <QApplication>
@@ -62,7 +63,10 @@ void Presenter::updateClientName()
 
 QIcon Presenter::settingsIcon()
 {
-  return QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon);
+  return makeIcons(
+      QStringLiteral(":/icons/settings_sync_on.png"),
+      QStringLiteral(":/icons/settings_sync_off.png"),
+      QStringLiteral(":/icons/settings_sync_off.png"));
 }
 }
 }

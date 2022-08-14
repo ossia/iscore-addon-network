@@ -52,8 +52,8 @@ const score::PanelStatus& PanelDelegate::defaultPanelStatus() const
   static const score::PanelStatus status{false, false,
                                          Qt::LeftDockWidgetArea,
                                          1,
-                                         QObject::tr("Groups"),
-                                         "device_explorer",
+                                         QObject::tr("Sync"),
+                                         "sync",
                                          QObject::tr("Ctrl+G")};
 
   return status;
