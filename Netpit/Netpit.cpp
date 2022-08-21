@@ -1,15 +1,13 @@
 #include "Netpit.hpp"
-#include <Netpit/NetpitMessage.hpp>
+
 #include <Netpit/MessageContext.hpp>
+#include <Netpit/NetpitMessage.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 
 namespace Netpit
 {
 
-Context::~Context()
-{
-
-}
+Context::~Context() { }
 
 const score::DocumentContext* current{};
 void setCurrentDocument(const score::DocumentContext& c)
@@ -21,18 +19,26 @@ std::shared_ptr<Context> registerSender(uint64_t instance, MessagePit& p)
 {
   assert(current);
 
-  auto m = std::make_shared<MessageContext>(instance, *current);
-  auto& plug = current->plugin<Network::NetworkDocumentPlugin>();
-  plug.register_message_context(m);
-  return m;
+  if(auto plug = current->findPlugin<Network::NetworkDocumentPlugin>())
+  {
+    auto m = std::make_shared<MessageContext>(instance, *current);
+    plug->register_message_context(m);
+    return m;
+  }
+  else
+  {
+    return {};
+  }
 }
 
 void unregisterSender(MessagePit& p)
 {
-  auto ctx = std::dynamic_pointer_cast<MessageContext>(p.context);
-  auto& plug = ctx->ctx.plugin<Network::NetworkDocumentPlugin>();
-  plug.unregister_message_context(ctx);
+  if(p.context)
+  {
+    auto ctx = std::dynamic_pointer_cast<MessageContext>(p.context);
+    auto& plug = ctx->ctx.plugin<Network::NetworkDocumentPlugin>();
+    plug.unregister_message_context(ctx);
+  }
 }
-
 
 }
