@@ -20,7 +20,10 @@ struct NonCompensatedExpressionInGroup
 {
   struct ExprData
   {
-    ExprData(ossia::time_sync& n) : node{n} {}
+    ExprData(ossia::time_sync& n)
+        : node{n}
+    {
+    }
     ossia::time_sync& node;
     std::shared_ptr<expression_with_callback> shared_expr;
     AsyncExpression* async_expr{};
@@ -33,27 +36,24 @@ struct NonCompensatedExpressionInGroup
   {
     // Wrap the expresion
     auto e = std::make_shared<ExprData>(*comp.OSSIATimeSync());
-    e->shared_expr = std::make_shared<expression_with_callback>(
-        comp.makeTrigger().release());
+    e->shared_expr
+        = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
     e->async_expr = new AsyncExpression;
 
     // ossia::expressions::expression_generic{
     //    std::unique_ptr<ossia::expressions::expression_generic_base>(e->async_expr)};
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
         ossia::in_place_type<ossia::expressions::expression_generic>,
-        std::unique_ptr<ossia::expressions::expression_generic_base>(
-            e->async_expr)));
+        std::unique_ptr<ossia::expressions::expression_generic_base>(e->async_expr)));
 
     return e;
   }
 };
 
-struct SharedNonCompensatedAsyncInGroup
-    : public NonCompensatedExpressionInGroup
+struct SharedNonCompensatedAsyncInGroup : public NonCompensatedExpressionInGroup
 {
   void operator()(
-      NetworkPrunerContext& ctx,
-      Execution::TimeSyncComponent& comp,
+      NetworkPrunerContext& ctx, Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     qDebug() << "SharedNonCompensatedAsyncInGroup";
@@ -80,19 +80,17 @@ struct SharedNonCompensatedAsyncInGroup
           //         });
           // }
 
-          if (!e->shared_expr->it_finished.has_value())
+          if(!e->shared_expr->it_finished.has_value())
           {
             qDebug() << "Registering callback";
             // TODO what if this trigger's condition already had become true ?
             e->shared_expr->it_finished = ossia::expressions::add_callback(
                 *e->shared_expr->expr, [=, &session, &mapi](bool b) {
                   qDebug() << "Evaluation true" << b;
-                  if (b)
+                  if(b)
                   {
                     session.emitMessage(
-                        master,
-                        session.makeMessage(
-                            mapi.trigger_expression_true, path));
+                        master, session.makeMessage(mapi.trigger_expression_true, path));
                   }
                 });
           }
@@ -108,7 +106,7 @@ struct SharedNonCompensatedAsyncInGroup
           //   e->it_triggered = std::nullopt;
           // }
 
-          if (e->shared_expr->it_finished)
+          if(e->shared_expr->it_finished)
           {
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
@@ -116,38 +114,35 @@ struct SharedNonCompensatedAsyncInGroup
             e->shared_expr->it_finished = std::nullopt;
           }
 
-          e->async_expr
-              ->ping(); // TODO how to transmit the max bound information ??
+          e->async_expr->ping(); // TODO how to transmit the max bound information ??
         });
 
     // When the trigger can be triggered
-    ctx.doc.noncompensated.trigger_triggered.emplace(
-        path, [=](const Id<Client>& orig) {
-          qDebug() << "Triggered";
-          // if (e->it_triggered)
-          // {
-          //   e->node.triggered.remove_callback(*e->it_triggered);
-          //   e->it_triggered = std::nullopt;
-          // }
+    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=](const Id<Client>& orig) {
+      qDebug() << "Triggered";
+      // if (e->it_triggered)
+      // {
+      //   e->node.triggered.remove_callback(*e->it_triggered);
+      //   e->it_triggered = std::nullopt;
+      // }
 
-          if (e->shared_expr->it_finished)
-          {
-            ossia::expressions::remove_callback(
-                *e->shared_expr->expr, *e->shared_expr->it_finished);
+      if(e->shared_expr->it_finished)
+      {
+        ossia::expressions::remove_callback(
+            *e->shared_expr->expr, *e->shared_expr->it_finished);
 
-            e->shared_expr->it_finished = std::nullopt;
-          }
+        e->shared_expr->it_finished = std::nullopt;
+      }
 
-          e->async_expr->ping();
-        });
+      e->async_expr->ping();
+    });
   }
 };
 
 struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
 {
   void operator()(
-      NetworkPrunerContext& ctx,
-      Execution::TimeSyncComponent& comp,
+      NetworkPrunerContext& ctx, Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     qDebug() << "SharedNonCompensatedSyncInGroup";
@@ -172,16 +167,14 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
           //         });
           // }
 
-          if (!e->shared_expr->it_finished)
+          if(!e->shared_expr->it_finished)
           {
             e->shared_expr->it_finished = ossia::expressions::add_callback(
-                *e->shared_expr->expr, [=, &session](bool b) {
-                  if (b)
+                *e->shared_expr->expr, [master, path, &mapi, &session](bool b) {
+                  if(b)
                   {
                     session.emitMessage(
-                        master,
-                        session.makeMessage(
-                            mapi.trigger_expression_true, path));
+                        master, session.makeMessage(mapi.trigger_expression_true, path));
                   }
                 });
           }
@@ -190,27 +183,25 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
     // When the trigger finishes evaluation
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(
         path, [=, &session](const Id<Client>& orig, bool b) {
-         // if (e->it_triggered)
-         // {
-         //   e->node.triggered.remove_callback(*e->it_triggered);
-         //   e->it_triggered = std::nullopt;
-         // }
+          // if (e->it_triggered)
+          // {
+          //   e->node.triggered.remove_callback(*e->it_triggered);
+          //   e->it_triggered = std::nullopt;
+          // }
 
-          if (e->shared_expr->it_finished)
+          if(e->shared_expr->it_finished)
           {
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
 
             e->shared_expr->it_finished = std::nullopt;
           }
-          e->async_expr
-              ->ping(); // TODO how to transmit the max bound information ??
+          e->async_expr->ping(); // TODO how to transmit the max bound information ??
 
           // Since we're ordered, we inform the master when we're ready to
           // trigger the followers
           session.emitMessage(
-              master,
-              session.makeMessage(mapi.trigger_previous_completed, path));
+              master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
 
     // When the trigger can be triggered
@@ -222,7 +213,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
           //   e->it_triggered = std::nullopt;
           // }
 
-          if (e->shared_expr->it_finished)
+          if(e->shared_expr->it_finished)
           {
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
@@ -234,8 +225,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
           // Since we're ordered, we inform the master when we're ready to
           // trigger the followers
           session.emitMessage(
-              master,
-              session.makeMessage(mapi.trigger_previous_completed, path));
+              master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
   }
 };
@@ -243,8 +233,7 @@ struct SharedNonCompensatedSyncInGroup : public NonCompensatedExpressionInGroup
 struct SharedNonCompensatedAsyncOutOfGroup
 {
   void operator()(
-      NetworkPrunerContext& ctx,
-      Execution::TimeSyncComponent& comp,
+      NetworkPrunerContext& ctx, Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     qDebug() << "SharedNonCompensatedAsyncOutOfGroup";
@@ -270,29 +259,25 @@ struct SharedNonCompensatedAsyncOutOfGroup
           // }
         });
 
-    ctx.doc.noncompensated.trigger_triggered.emplace(
-        path, [=](const Id<Client>& orig) {
-          e->cleanTriggerCallback();
-          expr_ptr->ping();
-        });
+    ctx.doc.noncompensated.trigger_triggered.emplace(path, [=](const Id<Client>& orig) {
+      e->cleanTriggerCallback();
+      expr_ptr->ping();
+    });
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(
         path, [=](const Id<Client>& orig, bool) {
           e->cleanTriggerCallback();
-          expr_ptr
-              ->ping(); // TODO how to transmit the max bound information ??
+          expr_ptr->ping(); // TODO how to transmit the max bound information ??
         });
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        ossia::in_place_type<ossia::expressions::expression_generic>,
-        std::move(expr)));
+        ossia::in_place_type<ossia::expressions::expression_generic>, std::move(expr)));
   }
 };
 
 struct SharedNonCompensatedSyncOutOfGroup
 {
   void operator()(
-      NetworkPrunerContext& ctx,
-      Execution::TimeSyncComponent& comp,
+      NetworkPrunerContext& ctx, Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     qDebug() << "SharedNonCompensatedSyncOutOfGroup";
@@ -323,23 +308,19 @@ struct SharedNonCompensatedSyncOutOfGroup
 
           expr_ptr->ping();
           session.emitMessage(
-              master,
-              session.makeMessage(mapi.trigger_previous_completed, path));
+              master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(
         path, [=, &session, &mapi](const Id<Client>& orig, bool) {
           e->cleanTriggerCallback();
 
-          expr_ptr
-              ->ping(); // TODO how to transmit the max bound information ??
+          expr_ptr->ping(); // TODO how to transmit the max bound information ??
           session.emitMessage(
-              master,
-              session.makeMessage(mapi.trigger_previous_completed, path));
+              master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        ossia::in_place_type<ossia::expressions::expression_generic>,
-        std::move(expr)));
+        ossia::in_place_type<ossia::expressions::expression_generic>, std::move(expr)));
   }
 };
 }

@@ -19,7 +19,10 @@ struct CompensatedExpressionInGroup
 {
   struct ExprData
   {
-    ExprData(ossia::time_sync& n) : node{n} {}
+    ExprData(ossia::time_sync& n)
+        : node{n}
+    {
+    }
     ossia::time_sync& node;
     std::shared_ptr<expression_with_callback> shared_expr;
     DateExpression* date_expr{};
@@ -41,14 +44,13 @@ struct CompensatedExpressionInGroup
   {
     // Wrap the expresion
     auto e = std::make_shared<ExprData>(*comp.OSSIATimeSync());
-    e->shared_expr = std::make_shared<expression_with_callback>(
-        comp.makeTrigger().release());
+    e->shared_expr
+        = std::make_shared<expression_with_callback>(comp.makeTrigger().release());
     e->date_expr = new DateExpression;
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
         ossia::in_place_type<ossia::expressions::expression_generic>,
-        std::unique_ptr<ossia::expressions::expression_generic_base>(
-            e->date_expr)));
+        std::unique_ptr<ossia::expressions::expression_generic_base>(e->date_expr)));
 
     return e;
   }
@@ -57,8 +59,7 @@ struct CompensatedExpressionInGroup
 struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
 {
   void operator()(
-      NetworkPrunerContext& ctx,
-      Execution::TimeSyncComponent& comp,
+      NetworkPrunerContext& ctx, Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     qDebug() << "SharedCompensatedAsyncInGroup";
@@ -83,17 +84,15 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
           //         });
           // }
 
-          if (!e->shared_expr->it_finished)
+          if(!e->shared_expr->it_finished)
           {
             e->shared_expr->it_finished = ossia::expressions::add_callback(
                 *e->shared_expr->expr, [=, &session, &mapi](bool b) {
                   qDebug() << "Evaluation entered" << b;
-                  if (b)
+                  if(b)
                   {
                     session.emitMessage(
-                        master,
-                        session.makeMessage(
-                            mapi.trigger_expression_true, path));
+                        master, session.makeMessage(mapi.trigger_expression_true, path));
                   }
                 });
           }
@@ -105,7 +104,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
           qDebug() << "Evaluation finished" << b;
           e->cleanTriggerCallback();
 
-          if (e->shared_expr->it_finished)
+          if(e->shared_expr->it_finished)
           {
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
@@ -123,7 +122,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
           qDebug() << "Triggered";
           e->cleanTriggerCallback();
 
-          if (e->shared_expr->it_finished)
+          if(e->shared_expr->it_finished)
           {
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
@@ -139,8 +138,7 @@ struct SharedCompensatedAsyncInGroup : public CompensatedExpressionInGroup
 struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 {
   void operator()(
-      NetworkPrunerContext& ctx,
-      Execution::TimeSyncComponent& comp,
+      NetworkPrunerContext& ctx, Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     qDebug() << "SharedCompensatedSyncInGroup";
@@ -165,16 +163,14 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
           //         });
           // }
 
-          if (!e->shared_expr->it_finished)
+          if(!e->shared_expr->it_finished)
           {
             e->shared_expr->it_finished = ossia::expressions::add_callback(
-                *e->shared_expr->expr, [=, &session](bool b) {
-                  if (b)
+                *e->shared_expr->expr, [master, path, &mapi, &session](bool b) {
+                  if(b)
                   {
                     session.emitMessage(
-                        master,
-                        session.makeMessage(
-                            mapi.trigger_expression_true, path));
+                        master, session.makeMessage(mapi.trigger_expression_true, path));
                   }
                 });
           }
@@ -184,7 +180,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(
         path, [=, &session](const Id<Client>& orig, bool b) {
           e->cleanTriggerCallback();
-          if (e->shared_expr->it_finished)
+          if(e->shared_expr->it_finished)
           {
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
@@ -197,8 +193,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
           // Since we're ordered, we inform the master when we're ready to
           // trigger the followers
           session.emitMessage(
-              master,
-              session.makeMessage(mapi.trigger_previous_completed, path));
+              master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
 
     // When the trigger can be triggered
@@ -206,7 +201,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
         path, [=, &session](const Id<Client>& orig, qint64 ns) {
           e->cleanTriggerCallback();
 
-          if (e->shared_expr->it_finished)
+          if(e->shared_expr->it_finished)
           {
             ossia::expressions::remove_callback(
                 *e->shared_expr->expr, *e->shared_expr->it_finished);
@@ -218,8 +213,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
           // Since we're ordered, we inform the master when we're ready to
           // trigger the followers
           session.emitMessage(
-              master,
-              session.makeMessage(mapi.trigger_previous_completed, path));
+              master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
   }
 };
@@ -227,8 +221,7 @@ struct SharedCompensatedSyncInGroup : public CompensatedExpressionInGroup
 struct SharedCompensatedAsyncOutOfGroup
 {
   void operator()(
-      NetworkPrunerContext& ctx,
-      Execution::TimeSyncComponent& comp,
+      NetworkPrunerContext& ctx, Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     qDebug() << "SharedCompensatedAsyncOutOfGroup";
@@ -267,16 +260,14 @@ struct SharedCompensatedAsyncOutOfGroup
         });
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        ossia::in_place_type<ossia::expressions::expression_generic>,
-        std::move(expr)));
+        ossia::in_place_type<ossia::expressions::expression_generic>, std::move(expr)));
   }
 };
 
 struct SharedCompensatedSyncOutOfGroup
 {
   void operator()(
-      NetworkPrunerContext& ctx,
-      Execution::TimeSyncComponent& comp,
+      NetworkPrunerContext& ctx, Execution::TimeSyncComponent& comp,
       const Path<Scenario::TimeSyncModel>& path)
   {
     qDebug() << "SharedCompensatedSyncOutOfGroup";
@@ -307,8 +298,7 @@ struct SharedCompensatedSyncOutOfGroup
 
           expr_ptr->set_min_date(std::chrono::nanoseconds(ns));
           session.emitMessage(
-              master,
-              session.makeMessage(mapi.trigger_previous_completed, path));
+              master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
     ctx.doc.noncompensated.trigger_evaluation_finished.emplace(
         path, [=, &session, &mapi](const Id<Client>& orig, bool) {
@@ -317,13 +307,11 @@ struct SharedCompensatedSyncOutOfGroup
           expr_ptr->set_min_date(
               get_now()); // TODO how to transmit the max bound information ??
           session.emitMessage(
-              master,
-              session.makeMessage(mapi.trigger_previous_completed, path));
+              master, session.makeMessage(mapi.trigger_previous_completed, path));
         });
 
     comp.OSSIATimeSync()->set_expression(std::make_unique<ossia::expression>(
-        ossia::in_place_type<ossia::expressions::expression_generic>,
-        std::move(expr)));
+        ossia::in_place_type<ossia::expressions::expression_generic>, std::move(expr)));
   }
 };
 }
