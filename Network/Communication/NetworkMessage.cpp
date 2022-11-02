@@ -4,6 +4,8 @@
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
 
+#include <core/document/DocumentModel.hpp>
+
 #include <QDataStream>
 
 #include <Network/Client/LocalClient.hpp>
@@ -24,10 +26,7 @@ QDataStream& operator>>(QDataStream& s, Network::NetworkMessage& m)
   s >> m.address >> m.sessionId >> m.clientId >> m.data;
   return s;
 }
-NetworkMessage::NetworkMessage(
-    Network::Session& s,
-    QByteArray&& addr,
-    QByteArray&& data)
+NetworkMessage::NetworkMessage(Network::Session& s, QByteArray&& addr, QByteArray&& data)
     : address{addr}
     , sessionId{s.id()}
     , clientId{s.localClient().id()}
