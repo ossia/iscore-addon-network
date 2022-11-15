@@ -1,9 +1,10 @@
 #include <score/command/CommandGeneratorMap.hpp>
 #include <score/plugins/FactorySetup.hpp>
+#include <score/plugins/documentdelegate/plugin/DocumentPluginCreator.hpp>
 #include <score/plugins/qt_interfaces/GUIApplicationPlugin_QtInterface.hpp>
 
-
-#include <score/plugins/documentdelegate/plugin/DocumentPluginCreator.hpp>
+#include <Avnd/Factories.hpp>
+#include <Netpit/NetpitMessage.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
 #include <Network/Group/Panel/GroupPanelFactory.hpp>
@@ -11,9 +12,6 @@
 #include <Network/PlayerPlugin.hpp>
 #include <Network/Settings/NetworkSettings.hpp>
 
-#include <Netpit/NetpitMessage.hpp>
-
-#include <Avnd/Factories.hpp>
 #include <score_addon_network.hpp>
 #include <score_addon_network_commands_files.hpp>
 
@@ -25,10 +23,8 @@ class DocumentPluginFactory : public score::DocumentPluginFactory
   SCORE_CONCRETE("58c9e19a-fde3-47d0-a121-35853fec667d")
 
 public:
-  score::DocumentPlugin* load(
-      const VisitorVariant& var,
-      score::DocumentContext& doc,
-      QObject* parent) override
+  score::DocumentPlugin*
+  load(const VisitorVariant& var, score::DocumentContext& doc, QObject* parent) override
   {
     return score::deserialize_dyn(var, [&](auto&& deserializer) {
       return new NetworkDocumentPlugin{doc, deserializer, parent};
@@ -41,36 +37,37 @@ namespace score
 
 class PanelFactory;
 } // namespace score
-score_addon_network::score_addon_network() {}
+score_addon_network::score_addon_network() { }
 
-score_addon_network::~score_addon_network() {}
+score_addon_network::~score_addon_network() { }
 
 // Interfaces implementations :
-score::ApplicationPlugin* score_addon_network::make_applicationPlugin(
-    const score::ApplicationContext& app)
+score::ApplicationPlugin*
+score_addon_network::make_applicationPlugin(const score::ApplicationContext& app)
 {
   return new Network::PlayerPlugin{app};
 }
 
-score::GUIApplicationPlugin* score_addon_network::make_guiApplicationPlugin(
-    const score::GUIApplicationContext& app)
+score::GUIApplicationPlugin*
+score_addon_network::make_guiApplicationPlugin(const score::GUIApplicationContext& app)
 {
   return new Network::NetworkApplicationPlugin{app};
 }
 
-std::vector<std::unique_ptr<score::InterfaceBase>>
-score_addon_network::factories(
-    const score::ApplicationContext& ctx,
-    const score::InterfaceKey& key) const
+std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_network::factories(
+    const score::ApplicationContext& ctx, const score::InterfaceKey& key) const
 {
-  if(auto res = oscr::instantiate_fx<Netpit::MessagePit>(ctx, key); !res.empty())
-    return res;
+  {
+    std::vector<std::unique_ptr<score::InterfaceBase>> fx;
+    oscr::instantiate_fx<Netpit::MessagePit>(fx, ctx, key);
+    if(!fx.empty())
+      return fx;
+  }
   return instantiate_factories<
       score::ApplicationContext,
       FW<score::DocumentPluginFactory, Network::DocumentPluginFactory>,
       FW<score::PanelDelegateFactory, Network::PanelDelegateFactory>,
-      FW<score::SettingsDelegateFactory, Network::Settings::Factory>>(
-      ctx, key);
+      FW<score::SettingsDelegateFactory, Network::Settings::Factory>>(ctx, key);
 }
 
 std::pair<const CommandGroupKey, CommandGeneratorMap>
