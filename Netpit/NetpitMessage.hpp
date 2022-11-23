@@ -12,11 +12,17 @@ namespace Netpit
 struct MessagePit
 {
 public:
-  halp_meta(name, "Message Pit") halp_meta(category, "Network")
-      halp_meta(c_name, "messagepit")
-          halp_meta(uuid, "c97a22ee-76b0-4ced-acff-1ae8a814141f")
+  halp_meta(name, "Message Pit")
+  halp_meta(category, "Network")
+  halp_meta(author, "ossia team")
+  halp_meta(description, "Allows to combine messages over the network. "
+                         "Every machine that runs this object instance will have its input combined with the others. "
+                         "On every machine, the output of the process is the resulting combination. "
+                         "For instance: the sum, the average, etc.")
+  halp_meta(c_name, "messagepit")
+  halp_meta(uuid, "c97a22ee-76b0-4ced-acff-1ae8a814141f")
 
-              std::shared_ptr<Netpit::Context> context{};
+  std::shared_ptr<Netpit::Context> context{};
 
   ~MessagePit() { unregisterSender(*this); }
 
@@ -39,7 +45,8 @@ public:
   {
     struct
     {
-      halp_meta(name, "Input") void operator()(MessagePit& m, float v)
+      halp_meta(name, "Input")
+      void operator()(MessagePit& m, float v)
       {
         if(m.context)
           m.context->push(v);
