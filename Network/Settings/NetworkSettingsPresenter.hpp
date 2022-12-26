@@ -19,6 +19,7 @@ public:
   using model_type = Model;
   using view_type = View;
   Presenter(Model& m, View& v, QObject* parent);
+  ~Presenter();
 
 private:
   QString settingsName() override { return tr("Network"); }
