@@ -4,6 +4,7 @@
 #include <score/plugins/qt_interfaces/GUIApplicationPlugin_QtInterface.hpp>
 
 #include <Avnd/Factories.hpp>
+#include <Netpit/NetpitAudio.hpp>
 #include <Netpit/NetpitMessage.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
@@ -59,7 +60,7 @@ std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_network::factorie
 {
   {
     std::vector<std::unique_ptr<score::InterfaceBase>> fx;
-    oscr::instantiate_fx<Netpit::MessagePit>(fx, ctx, key);
+    oscr::instantiate_fx<Netpit::MessagePit, Netpit::AudioPit>(fx, ctx, key);
     if(!fx.empty())
       return fx;
   }

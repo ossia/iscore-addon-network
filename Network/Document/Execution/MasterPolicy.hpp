@@ -1,7 +1,9 @@
 #pragma once
-#include <Network/Document/DocumentPlugin.hpp>
-#include <unordered_map>
 #include <ossia/detail/flat_map.hpp>
+
+#include <Network/Document/DocumentPlugin.hpp>
+
+#include <unordered_map>
 
 namespace Network
 {
@@ -10,16 +12,19 @@ class MasterExecutionPolicy : public ExecutionPolicy
 {
 public:
   MasterExecutionPolicy(
-      Session& s,
-      NetworkDocumentPlugin& doc,
-      const score::DocumentContext& c);
+      Session& s, NetworkDocumentPlugin& doc, const score::DocumentContext& c);
 
-  void writeMessage(Netpit::Message m) override;
+  void writeMessage(Netpit::OutboundMessage m) override;
+  void writeAudio(Netpit::OutboundAudio&& m) override;
+
 private:
   Session& m_session;
   Timekeeper& m_keep;
 
   // For each "Netpit" process we keep a list of what each client sent as value, if any
   std::unordered_map<int64_t, ossia::flat_map<Id<Client>, ossia::value>> m_messages;
+  std::unordered_map<
+      int64_t, ossia::flat_map<Id<Client>, std::vector<std::vector<float>>>>
+      m_audios;
 };
 }

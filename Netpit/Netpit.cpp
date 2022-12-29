@@ -1,13 +1,15 @@
 #include "Netpit.hpp"
 
 #include <Netpit/MessageContext.hpp>
+#include <Netpit/NetpitAudio.hpp>
 #include <Netpit/NetpitMessage.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 
 namespace Netpit
 {
 
-Context::~Context() { }
+IMessageContext::~IMessageContext() { }
+IAudioContext::~IAudioContext() { }
 
 const score::DocumentContext* current{};
 void setCurrentDocument(const score::DocumentContext& c)
@@ -15,7 +17,7 @@ void setCurrentDocument(const score::DocumentContext& c)
   current = &c;
 }
 
-std::shared_ptr<Context> registerSender(uint64_t instance, MessagePit& p)
+std::shared_ptr<IMessageContext> registerSender(uint64_t instance, MessagePit& p)
 {
   assert(current);
 
@@ -38,6 +40,32 @@ void unregisterSender(MessagePit& p)
     auto ctx = std::dynamic_pointer_cast<MessageContext>(p.context);
     auto& plug = ctx->ctx.plugin<Network::NetworkDocumentPlugin>();
     plug.unregister_message_context(ctx);
+  }
+}
+
+std::shared_ptr<IAudioContext> registerSender(uint64_t instance, AudioPit& p)
+{
+  assert(current);
+
+  if(auto plug = current->findPlugin<Network::NetworkDocumentPlugin>())
+  {
+    auto m = std::make_shared<AudioContext>(instance, *current);
+    plug->register_audio_context(m);
+    return m;
+  }
+  else
+  {
+    return {};
+  }
+}
+
+void unregisterSender(AudioPit& p)
+{
+  if(p.context)
+  {
+    auto ctx = std::dynamic_pointer_cast<AudioContext>(p.context);
+    auto& plug = ctx->ctx.plugin<Network::NetworkDocumentPlugin>();
+    plug.unregister_audio_context(ctx);
   }
 }
 

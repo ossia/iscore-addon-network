@@ -15,14 +15,17 @@ public:
   halp_meta(name, "Message Pit")
   halp_meta(category, "Network")
   halp_meta(author, "ossia team")
-  halp_meta(description, "Allows to combine messages over the network. "
-                         "Every machine that runs this object instance will have its input combined with the others. "
-                         "On every machine, the output of the process is the resulting combination. "
-                         "For instance: the sum, the average, etc.")
+  halp_meta(
+      description,
+      "Allows to combine messages over the network. "
+      "Every machine that runs this object instance will have its input combined with "
+      "the others. "
+      "On every machine, the output of the process is the resulting combination. "
+      "For instance: the sum, the average, etc.")
   halp_meta(c_name, "messagepit")
   halp_meta(uuid, "c97a22ee-76b0-4ced-acff-1ae8a814141f")
 
-  std::shared_ptr<Netpit::Context> context{};
+  std::shared_ptr<Netpit::IMessageContext> context{};
 
   ~MessagePit() { unregisterSender(*this); }
 
@@ -63,7 +66,7 @@ public:
     } bang;
   } outputs;
 
-  message_list current;
+  InboundMessages current;
   void operator()()
   {
     if(!context)
@@ -84,7 +87,7 @@ public:
       case mode_type::Sum: {
         double res = 0.;
         for(auto& v : current)
-          res += ossia::convert<float>(v);
+          res += ossia::convert<float>(v.val);
 
         outputs.bang.call(res);
         break;
@@ -94,7 +97,7 @@ public:
         {
           double res = 0.;
           for(auto& v : current)
-            res += ossia::convert<float>(v);
+            res += ossia::convert<float>(v.val);
 
           outputs.bang.call(res / current.size());
         }

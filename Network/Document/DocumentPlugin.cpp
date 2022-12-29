@@ -1,53 +1,44 @@
 #include "DocumentPlugin.hpp"
 
-#include <score/actions/Action.hpp>
-#include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
-#include <score/plugins/documentdelegate/plugin/DocumentPluginCreator.hpp>
-#include <score/serialization/DataStreamVisitor.hpp>
-#include <score/serialization/JSONVisitor.hpp>
-
-#include <core/document/Document.hpp>
-
-#include <ossia/editor/expression/expression.hpp>
-
-#include <QObject>
-
-#include <Network/Client/Client.hpp>
-#include <Network/Document/Execution/SyncMode.hpp>
-#include <Network/Group/Group.hpp>
-#include <Network/Group/GroupManager.hpp>
-#include <tsl/hopscotch_set.h>
-
-#include <functional>
-#include <vector>
-
-
-
 #include <Process/Process.hpp>
+
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 
+#include <score/actions/Action.hpp>
 #include <score/model/EntityMap.hpp>
 #include <score/model/Identifier.hpp>
 #include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
+#include <score/plugins/documentdelegate/plugin/DocumentPluginCreator.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/JSONVisitor.hpp>
 #include <score/serialization/VisitorCommon.hpp>
 #include <score/tools/std/Optional.hpp>
 
 #include <core/document/Document.hpp>
 #include <core/document/DocumentModel.hpp>
 
+#include <ossia/editor/expression/expression.hpp>
+
+#include <QObject>
 #include <QString>
 
 #include <Netpit/MessageContext.hpp>
+#include <Network/Client/Client.hpp>
 #include <Network/Client/LocalClient.hpp>
+#include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
 #include <Network/Group/GroupMetadata.hpp>
 #include <Network/Group/GroupMetadataWidget.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
 #include <Network/Session/Session.hpp>
+#include <tsl/hopscotch_set.h>
+
+#include <functional>
+#include <vector>
 class QWidget;
 struct VisitorVariant;
 
@@ -82,8 +73,7 @@ MessagesAPI::MessagesAPI()
     ,
 
     trigger_expression_true{QByteArrayLiteral("/trigger/expression_true")}
-    , trigger_previous_completed{QByteArrayLiteral(
-          "/trigger/previous_completed")}
+    , trigger_previous_completed{QByteArrayLiteral("/trigger/previous_completed")}
     , trigger_entered{QByteArrayLiteral("/trigger/entered")}
     , trigger_left{QByteArrayLiteral("/trigger/left")}
     , trigger_finished{QByteArrayLiteral("/trigger/finished")}
@@ -92,6 +82,12 @@ MessagesAPI::MessagesAPI()
 
     , netpit_in_message{QByteArrayLiteral("/np/msg/in")}
     , netpit_out_message{QByteArrayLiteral("/np/msg/out")}
+    , netpit_in_audio{QByteArrayLiteral("/np/audio/in")}
+    , netpit_out_audio{QByteArrayLiteral("/np/audio/out")}
+    , netpit_in_video{QByteArrayLiteral("/np/video/in")}
+    , netpit_out_video{QByteArrayLiteral("/np/video/out")}
+    , netpit_in_geometry{QByteArrayLiteral("/np/geom/in")}
+    , netpit_out_geometry{QByteArrayLiteral("/np/geom/out")}
 {
 }
 
@@ -102,12 +98,8 @@ const MessagesAPI& MessagesAPI::instance()
 }
 
 NetworkDocumentPlugin::NetworkDocumentPlugin(
-    const score::DocumentContext& ctx,
-    EditionPolicy* policy,
-    QObject* parent)
-    : score::SerializableDocumentPlugin{ctx,
-                                        "NetworkDocumentPlugin",
-                                        parent}
+    const score::DocumentContext& ctx, EditionPolicy* policy, QObject* parent)
+    : score::SerializableDocumentPlugin{ctx, "NetworkDocumentPlugin", parent}
     , m_policy{policy}
     , m_groups{new GroupManager{this}}
 {
@@ -120,16 +112,18 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   groupManager().addGroup(allGroup);
 }
 
-NetworkDocumentPlugin::~NetworkDocumentPlugin() {}
+NetworkDocumentPlugin::~NetworkDocumentPlugin() { }
 
-NetworkDocumentPlugin::NetworkDocumentPlugin(const score::DocumentContext& ctx, JSONObject::Deserializer& vis, QObject* parent)
-  : score::SerializableDocumentPlugin{ctx, vis, parent}
+NetworkDocumentPlugin::NetworkDocumentPlugin(
+    const score::DocumentContext& ctx, JSONObject::Deserializer& vis, QObject* parent)
+    : score::SerializableDocumentPlugin{ctx, vis, parent}
 {
   vis.writeTo(*this);
 }
 
-NetworkDocumentPlugin::NetworkDocumentPlugin(const score::DocumentContext& ctx, DataStream::Deserializer& vis, QObject* parent)
-  : score::SerializableDocumentPlugin{ctx, vis, parent}
+NetworkDocumentPlugin::NetworkDocumentPlugin(
+    const score::DocumentContext& ctx, DataStream::Deserializer& vis, QObject* parent)
+    : score::SerializableDocumentPlugin{ctx, vis, parent}
 {
   vis.writeTo(*this);
 }
@@ -158,30 +152,61 @@ void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
     m_exec = pol;
 
     m_timer = startTimer(4);
-    connect(m_exec, &ExecutionPolicy::on_message,
-            this, [this] (uint64_t process, std::vector<std::pair<Id<Client>, ossia::value>> m)
-    {
+    connect(
+        m_exec, &ExecutionPolicy::on_message, this,
+        [this](uint64_t process, std::vector<std::pair<Id<Client>, ossia::value>> m) {
+      // Process messages
       auto it = m_messages.find(process);
       if(it != m_messages.end())
       {
         auto& p = it->second;
         if(p)
         {
-          Netpit::Inbound vec;
+          Netpit::InboundMessages vec;
           vec.reserve(m.size());
-          for(auto& [i,v] : m)
-            vec.push_back(std::move(v));
+          for(auto& [i, v] : m)
+            vec.emplace_back(Netpit::InboundMessage{std::move(v), i.val()});
 
           p->from_network.enqueue(std::move(vec));
         }
       }
-    });
+        });
+
+    connect(
+        m_exec, &ExecutionPolicy::on_audio, this,
+        [this](
+            uint64_t process,
+            std::vector<std::pair<Id<Client>, std::vector<std::vector<float>>>> m) {
+      // Process audio
+      auto it = m_audio.find(process);
+      if(it != m_audio.end())
+      {
+        auto& p = it->second;
+        if(p)
+        {
+          Netpit::InboundAudios vec;
+          vec.reserve(m.size());
+          for(auto& [i, v] : m)
+          {
+            vec.emplace_back(Netpit::InboundAudio{std::move(v), i.val()});
+          }
+
+          p->from_network.enqueue(std::move(vec));
+        }
+      }
+        });
   }
 }
 
-GroupManager& NetworkDocumentPlugin::groupManager() const { return *m_groups; }
+GroupManager& NetworkDocumentPlugin::groupManager() const
+{
+  return *m_groups;
+}
 
-EditionPolicy& NetworkDocumentPlugin::policy() const { return *m_policy; }
+EditionPolicy& NetworkDocumentPlugin::policy() const
+{
+  return *m_policy;
+}
 
 void NetworkDocumentPlugin::on_stop()
 {
@@ -194,128 +219,154 @@ void NetworkDocumentPlugin::on_stop()
   compensated.trigger_triggered.clear();
 }
 
-const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj) const noexcept
+const ObjectMetadata*
+NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj) const noexcept
 {
   if(auto it = m_intervalsGroups.find(&obj); it != m_intervalsGroups.end())
     return &it->second;
   return {};
 }
 
-const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj) const noexcept
+const ObjectMetadata*
+NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj) const noexcept
 {
   if(auto it = m_eventGroups.find(&obj); it != m_eventGroups.end())
     return &it->second;
   return {};
 }
 
-const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj) const noexcept
+const ObjectMetadata*
+NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj) const noexcept
 {
   if(auto it = m_syncGroups.find(&obj); it != m_syncGroups.end())
     return &it->second;
   return {};
 }
 
-const ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) const noexcept
+const ObjectMetadata*
+NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) const noexcept
 {
   if(auto it = m_processGroups.find(&obj); it != m_processGroups.end())
     return &it->second;
   return {};
 }
-ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj) noexcept
+ObjectMetadata*
+NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj) noexcept
 {
   if(auto it = m_intervalsGroups.find(&obj); it != m_intervalsGroups.end())
     return &it->second;
   return {};
 }
 
-ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj) noexcept
+ObjectMetadata*
+NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj) noexcept
 {
   if(auto it = m_eventGroups.find(&obj); it != m_eventGroups.end())
     return &it->second;
   return {};
 }
 
-ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj) noexcept
+ObjectMetadata*
+NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj) noexcept
 {
   if(auto it = m_syncGroups.find(&obj); it != m_syncGroups.end())
     return &it->second;
   return {};
 }
 
-ObjectMetadata* NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) noexcept
+ObjectMetadata*
+NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) noexcept
 {
   if(auto it = m_processGroups.find(&obj); it != m_processGroups.end())
     return &it->second;
   return {};
 }
 
-void NetworkDocumentPlugin::set_metadata(const Scenario::IntervalModel& obj, const ObjectMetadata& m)
+void NetworkDocumentPlugin::set_metadata(
+    const Scenario::IntervalModel& obj, const ObjectMetadata& m)
 {
   m_intervalsGroups[&obj] = m;
-  connect(&obj, &IdentifiedObjectAbstract::identified_object_destroying,
-          this, [this, ptr=&obj] {
-    m_intervalsGroups.erase(ptr);
-  });
+  connect(
+      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this,
+      [this, ptr = &obj] { m_intervalsGroups.erase(ptr); });
 }
 
-void NetworkDocumentPlugin::set_metadata(const Scenario::EventModel& obj, const ObjectMetadata& m)
+void NetworkDocumentPlugin::set_metadata(
+    const Scenario::EventModel& obj, const ObjectMetadata& m)
 {
   m_eventGroups[&obj] = m;
-  connect(&obj, &IdentifiedObjectAbstract::identified_object_destroying,
-          this, [this, ptr=&obj] {
-    m_eventGroups.erase(ptr);
-  });
+  connect(
+      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this,
+      [this, ptr = &obj] { m_eventGroups.erase(ptr); });
 }
 
-void NetworkDocumentPlugin::set_metadata(const Scenario::TimeSyncModel& obj, const ObjectMetadata& m)
+void NetworkDocumentPlugin::set_metadata(
+    const Scenario::TimeSyncModel& obj, const ObjectMetadata& m)
 {
   m_syncGroups[&obj] = m;
-  connect(&obj, &IdentifiedObjectAbstract::identified_object_destroying,
-          this, [this, ptr=&obj] {
-    m_syncGroups.erase(ptr);
-  });
+  connect(
+      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this,
+      [this, ptr = &obj] { m_syncGroups.erase(ptr); });
 }
 
-void NetworkDocumentPlugin::set_metadata(const Process::ProcessModel& obj, const ObjectMetadata& m)
+void NetworkDocumentPlugin::set_metadata(
+    const Process::ProcessModel& obj, const ObjectMetadata& m)
 {
   m_processGroups[&obj] = m;
-  connect(&obj, &IdentifiedObjectAbstract::identified_object_destroying,
-          this, [this, ptr=&obj] {
-    m_processGroups.erase(ptr);
-  });
+  connect(
+      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this,
+      [this, ptr = &obj] { m_processGroups.erase(ptr); });
 }
 void NetworkDocumentPlugin::unset_metadata(const Scenario::IntervalModel& obj)
 {
   m_intervalsGroups.erase(&obj);
-  disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+  disconnect(
+      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
 }
 
 void NetworkDocumentPlugin::unset_metadata(const Scenario::EventModel& obj)
 {
   m_eventGroups.erase(&obj);
-  disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+  disconnect(
+      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
 }
 
 void NetworkDocumentPlugin::unset_metadata(const Scenario::TimeSyncModel& obj)
 {
   m_syncGroups.erase(&obj);
-  disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+  disconnect(
+      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
 }
 
 void NetworkDocumentPlugin::unset_metadata(const Process::ProcessModel& obj)
 {
   m_processGroups.erase(&obj);
-  disconnect(&obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+  disconnect(
+      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
 }
 
-void NetworkDocumentPlugin::register_message_context(std::shared_ptr<Netpit::MessageContext> ctx)
+void NetworkDocumentPlugin::register_message_context(
+    std::shared_ptr<Netpit::MessageContext> ctx)
 {
   m_messages[ctx->instance] = std::move(ctx);
 }
 
-void NetworkDocumentPlugin::unregister_message_context(std::shared_ptr<Netpit::MessageContext> ctx)
+void NetworkDocumentPlugin::unregister_message_context(
+    std::shared_ptr<Netpit::MessageContext> ctx)
 {
   m_messages.erase(ctx->instance);
+}
+
+void NetworkDocumentPlugin::register_audio_context(
+    std::shared_ptr<Netpit::AudioContext> ctx)
+{
+  m_audio[ctx->instance] = std::move(ctx);
+}
+
+void NetworkDocumentPlugin::unregister_audio_context(
+    std::shared_ptr<Netpit::AudioContext> ctx)
+{
+  m_audio.erase(ctx->instance);
 }
 
 void NetworkDocumentPlugin::finish_loading()
@@ -340,21 +391,33 @@ void NetworkDocumentPlugin::finish_loading()
   m_loadProcessGroups.shrink_to_fit();
 }
 
-const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& NetworkDocumentPlugin::intervalMetadatas() const noexcept
-{ return m_intervalsGroups; }
+const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>&
+NetworkDocumentPlugin::intervalMetadatas() const noexcept
+{
+  return m_intervalsGroups;
+}
 
-const std::unordered_map<const Scenario::EventModel*, ObjectMetadata>& NetworkDocumentPlugin::eventMetadatas() const noexcept
-{ return m_eventGroups; }
+const std::unordered_map<const Scenario::EventModel*, ObjectMetadata>&
+NetworkDocumentPlugin::eventMetadatas() const noexcept
+{
+  return m_eventGroups;
+}
 
-const std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>& NetworkDocumentPlugin::syncMetadatas() const noexcept
-{ return m_syncGroups; }
+const std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>&
+NetworkDocumentPlugin::syncMetadatas() const noexcept
+{
+  return m_syncGroups;
+}
 
-const std::unordered_map<const Process::ProcessModel*, ObjectMetadata>& NetworkDocumentPlugin::processMetadatas() const noexcept
-{ return m_processGroups; }
+const std::unordered_map<const Process::ProcessModel*, ObjectMetadata>&
+NetworkDocumentPlugin::processMetadatas() const noexcept
+{
+  return m_processGroups;
+}
 
-ExecutionPolicy::~ExecutionPolicy() {}
+ExecutionPolicy::~ExecutionPolicy() { }
 
-EditionPolicy::~EditionPolicy() {}
+EditionPolicy::~EditionPolicy() { }
 
 void EditionPolicy::setSendControls(bool b)
 {
@@ -366,7 +429,6 @@ void EditionPolicy::setSendCommands(bool b)
 }
 }
 
-
 void Network::NetworkDocumentPlugin::timerEvent(QTimerEvent* event)
 {
   if(!m_exec)
@@ -376,12 +438,21 @@ void Network::NetworkDocumentPlugin::timerEvent(QTimerEvent* event)
   for(auto& m : m_messages)
   {
     Netpit::MessageContext& ctx = *m.second;
-    Netpit::Outbound mm;
+    Netpit::OutboundMessage mm;
     bool ok = false;
-    while(ctx.to_network.try_dequeue(mm)) ok = true;
+    while(ctx.to_network.try_dequeue(mm))
+      ok = true;
     if(ok)
     {
       m_exec->writeMessage(mm);
     }
+  }
+
+  for(auto& m : m_audio)
+  {
+    Netpit::AudioContext& ctx = *m.second;
+    Netpit::OutboundAudio mm;
+    while(ctx.to_network.try_dequeue(mm))
+      m_exec->writeAudio(std::move(mm));
   }
 }

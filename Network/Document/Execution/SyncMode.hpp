@@ -60,5 +60,11 @@ struct MessagesAPI
 
   const QByteArray netpit_in_message;
   const QByteArray netpit_out_message;
+  const QByteArray netpit_in_audio;
+  const QByteArray netpit_out_audio;
+  const QByteArray netpit_in_video;
+  const QByteArray netpit_out_video;
+  const QByteArray netpit_in_geometry;
+  const QByteArray netpit_out_geometry;
 };
 }

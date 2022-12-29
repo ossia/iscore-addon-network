@@ -135,6 +135,7 @@ set(SRCS
     Netpit/Netpit.hpp
     Netpit/Netpit.cpp
     Netpit/NetpitMessage.hpp
+    Netpit/NetpitAudio.hpp
 
     Netpit/MessageContext.hpp
     Netpit/MessageContext.cpp
