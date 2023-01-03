@@ -16,6 +16,7 @@ public:
 
   void writeMessage(Netpit::OutboundMessage m) override;
   void writeAudio(Netpit::OutboundAudio&& m) override;
+  void writeVideo(Netpit::OutboundImage&& m) override;
 
 private:
   Session& m_session;
@@ -26,5 +27,6 @@ private:
   std::unordered_map<
       int64_t, ossia::flat_map<Id<Client>, std::vector<std::vector<float>>>>
       m_audios;
+  std::unordered_map<int64_t, ossia::flat_map<Id<Client>, QByteArray>> m_videos;
 };
 }

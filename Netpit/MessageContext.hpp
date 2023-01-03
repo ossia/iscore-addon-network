@@ -36,4 +36,22 @@ struct AudioContext : IAudioContext
   ossia::mpmc_queue<OutboundAudio> to_network;
   ossia::mpmc_queue<InboundAudios> from_network;
 };
+
+// Case that seems to always be needed:
+// queue to update values, + operations to add / remove elements from a set
+struct VideoContext : IVideoContext
+{
+  uint64_t instance{};
+  const score::DocumentContext& ctx;
+
+  explicit VideoContext(uint64_t i, const score::DocumentContext& ctx);
+
+  ~VideoContext();
+
+  void push(halp::rgba_texture samples) override;
+  bool read(std::vector<InboundImage>&) override;
+
+  ossia::mpmc_queue<OutboundImage> to_network;
+  ossia::mpmc_queue<InboundImage> from_network;
+};
 }

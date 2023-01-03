@@ -263,6 +263,16 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       });
 
   s.mapper().addHandler_(
+      mapi.netpit_in_video, [&](const NetworkMessage& m, uint64_t id, QByteArray v) {
+        // Got a message that updates a process value from a remote client
+        auto& messages = m_videos[id];
+        messages[m.clientId] = std::move(v);
+
+        m_session.broadcastToAll(
+            m_session.makeMessage(mapi.netpit_out_video, id, m.clientId, v));
+      });
+
+  s.mapper().addHandler_(
       mapi.netpit_out_message,
       [&](const NetworkMessage& m, uint64_t process,
           std::vector<std::pair<Id<Client>, ossia::value>> vec) {
@@ -276,6 +286,13 @@ MasterExecutionPolicy::MasterExecutionPolicy(
           std::vector<std::pair<Id<Client>, std::vector<std::vector<float>>>> vec) {
     // Apply to the local process
     this->on_audio(process, std::move(vec));
+      });
+
+  s.mapper().addHandler_(
+      mapi.netpit_out_video,
+      [&](const NetworkMessage& m, uint64_t process, Id<Client> source, QByteArray vec) {
+    // Apply to the local process
+    this->on_video(process, Netpit::InboundImage{vec, (int)source.val()});
       });
 }
 
@@ -300,5 +317,16 @@ void MasterExecutionPolicy::writeAudio(Netpit::OutboundAudio&& m)
   m_session.broadcastToAll(
       m_session.makeMessage(mapi.netpit_out_audio, m.instance, messages.container));
   messages.clear();
+}
+
+void MasterExecutionPolicy::writeVideo(Netpit::OutboundImage&& m)
+{
+  // Local execution writes a message: it is applied to m_messages ; everyone is notified.
+  auto& messages = m_videos[m.instance];
+  const QByteArray& img = messages[m_session.master().id()] = std::move(m.texture);
+
+  auto& mapi = MessagesAPI::instance();
+  m_session.broadcastToAll(m_session.makeMessage(
+      mapi.netpit_out_video, m.instance, m_session.master().id(), img));
 }
 }

@@ -87,6 +87,13 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     // Apply to the local process
     this->on_audio(process, std::move(vec));
       });
+
+  s.mapper().addHandler_(
+      mapi.netpit_out_video,
+      [&](const NetworkMessage& m, uint64_t process, QByteArray vec) {
+    // Apply to the local process
+    this->on_video(process, Netpit::InboundImage{vec, (int)m.clientId.val()});
+      });
 }
 
 void SlaveExecutionPolicy::writeMessage(Netpit::OutboundMessage m)
@@ -103,5 +110,13 @@ void SlaveExecutionPolicy::writeAudio(Netpit::OutboundAudio&& m)
   m_session.sendMessage(
       m_session.master().id(),
       m_session.makeMessage(mapi.netpit_in_audio, m.instance, m.channels));
+}
+
+void SlaveExecutionPolicy::writeVideo(Netpit::OutboundImage&& m)
+{
+  auto& mapi = MessagesAPI::instance();
+  m_session.sendMessage(
+      m_session.master().id(),
+      m_session.makeMessage(mapi.netpit_in_video, m.instance, m.texture));
 }
 }

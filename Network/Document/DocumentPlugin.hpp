@@ -37,6 +37,7 @@ namespace Netpit
 {
 struct MessageContext;
 struct AudioContext;
+struct VideoContext;
 }
 namespace Network
 {
@@ -127,6 +128,7 @@ public:
   virtual ~ExecutionPolicy();
   virtual void writeMessage(Netpit::OutboundMessage m) = 0;
   virtual void writeAudio(Netpit::OutboundAudio&& m) = 0;
+  virtual void writeVideo(Netpit::OutboundImage&& m) = 0;
 
   void
   on_message(uint64_t process, const std::vector<std::pair<Id<Client>, ossia::value>>& m)
@@ -135,6 +137,7 @@ public:
       uint64_t process,
       const std::vector<std::pair<Id<Client>, std::vector<std::vector<float>>>>& m)
       W_SIGNAL(on_audio, process, m);
+  void on_video(uint64_t process, Netpit::InboundImage m) W_SIGNAL(on_video, process, m);
 };
 
 class SCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final
@@ -211,6 +214,8 @@ public:
   void unregister_message_context(std::shared_ptr<Netpit::MessageContext> ctx);
   void register_audio_context(std::shared_ptr<Netpit::AudioContext> ctx);
   void unregister_audio_context(std::shared_ptr<Netpit::AudioContext> ctx);
+  void register_video_context(std::shared_ptr<Netpit::VideoContext> ctx);
+  void unregister_video_context(std::shared_ptr<Netpit::VideoContext> ctx);
 
   void finish_loading();
 
@@ -250,6 +255,7 @@ private:
 
   std::unordered_map<uint64_t, std::shared_ptr<Netpit::MessageContext>> m_messages;
   std::unordered_map<uint64_t, std::shared_ptr<Netpit::AudioContext>> m_audio;
+  std::unordered_map<uint64_t, std::shared_ptr<Netpit::VideoContext>> m_video;
 
   int m_timer{};
 };

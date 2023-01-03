@@ -11,6 +11,7 @@ public:
 
   void writeMessage(Netpit::OutboundMessage m) override;
   void writeAudio(Netpit::OutboundAudio&& m) override;
+  void writeVideo(Netpit::OutboundImage&& m) override;
 
 private:
   Session& m_session;

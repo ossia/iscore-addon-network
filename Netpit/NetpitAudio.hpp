@@ -40,7 +40,7 @@ public:
 
   struct
   {
-    halp::dynamic_audio_bus<"Output", float> audio;
+    halp::dynamic_audio_bus<"Input", float> audio;
     struct
     {
       halp__enum("Mode", Sum, List, Sum);
@@ -59,6 +59,7 @@ public:
     for(int c = 0; c < outputs.audio.channels; c++)
       for(int i = 0; i < N; i++)
         outputs.audio.samples[c][i] = 0.f;
+
     if(!context)
       return;
 

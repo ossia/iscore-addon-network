@@ -104,4 +104,40 @@ bool AudioContext::read(std::vector<AudioBuffer>& data, int N)
   return true;
 }
 
+VideoContext::VideoContext(uint64_t i, const score::DocumentContext& ctx)
+    : instance{i}
+    , ctx{ctx}
+{
+}
+
+VideoContext::~VideoContext() { }
+
+void VideoContext::push(halp::rgba_texture data)
+{
+  to_network.enqueue(
+      {instance,
+       QByteArray(reinterpret_cast<const char*>(data.bytes), data.bytesize())});
+}
+
+bool VideoContext::read(std::vector<InboundImage>& data)
+{
+  InboundImage ins;
+  while(from_network.try_dequeue(ins))
+  {
+    auto it = std::find_if(data.begin(), data.end(), [&](const InboundImage& d) {
+      return d.client == ins.client;
+    });
+
+    if(it != data.end())
+    {
+      it->texture = ins.texture;
+    }
+    else
+    {
+      data.push_back(ins);
+    }
+  }
+
+  return true;
+}
 }

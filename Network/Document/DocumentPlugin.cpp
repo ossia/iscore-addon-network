@@ -195,6 +195,21 @@ void NetworkDocumentPlugin::setExecPolicy(ExecutionPolicy* pol)
         }
       }
         });
+
+    connect(
+        m_exec, &ExecutionPolicy::on_video, this,
+        [this](uint64_t process, Netpit::InboundImage m) {
+      // Process video
+      auto it = m_video.find(process);
+      if(it != m_video.end())
+      {
+        auto& p = it->second;
+        if(p)
+        {
+          p->from_network.enqueue(std::move(m));
+        }
+      }
+        });
   }
 }
 
@@ -369,6 +384,18 @@ void NetworkDocumentPlugin::unregister_audio_context(
   m_audio.erase(ctx->instance);
 }
 
+void NetworkDocumentPlugin::register_video_context(
+    std::shared_ptr<Netpit::VideoContext> ctx)
+{
+  m_video[ctx->instance] = std::move(ctx);
+}
+
+void NetworkDocumentPlugin::unregister_video_context(
+    std::shared_ptr<Netpit::VideoContext> ctx)
+{
+  m_video.erase(ctx->instance);
+}
+
 void NetworkDocumentPlugin::finish_loading()
 {
   auto& ctx = this->context();
@@ -454,5 +481,13 @@ void Network::NetworkDocumentPlugin::timerEvent(QTimerEvent* event)
     Netpit::OutboundAudio mm;
     while(ctx.to_network.try_dequeue(mm))
       m_exec->writeAudio(std::move(mm));
+  }
+
+  for(auto& m : m_video)
+  {
+    Netpit::VideoContext& ctx = *m.second;
+    Netpit::OutboundImage mm;
+    while(ctx.to_network.try_dequeue(mm))
+      m_exec->writeVideo(std::move(mm));
   }
 }

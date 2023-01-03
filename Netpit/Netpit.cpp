@@ -3,6 +3,7 @@
 #include <Netpit/MessageContext.hpp>
 #include <Netpit/NetpitAudio.hpp>
 #include <Netpit/NetpitMessage.hpp>
+#include <Netpit/NetpitVideo.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 
 namespace Netpit
@@ -10,6 +11,7 @@ namespace Netpit
 
 IMessageContext::~IMessageContext() { }
 IAudioContext::~IAudioContext() { }
+IVideoContext::~IVideoContext() { }
 
 const score::DocumentContext* current{};
 void setCurrentDocument(const score::DocumentContext& c)
@@ -66,6 +68,32 @@ void unregisterSender(AudioPit& p)
     auto ctx = std::dynamic_pointer_cast<AudioContext>(p.context);
     auto& plug = ctx->ctx.plugin<Network::NetworkDocumentPlugin>();
     plug.unregister_audio_context(ctx);
+  }
+}
+
+std::shared_ptr<IVideoContext> registerSender(uint64_t instance, VideoPit& p)
+{
+  assert(current);
+
+  if(auto plug = current->findPlugin<Network::NetworkDocumentPlugin>())
+  {
+    auto m = std::make_shared<VideoContext>(instance, *current);
+    plug->register_video_context(m);
+    return m;
+  }
+  else
+  {
+    return {};
+  }
+}
+
+void unregisterSender(VideoPit& p)
+{
+  if(p.context)
+  {
+    auto ctx = std::dynamic_pointer_cast<VideoContext>(p.context);
+    auto& plug = ctx->ctx.plugin<Network::NetworkDocumentPlugin>();
+    plug.unregister_video_context(ctx);
   }
 }
 

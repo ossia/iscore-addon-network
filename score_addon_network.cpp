@@ -6,6 +6,7 @@
 #include <Avnd/Factories.hpp>
 #include <Netpit/NetpitAudio.hpp>
 #include <Netpit/NetpitMessage.hpp>
+#include <Netpit/NetpitVideo.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
 #include <Network/Group/Panel/GroupPanelFactory.hpp>
@@ -60,7 +61,8 @@ std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_network::factorie
 {
   {
     std::vector<std::unique_ptr<score::InterfaceBase>> fx;
-    oscr::instantiate_fx<Netpit::MessagePit, Netpit::AudioPit>(fx, ctx, key);
+    oscr::instantiate_fx<Netpit::MessagePit, Netpit::AudioPit, Netpit::VideoPit>(
+        fx, ctx, key);
     if(!fx.empty())
       return fx;
   }

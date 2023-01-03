@@ -4,6 +4,11 @@
 
 #include <boost/circular_buffer.hpp>
 
+#include <QByteArray>
+
+#include <halp/texture.hpp>
+#include <tcb/span.hpp>
+
 #include <memory>
 
 namespace score
@@ -57,8 +62,21 @@ struct AudioBuffer
   int32_t client{};
 };
 
+struct OutboundImage
+{
+  uint64_t instance{};
+  QByteArray texture;
+};
+
+struct InboundImage
+{
+  QByteArray texture;
+  int32_t client{};
+};
+
 struct MessagePit;
 struct AudioPit;
+struct VideoPit;
 
 struct IMessageContext
 {
@@ -74,11 +92,22 @@ struct IAudioContext
   virtual bool read(std::vector<AudioBuffer>&, int N) = 0;
 };
 
+struct IVideoContext
+{
+  virtual ~IVideoContext();
+  virtual void push(halp::rgba_texture samples) = 0;
+  virtual bool read(std::vector<InboundImage>&) = 0;
+};
+
 void setCurrentDocument(const score::DocumentContext&);
 std::shared_ptr<IMessageContext> registerSender(uint64_t instance, MessagePit& p);
 void unregisterSender(MessagePit& p);
+
 std::shared_ptr<IAudioContext> registerSender(uint64_t instance, AudioPit& p);
 void unregisterSender(AudioPit& p);
+
+std::shared_ptr<IVideoContext> registerSender(uint64_t instance, VideoPit& p);
+void unregisterSender(VideoPit& p);
 }
 
 #include <verdigris>
@@ -86,3 +115,13 @@ Q_DECLARE_METATYPE(Netpit::OutboundMessage)
 W_REGISTER_ARGTYPE(Netpit::OutboundMessage)
 Q_DECLARE_METATYPE(Netpit::InboundMessage)
 W_REGISTER_ARGTYPE(Netpit::InboundMessage)
+
+Q_DECLARE_METATYPE(Netpit::OutboundAudio)
+W_REGISTER_ARGTYPE(Netpit::OutboundAudio)
+Q_DECLARE_METATYPE(Netpit::InboundAudio)
+W_REGISTER_ARGTYPE(Netpit::InboundAudio)
+
+Q_DECLARE_METATYPE(Netpit::OutboundImage)
+W_REGISTER_ARGTYPE(Netpit::OutboundImage)
+Q_DECLARE_METATYPE(Netpit::InboundImage)
+W_REGISTER_ARGTYPE(Netpit::InboundImage)
