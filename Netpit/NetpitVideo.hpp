@@ -1,14 +1,15 @@
 #pragma once
 #include <ossia/network/value/value_conversion.hpp>
 
+#include <QDebug>
+#include <QImage>
+
 #include <Netpit/Netpit.hpp>
 #include <halp/audio.hpp>
 #include <halp/callback.hpp>
 #include <halp/controls.hpp>
 #include <halp/messages.hpp>
 #include <halp/meta.hpp>
-
-#include <iostream>
 
 namespace Netpit
 {
@@ -45,8 +46,8 @@ public:
     {
       halp__enum("Mode", Sum, List, Sum);
     } mode{};
-    halp::spinbox_i32<"Width"> width;
-    halp::spinbox_i32<"Height"> height;
+    halp::spinbox_i32<"Width", halp::range{1, 2048, 1280}> width;
+    halp::spinbox_i32<"Height", halp::range{1, 2048, 720}> height;
   } inputs;
 
   struct
@@ -54,7 +55,7 @@ public:
     halp::texture_output<"Output"> tex;
   } outputs;
 
-  boost::container::vector<float> rgba_tex = halp::rgba32f_texture::allocate(320, 240);
+  boost::container::vector<float> rgba_tex = halp::rgba32f_texture::allocate(1280, 720);
   // Input of a specific client
   std::vector<Netpit::InboundImage> current;
   void operator()()
@@ -69,6 +70,7 @@ public:
     auto& in_tex = inputs.tex.texture;
     if(in_tex.bytes && in_tex.changed)
     {
+      // FIXME instead have a buffer and just do sws_rescale...
       QImage img{in_tex.bytes, in_tex.width, in_tex.height, QImage::Format_RGBA8888};
       auto scaled = img.scaled(QSize(w, h));
       halp::rgba_texture sent{.bytes = scaled.bits(), .width = w, .height = h};
@@ -79,13 +81,14 @@ public:
     // Read what the network has to say
     context->read(current);
 
+    if(current.empty())
+      return;
+
     auto& out_tex = outputs.tex.texture;
-    int N = w * h * 4;
+    const int N = w * h * 4;
 
     outputs.tex.create(w, h);
-    rgba_tex.clear();
-    rgba_tex.resize(w * h * 4);
-
+    boost::container::small_vector<unsigned char*, 16> textures_to_copy;
     for(auto& [tex, client] : current)
     {
       if(tex.size() != out_tex.bytesize())
@@ -93,18 +96,65 @@ public:
         qDebug() << "input texture has wrong size: " << tex.size() << out_tex.bytesize();
         continue;
       }
+      textures_to_copy.push_back((unsigned char*)tex.data());
+    }
 
-      unsigned char* bytes = (unsigned char*)tex.constData();
+    if(textures_to_copy.empty())
+      return;
+
+    const std::size_t T = textures_to_copy.size();
+
+    auto copy_tex = [&](unsigned char* bytes) {
       for(int i = 0; i < N; i++)
       {
-        rgba_tex[i] += bytes[i] / 255.f;
+        out_tex.bytes[i] = bytes[i];
+      }
+    };
+    auto add_tex = [&](auto... bytes) {
+      for(int i = 0; i < N; i++)
+      {
+        out_tex.bytes[i] += std::clamp((int(bytes[i]) + ...), 0, 255);
+      }
+    };
+
+    switch(T)
+    {
+      case 0:
+        return;
+      case 1:
+        copy_tex(textures_to_copy[0]);
+        break;
+      case 2:
+        add_tex(textures_to_copy[0], textures_to_copy[1]);
+        break;
+      case 3:
+        add_tex(textures_to_copy[0], textures_to_copy[1], textures_to_copy[2]);
+        break;
+      case 4:
+        add_tex(
+            textures_to_copy[0], textures_to_copy[1], textures_to_copy[2],
+            textures_to_copy[3]);
+        break;
+      default: {
+        rgba_tex.clear();
+        rgba_tex.assign(textures_to_copy[0], textures_to_copy[0] + N);
+
+        for(std::size_t tex = 1; tex < T; tex++)
+        {
+          unsigned char* bytes = textures_to_copy[tex];
+          for(int i = 0; i < N; i++)
+          {
+            rgba_tex[i] += bytes[i];
+          }
+        }
+
+        for(int i = 0; i < N; i++)
+        {
+          out_tex.bytes[i] = std::clamp(rgba_tex[i], 0.f, 255.f);
+        }
       }
     }
 
-    for(int i = 0; i < N; i++)
-    {
-      out_tex.bytes[i] = std::clamp(rgba_tex[i], 0.f, 1.f) * 255.f;
-    }
     out_tex.changed = true;
   }
 };
