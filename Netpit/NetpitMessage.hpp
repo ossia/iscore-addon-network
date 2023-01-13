@@ -49,7 +49,7 @@ public:
     struct
     {
       halp_meta(name, "Input")
-      void operator()(MessagePit& m, float v)
+      void operator()(MessagePit& m, const ossia::value& v)
       {
         if(m.context)
           m.context->push(v);
@@ -62,11 +62,13 @@ public:
     struct
     {
       static consteval auto name() { return "Output"; }
-      halp::basic_callback<void(float)> call;
+      halp::basic_callback<void(ossia::value)> call;
     } bang;
   } outputs;
 
   InboundMessages current;
+
+  ossia::value temp_list = std::vector<ossia::value>{};
   void operator()()
   {
     if(!context)
@@ -81,9 +83,16 @@ public:
     using mode_type = std::decay_t<decltype(inputs.mode.value)>;
     switch(inputs.mode)
     {
-      case mode_type::List:
-        // TODO
+      case mode_type::List: {
+        auto& lst = *temp_list.target<std::vector<ossia::value>>();
+        lst.clear();
+        lst.reserve(current.size());
+        for(auto& v : current)
+          lst.push_back(v.val);
+
+        outputs.bang.call(temp_list);
         break;
+      }
       case mode_type::Sum: {
         double res = 0.;
         for(auto& v : current)
