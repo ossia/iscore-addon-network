@@ -1,5 +1,7 @@
 #include "SharedScenarioPolicy.hpp"
 
+#include <Scenario/Document/Event/EventExecution.hpp>
+
 #include <score/model/ComponentUtils.hpp>
 #include <score/tools/Bind.hpp>
 
@@ -23,7 +25,7 @@ void SharedScenarioPolicy::operator()(
 
   for(Scenario::EventModel& tn : ip.getEvents())
   {
-    auto comp = score::findComponent<Execution::TimeSyncComponent>(tn.components());
+    auto comp = score::findComponent<Execution::EventComponent>(tn.components());
     if(comp)
     {
       operator()(*comp, cur);
@@ -120,6 +122,7 @@ void SharedScenarioPolicy::operator()(
       else
       {
         // FIXME: disable controls for processes in "free" mode
+        process.second->OSSIAProcess().enable(cur_group.hasClient(ctx.self));
       }
     }
   }

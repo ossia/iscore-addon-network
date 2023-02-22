@@ -31,7 +31,7 @@ public:
   void clientPortChanged(int v) W_SIGNAL(clientPortChanged, v);
 
 private:
-  QWidget* m_widget{new QWidget};
+  QWidget* m_widget{};
 
   QSpinBox* m_masterPort{new QSpinBox{m_widget}};
   QSpinBox* m_clientPort{new QSpinBox{m_widget}};

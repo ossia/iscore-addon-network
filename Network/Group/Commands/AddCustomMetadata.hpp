@@ -1,9 +1,9 @@
 #pragma once
-#include <Network/Document/DocumentPlugin.hpp>
-#include <Network/Document/Execution/SyncMode.hpp>
 #include <score/command/Command.hpp>
 #include <score/selection/Selection.hpp>
 
+#include <Network/Document/DocumentPlugin.hpp>
+#include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
 
 namespace Process
