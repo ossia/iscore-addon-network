@@ -34,7 +34,7 @@ struct InboundMessage
   int32_t client{};
 };
 
-using InboundMessages = boost::container::small_vector<InboundMessage, 4>;
+using InboundMessages = ossia::small_vector<InboundMessage, 4>;
 
 using AudioChannel = std::vector<float>;
 
@@ -52,7 +52,7 @@ struct InboundAudio
   int32_t client{};
 };
 
-using InboundAudios = boost::container::small_vector<InboundAudio, 4>;
+using InboundAudios = ossia::small_vector<InboundAudio, 4>;
 
 struct AudioBuffer
 {

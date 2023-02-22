@@ -21,7 +21,8 @@ void setCurrentDocument(const score::DocumentContext& c)
 
 std::shared_ptr<IMessageContext> registerSender(uint64_t instance, MessagePit& p)
 {
-  assert(current);
+  if(!current)
+    return {};
 
   if(auto plug = current->findPlugin<Network::NetworkDocumentPlugin>())
   {
@@ -47,7 +48,8 @@ void unregisterSender(MessagePit& p)
 
 std::shared_ptr<IAudioContext> registerSender(uint64_t instance, AudioPit& p)
 {
-  assert(current);
+  if(!current)
+    return {};
 
   if(auto plug = current->findPlugin<Network::NetworkDocumentPlugin>())
   {
@@ -73,7 +75,8 @@ void unregisterSender(AudioPit& p)
 
 std::shared_ptr<IVideoContext> registerSender(uint64_t instance, VideoPit& p)
 {
-  assert(current);
+  if(!current)
+    return {};
 
   if(auto plug = current->findPlugin<Network::NetworkDocumentPlugin>())
   {
