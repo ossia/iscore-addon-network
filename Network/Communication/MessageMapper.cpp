@@ -19,7 +19,7 @@ void MessageMapper::map(const NetworkMessage& m)
 {
   auto it = m_handlers.find(m.address);
   if (it != m_handlers.end())
-    (it.value())(m);
+    (it->second)(m);
   else
     qDebug() << "Address" << m.address << "not handled.";
 }

@@ -6,7 +6,7 @@
 
 #include <Netpit/Netpit.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
-#include <tsl/hopscotch_set.h>
+#include <ossia/detail/hash_map.hpp>
 
 #include <score_addon_network_export.h>
 
@@ -69,7 +69,7 @@ struct NetworkExpressionData
 
   //! Will fill itself with received messages
   score::hash_map<Id<Client>, std::optional<bool>> values;
-  tsl::hopscotch_set<Id<Client>> previousCompleted;
+  ossia::hash_set<Id<Client>> previousCompleted;
 
   Id<Group> thisGroup;
   std::vector<Id<Group>> prevGroups, nextGroups;

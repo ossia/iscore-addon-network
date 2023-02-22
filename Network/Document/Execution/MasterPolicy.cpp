@@ -3,6 +3,7 @@
 
 #include <score/model/path/PathDebug.hpp>
 #include <score/model/path/PathSerialization.hpp>
+#include <score/serialization/MapSerialization.hpp>
 
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/Execution/MasterPolicy.hpp>
@@ -33,8 +34,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       if(it != doc.noncompensated.trigger_evaluation_entered.end())
       {
         // TODO also start evaluating expressions.
-        if(it.value())
-          it.value()(m.clientId);
+        if(it->second)
+          it->second(m.clientId);
       }
     }
       });
@@ -57,8 +58,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       auto it = doc.noncompensated.trigger_evaluation_finished.find(p);
       if(it != doc.noncompensated.trigger_evaluation_finished.end())
       {
-        if(it.value())
-          it.value()(m.clientId, val);
+        if(it->second)
+          it->second(m.clientId, val);
       }
     }
 
@@ -72,7 +73,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     auto it = doc.noncompensated.network_expressions.find(p);
     if(it != doc.noncompensated.network_expressions.end())
     {
-      NetworkExpressionData& e = it.value();
+      NetworkExpressionData& e = it->second;
       Group* grp = doc.groupManager().group(e.thisGroup);
       if(!grp)
         return;
@@ -163,7 +164,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     auto it = doc.noncompensated.network_expressions.find(p);
     if(it != doc.noncompensated.network_expressions.end())
     {
-      NetworkExpressionData& e = it.value();
+      NetworkExpressionData& e = it->second;
       Group* grp = doc.groupManager().group(e.thisGroup);
       if(!grp)
         return;
@@ -198,8 +199,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       auto it = doc.noncompensated.trigger_triggered.find(p);
       if(it != doc.noncompensated.trigger_triggered.end())
       {
-        if(it.value())
-          it.value()(m.clientId);
+        if(it->second)
+          it->second(m.clientId);
       }
     }
 
@@ -215,8 +216,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       auto it = doc.compensated.trigger_triggered.find(p);
       if(it != doc.compensated.trigger_triggered.end())
       {
-        if(it.value())
-          it.value()(m.clientId, ns);
+        if(it->second)
+          it->second(m.clientId, ns);
       }
     }
 
@@ -232,8 +233,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       auto it = doc.noncompensated.interval_speed_changed.find(p);
       if(it != doc.noncompensated.interval_speed_changed.end())
       {
-        if(it.value())
-          it.value()(m.clientId, val);
+        if(it->second)
+          it->second(m.clientId, val);
       }
     }
 
@@ -246,8 +247,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
         auto& messages = m_messages[id];
         messages[m.clientId] = std::move(v);
 
-        m_session.broadcastToAll(
-            m_session.makeMessage(mapi.netpit_out_message, id, messages.container));
+        m_session.broadcastToAll(m_session.makeMessage(
+            mapi.netpit_out_message, id, messages.tree().get_sequence_cref()));
       });
 
   s.mapper().addHandler_(
@@ -257,8 +258,8 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     auto& messages = m_audios[id];
     messages[m.clientId] = std::move(v);
 
-    m_session.broadcastToAll(
-        m_session.makeMessage(mapi.netpit_out_audio, id, messages.container));
+    m_session.broadcastToAll(m_session.makeMessage(
+        mapi.netpit_out_audio, id, messages.tree().get_sequence_cref()));
     messages.clear();
       });
 
@@ -303,8 +304,8 @@ void MasterExecutionPolicy::writeMessage(Netpit::OutboundMessage m)
   messages[m_session.master().id()] = std::move(m.val);
 
   auto& mapi = MessagesAPI::instance();
-  m_session.broadcastToAll(
-      m_session.makeMessage(mapi.netpit_out_message, m.instance, messages.container));
+  m_session.broadcastToAll(m_session.makeMessage(
+      mapi.netpit_out_message, m.instance, messages.tree().get_sequence_cref()));
 }
 
 void MasterExecutionPolicy::writeAudio(Netpit::OutboundAudio&& m)
@@ -314,8 +315,8 @@ void MasterExecutionPolicy::writeAudio(Netpit::OutboundAudio&& m)
   messages[m_session.master().id()] = std::move(m.channels);
 
   auto& mapi = MessagesAPI::instance();
-  m_session.broadcastToAll(
-      m_session.makeMessage(mapi.netpit_out_audio, m.instance, messages.container));
+  m_session.broadcastToAll(m_session.makeMessage(
+      mapi.netpit_out_audio, m.instance, messages.tree().get_sequence_cref()));
   messages.clear();
 }
 

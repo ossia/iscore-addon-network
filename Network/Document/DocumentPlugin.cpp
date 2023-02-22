@@ -35,7 +35,7 @@
 #include <Network/Group/GroupMetadataWidget.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
 #include <Network/Session/Session.hpp>
-#include <tsl/hopscotch_set.h>
+#include <ossia/detail/hash_map.hpp>
 
 #include <functional>
 #include <vector>

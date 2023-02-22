@@ -19,8 +19,8 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     auto it = doc.noncompensated.trigger_evaluation_entered.find(p);
     if(it != doc.noncompensated.trigger_evaluation_entered.end())
     {
-      if(it.value())
-        it.value()(m.clientId);
+      if(it->second)
+        it->second(m.clientId);
     }
       });
 
@@ -34,8 +34,8 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     auto it = doc.noncompensated.trigger_evaluation_finished.find(p);
     if(it != doc.noncompensated.trigger_evaluation_finished.end())
     {
-      if(it.value())
-        it.value()(m.clientId, val);
+      if(it->second)
+        it->second(m.clientId, val);
     }
       });
 
@@ -45,8 +45,8 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     auto it = doc.noncompensated.trigger_triggered.find(p);
     if(it != doc.noncompensated.trigger_triggered.end())
     {
-      if(it.value())
-        it.value()(m.clientId);
+      if(it->second)
+        it->second(m.clientId);
     }
       });
   s.mapper().addHandler_(
@@ -56,8 +56,8 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     auto it = doc.compensated.trigger_triggered.find(p);
     if(it != doc.compensated.trigger_triggered.end())
     {
-      if(it.value())
-        it.value()(m.clientId, ns);
+      if(it->second)
+        it->second(m.clientId, ns);
     }
       });
 
@@ -67,8 +67,8 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     auto it = doc.noncompensated.interval_speed_changed.find(p);
     if(it != doc.noncompensated.interval_speed_changed.end())
     {
-      if(it.value())
-        it.value()(m.clientId, val);
+      if(it->second)
+        it->second(m.clientId, val);
     }
       });
 

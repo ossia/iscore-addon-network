@@ -53,7 +53,7 @@ struct Timekeeper final : public QObject
     auto e = m_timestamps.end();
     for (auto it = b; it != e; ++it)
     {
-      it.value().last_sent = t;
+      it->second.last_sent = t;
     }
   }
   void on_pong(NetworkMessage m)
@@ -68,7 +68,7 @@ struct Timekeeper final : public QObject
     auto it = m_timestamps.find(m.clientId);
     if (it != m_timestamps.end())
     {
-      ClientTimes& times = it.value();
+      ClientTimes& times = it->second;
       times.last_received = pong_date;
       times.roundtrip_latency = times.last_received - times.last_sent;
 
@@ -104,7 +104,7 @@ struct Timekeeper final : public QObject
   {
     auto it = m_timestamps.find(c);
     SCORE_ASSERT(it != m_timestamps.end());
-    return it.value();
+    return it->second;
   }
 
   using stamps = score::hash_map<Id<Client>, ClientTimes>;
