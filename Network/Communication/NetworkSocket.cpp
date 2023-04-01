@@ -8,24 +8,27 @@
 #include <QtWebSockets/QWebSocket>
 
 #include <Network/Communication/NetworkMessage.hpp>
+
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::NetworkSocket)
 namespace Network
 {
 NetworkSocket::NetworkSocket(QWebSocket* sock, QObject* parent)
-    : QObject{parent}, m_socket{sock}
+    : QObject{parent}
+    , m_socket{sock}
 {
   init();
 }
 
 NetworkSocket::NetworkSocket(QString ip, int port, QObject* parent)
-    : QObject{parent}, m_socket{new QWebSocket{QString{}, {}, this}}
+    : QObject{parent}
+    , m_socket{new QWebSocket{QString{}, {}, this}}
 {
   init();
 
-  if (ip.startsWith("::ffff:"))
+  if(ip.startsWith("::ffff:"))
     ip.remove("::ffff:");
-  else if (ip == "::1")
+  else if(ip == "::1")
     ip = "127.0.0.1";
   m_socket->open(QUrl("ws://" + ip + ":" + QString::number(port)));
 }
@@ -42,28 +45,25 @@ void NetworkSocket::init()
 {
   connect(
       m_socket,
-      qOverload<QAbstractSocket::SocketError>(&QWebSocket::error),
-      this,
-      [=]() { qDebug() << "Error: " << m_socket->errorString(); });
+#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
+      QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
+#else
+      &QWebSocket::errorOccurred,
+#endif
+      this, [=]() { qDebug() << "Error: " << m_socket->errorString(); });
   connect(m_socket, &QWebSocket::connected, this, [=]() {
     qDebug() << "WS Connected";
     connected();
   });
-  connect(m_socket, &QWebSocket::disconnected, this, []() {
-    qDebug("Disconnected");
+  connect(m_socket, &QWebSocket::disconnected, this, []() { qDebug("Disconnected"); });
+
+  connect(m_socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray& b) {
+    QDataStream reader(b);
+    NetworkMessage m;
+    reader >> m;
+
+    messageReceived(m);
   });
-
-  connect(
-      m_socket,
-      &QWebSocket::binaryMessageReceived,
-      this,
-      [=](const QByteArray& b) {
-        QDataStream reader(b);
-        NetworkMessage m;
-        reader >> m;
-
-        messageReceived(m);
-      });
 
   // m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 }
