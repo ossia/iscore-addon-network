@@ -75,32 +75,28 @@ void update_metadata(NetworkDocumentPlugin& plug, auto& obj, QString group)
 UpdateObjectMetadata::UpdateObjectMetadata(
     NetworkDocumentPlugin& plug, const Selection& s)
 {
-  auto init_itv = [&] (Scenario::IntervalModel* elt)
-  {
+  auto init_itv = [&](Scenario::IntervalModel* elt) {
     MetadataUndoRedo<Scenario::IntervalModel> m;
     m.path = score::IDocument::path(*elt);
     if(auto p = plug.get_metadata(*elt))
       m.before = *p;
     m_intervals.push_back(std::move(m));
   };
-  auto init_ev = [&] (Scenario::EventModel* elt)
-  {
+  auto init_ev = [&](Scenario::EventModel* elt) {
     MetadataUndoRedo<Scenario::EventModel> m;
     m.path = score::IDocument::path(*elt);
     if(auto p = plug.get_metadata(*elt))
       m.before = *p;
     m_events.push_back(std::move(m));
   };
-  auto init_s = [&] (Scenario::TimeSyncModel* elt)
-  {
+  auto init_s = [&](Scenario::TimeSyncModel* elt) {
     MetadataUndoRedo<Scenario::TimeSyncModel> m;
     m.path = score::IDocument::path(*elt);
     if(auto p = plug.get_metadata(*elt))
       m.before = *p;
     m_nodes.push_back(std::move(m));
   };
-  auto init_p = [&] (Process::ProcessModel* elt)
-  {
+  auto init_p = [&](Process::ProcessModel* elt) {
     MetadataUndoRedo<Process::ProcessModel> m;
     m.path = score::IDocument::path(*elt);
     if(auto p = plug.get_metadata(*elt))

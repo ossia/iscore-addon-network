@@ -164,7 +164,7 @@ void JSONReader::read(const Network::ObjectMetadata& elt)
 template <>
 void JSONWriter::write(Network::ObjectMetadata& elt)
 {
-  elt.syncmode = (Network::SyncMode) obj["Sync"].toInt();
-  elt.sharemode = (Network::ShareMode) obj["Share"].toInt();
+  elt.syncmode = (Network::SyncMode)obj["Sync"].toInt();
+  elt.sharemode = (Network::ShareMode)obj["Share"].toInt();
   elt.group = obj["Group"].toString();
 }

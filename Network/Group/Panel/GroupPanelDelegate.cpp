@@ -224,6 +224,7 @@ public:
     lay->addLayout(l1bis);
     {
       auto g = new QButtonGroup{this};
+
       auto async_uc = setup("Async", l1, g, [this] {
         disp.submit(new SetSyncMode{
             this->m_plug, m_ctx.selectionStack.currentSelection(),

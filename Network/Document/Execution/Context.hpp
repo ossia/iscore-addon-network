@@ -40,18 +40,18 @@ struct NetworkPrunerContext
   const MessagesAPI& mapi = MessagesAPI::instance();
 };
 
-
 template <typename T>
 SyncMode getInfos(NetworkDocumentPlugin& doc, const T& obj)
 {
   if(const ObjectMetadata* meta = doc.get_metadata(obj))
     return meta->syncmode;
   else
-  return SyncMode::NonCompensatedAsync;
+    return SyncMode::NonCompensatedAsync;
 }
 
 template <typename T>
-const Group& getGroup(NetworkDocumentPlugin& doc, const GroupManager& gm, const Group& cur, const T& obj)
+const Group& getGroup(
+    NetworkDocumentPlugin& doc, const GroupManager& gm, const Group& cur, const T& obj)
 {
   const ObjectMetadata* meta = doc.get_metadata(obj);
   const Group* cur_group = &cur;
@@ -60,11 +60,11 @@ const Group& getGroup(NetworkDocumentPlugin& doc, const GroupManager& gm, const 
 
   auto& str = meta->group;
   const auto& cst = Constants::instance();
-  if (str == cst.all)
+  if(str == cst.all)
   {
     cur_group = gm.group(gm.defaultGroup());
   }
-  else if (str == cst.parent || str.isEmpty())
+  else if(str == cst.parent || str.isEmpty())
   {
     // Default
   }
