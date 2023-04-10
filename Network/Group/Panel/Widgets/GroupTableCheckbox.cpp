@@ -11,8 +11,7 @@ namespace Network
 GroupTableCheckbox::GroupTableCheckbox()
 {
   m_cb = new QCheckBox;
-  connect(
-      m_cb, &QCheckBox::stateChanged, this, &GroupTableCheckbox::stateChanged);
+  connect(m_cb, &QCheckBox::stateChanged, this, &GroupTableCheckbox::stateChanged);
 
   auto lay = new QHBoxLayout{this};
   lay->addWidget(m_cb);
@@ -27,7 +26,7 @@ int GroupTableCheckbox::state()
 
 void GroupTableCheckbox::setState(int state)
 {
-  if (state != m_cb->checkState())
+  if(state != m_cb->checkState())
   {
     m_cb->setCheckState(Qt::CheckState(state));
   }

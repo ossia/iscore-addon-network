@@ -24,8 +24,7 @@ struct SCORE_ADDON_NETWORK_EXPORT BasicPruner
   void recurse(Scenario::ScenarioInterface&, const Group& cur);
   void recurse(Execution::TimeSyncComponent&);
   void operator()(
-      const Execution::Context& exec_ctx,
-      const Execution::BaseScenarioElement& scenar);
+      const Execution::Context& exec_ctx, const Execution::BaseScenarioElement& scenar);
 
 private:
   NetworkPrunerContext ctx;

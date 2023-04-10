@@ -29,9 +29,7 @@ class MasterSession : public Session
   W_OBJECT(MasterSession)
 public:
   MasterSession(
-      const score::DocumentContext& doc,
-      LocalClient* theclient,
-      Id<Session> id,
+      const score::DocumentContext& doc, LocalClient* theclient, Id<Session> id,
       QObject* parent = nullptr);
   ~MasterSession();
 

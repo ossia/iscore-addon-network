@@ -1,15 +1,16 @@
 #include "PlaceholderPolicy.hpp"
 
 #include <score/plugins/documentdelegate/plugin/SerializableDocumentPlugin.hpp>
-#include <Network/Session/Session.hpp>
 #include <score/tools/Bind.hpp>
+
+#include <Network/Session/Session.hpp>
 
 template <>
 void DataStreamReader::read(const Network::EditionPolicy& elt)
 {
   m_stream << elt.session()->id();
   readFrom(static_cast<Network::Client&>(elt.session()->localClient()));
-/*
+  /*
   m_stream << elt.session()->remoteClients().count();
   for (auto& clt : elt.session()->remoteClients())
   {
@@ -26,7 +27,7 @@ void JSONReader::read(const Network::EditionPolicy& elt)
   {
     obj["SessionId"] = elt.session()->id();
     obj["LocalClient"] = static_cast<Network::Client&>(elt.session()->localClient());
-/*
+    /*
     stream.Key("RemoteClients");
     stream.StartArray();
     for (auto& clt : elt.session()->remoteClients())
@@ -44,9 +45,9 @@ void DataStreamWriter::write(Network::PlaceholderEditionPolicy& elt)
   Id<Network::Session> sessId;
   m_stream >> sessId;
 
-  elt.m_session = new Network::Session{
-      new Network::LocalClient(*this, nullptr), sessId, &elt};
-/*
+  elt.m_session
+      = new Network::Session{new Network::LocalClient(*this, nullptr), sessId, &elt};
+  /*
   int n;
   m_stream >> n;
   for (; n-- > 0;)
@@ -64,10 +65,8 @@ void JSONWriter::write(Network::PlaceholderEditionPolicy& elt)
   session_id <<= obj["SessionId"];
   JSONObject::Deserializer localClientDeser(obj["LocalClient"]);
   elt.m_session = new Network::Session{
-      new Network::LocalClient(localClientDeser, nullptr),
-      session_id,
-      &elt};
-/*
+      new Network::LocalClient(localClientDeser, nullptr), session_id, &elt};
+  /*
   for (const auto& json_vref : obj["RemoteClients"].toArray())
   {
     JSONObject::Deserializer deser(json_vref);

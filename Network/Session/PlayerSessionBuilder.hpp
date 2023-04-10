@@ -4,8 +4,6 @@
 #include <score/model/Identifier.hpp>
 #include <score/tools/std/Optional.hpp>
 
-#include <verdigris>
-
 #include <QByteArray>
 #include <QList>
 #include <QObject>
@@ -13,6 +11,7 @@
 #include <QString>
 
 #include <functional>
+#include <verdigris>
 
 namespace score
 {

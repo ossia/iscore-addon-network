@@ -9,17 +9,16 @@ class RemoteClient : public Client
   W_OBJECT(RemoteClient)
 public:
   RemoteClient(NetworkSocket* socket, Id<Client> id, QObject* parent = nullptr)
-      : Client(id, parent), m_socket{socket}
+      : Client(id, parent)
+      , m_socket{socket}
   {
     connect(
-        m_socket,
-        &NetworkSocket::messageReceived,
-        this,
-        &RemoteClient::messageReceived);
+        m_socket, &NetworkSocket::messageReceived, this, &RemoteClient::messageReceived);
   }
 
   template <typename Deserializer>
-  RemoteClient(Deserializer&& vis, QObject* parent) : Client{vis, parent}
+  RemoteClient(Deserializer&& vis, QObject* parent)
+      : Client{vis, parent}
   {
   }
 

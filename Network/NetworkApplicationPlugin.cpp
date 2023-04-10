@@ -18,8 +18,8 @@
 
 #include <QAction>
 #include <QApplication>
-#include <QMenu>
 #include <QDebug>
+#include <QMenu>
 #include <QMessageBox>
 #include <QPair>
 #include <QTcpSocket>
@@ -57,7 +57,7 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(
 {
 }
 
-NetworkApplicationPlugin::~NetworkApplicationPlugin() {}
+NetworkApplicationPlugin::~NetworkApplicationPlugin() { }
 
 void NetworkApplicationPlugin::on_loadedDocument(score::Document& doc)
 {
@@ -68,52 +68,38 @@ void NetworkApplicationPlugin::on_loadedDocument(score::Document& doc)
 }
 
 void NetworkApplicationPlugin::setupClientConnection(
-    QString name,
-    QString ip,
-    int port,
-    QMap<QString, QByteArray>)
+    QString name, QString ip, int port, QMap<QString, QByteArray>)
 {
   m_sessionBuilder = std::make_unique<ClientSessionBuilder>(context, ip, port);
 
-  connect(
-      m_sessionBuilder.get(),
-      &ClientSessionBuilder::sessionReady,
-      this,
-      [&]() {
-        auto& panel = context.panel<Network::PanelDelegate>();
-        panel.networkPluginReady();
+  connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady, this, [&]() {
+    auto& panel = context.panel<Network::PanelDelegate>();
+    panel.networkPluginReady();
 
-        m_sessionBuilder.reset();
-      });
-  connect(
-      m_sessionBuilder.get(),
-      &ClientSessionBuilder::sessionFailed,
-      this,
-      [&]() { m_sessionBuilder.reset(); });
-  connect(
-      m_sessionBuilder.get(), &ClientSessionBuilder::connected, this, [&]() {
-        m_sessionBuilder->initiateConnection();
-      });
+    m_sessionBuilder.reset();
+  });
+  connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed, this, [&]() {
+    m_sessionBuilder.reset();
+  });
+  connect(m_sessionBuilder.get(), &ClientSessionBuilder::connected, this, [&]() {
+    m_sessionBuilder->initiateConnection();
+  });
 }
 
 void NetworkApplicationPlugin::setupPlayerConnection(
-    QString name,
-    QString ip,
-    int port,
-    QMap<QString, QByteArray>)
+    QString name, QString ip, int port, QMap<QString, QByteArray>)
 {
   auto cur = currentDocument();
-  if (!cur)
+  if(!cur)
     return;
 
-  NetworkDocumentPlugin* plug
-      = cur->context().findPlugin<NetworkDocumentPlugin>();
-  if (!plug)
+  NetworkDocumentPlugin* plug = cur->context().findPlugin<NetworkDocumentPlugin>();
+  if(!plug)
     return;
 
   auto session = plug->policy().session();
   auto ms = dynamic_cast<MasterSession*>(session);
-  if (!ms)
+  if(!ms)
     return;
 
   auto s = new QTcpSocket;
@@ -124,12 +110,10 @@ void NetworkApplicationPlugin::setupPlayerConnection(
     // s->deleteLater();
   });
   connect(
-      s,
-      qOverload<QAbstractSocket::SocketError>(&QTcpSocket::errorOccurred),
-      this,
+      s, qOverload<QAbstractSocket::SocketError>(&QTcpSocket::errorOccurred), this,
       [=](auto) {
-        qDebug("Socket error");
-        s->deleteLater();
+    qDebug("Socket error");
+    s->deleteLater();
       });
 }
 
@@ -142,19 +126,14 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 #ifdef OSSIA_DNSSD
   m_serverBrowser = new ZeroconfBrowser{"_score._tcp", qApp->activeWindow()};
   connect(
-      m_serverBrowser,
-      &ZeroconfBrowser::sessionSelected,
-      this,
+      m_serverBrowser, &ZeroconfBrowser::sessionSelected, this,
       &NetworkApplicationPlugin::setupClientConnection);
   auto serveract = m_serverBrowser->makeAction();
   serveract->setText("Browse for server");
 
-  m_playerBrowser
-      = new ZeroconfBrowser{"_score_player._tcp", qApp->activeWindow()};
+  m_playerBrowser = new ZeroconfBrowser{"_score_player._tcp", qApp->activeWindow()};
   connect(
-      m_playerBrowser,
-      &ZeroconfBrowser::sessionSelected,
-      this,
+      m_playerBrowser, &ZeroconfBrowser::sessionSelected, this,
       &NetworkApplicationPlugin::setupPlayerConnection);
   auto playeract = m_playerBrowser->makeAction();
   playeract->setText("Browse for players");
@@ -165,11 +144,11 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 
   QAction* makeServer = new QAction{tr("Make Server"), this};
   connect(makeServer, &QAction::triggered, this, [&]() {
-    if (auto doc = currentDocument())
+    if(auto doc = currentDocument())
     {
       const auto& ctx = doc->context();
       NetworkDocumentPlugin* plug = ctx.findPlugin<NetworkDocumentPlugin>();
-      if (plug)
+      if(plug)
       {
         auto clt = new LocalClient(Id<Client>(0));
         clt->setName(tr("Master"));
@@ -185,8 +164,7 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
         clt->setName(tr("Master"));
         auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
         auto policy = new MasterEditionPolicy{serv, ctx};
-        auto plug = new NetworkDocumentPlugin{
-            ctx, policy, doc};
+        auto plug = new NetworkDocumentPlugin{ctx, policy, doc};
         auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
 
         plug->setExecPolicy(execpol);
@@ -204,7 +182,7 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
   connect(connectLocal, &QAction::triggered, this, [&]() {
     IpDialog dial{QApplication::activeWindow()};
 
-    if (dial.exec())
+    if(dial.exec())
     {
       // Default is 127.0.0.1 : 9090
       setupClientConnection(QString{}, dial.ip(), dial.port(), {});

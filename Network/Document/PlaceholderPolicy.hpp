@@ -18,8 +18,8 @@ public:
 
   Session* session() const override { return m_session; }
 
-  void play() override {}
-  void stop() override {}
+  void play() override { }
+  void stop() override { }
   Session* m_session{};
 };
 }

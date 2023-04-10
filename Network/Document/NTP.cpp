@@ -1,4 +1,5 @@
 #include <Network/Document/NTP.hpp>
+
 #include <cmath>
 
 namespace Network
@@ -38,18 +39,16 @@ NTP::NTP()
   socket.open(udp::v4());
 }
 
-NTP::~NTP() {}
+NTP::~NTP() { }
 
 NTP::duration_t NTP::get_synchronous()
 {
   ntp_impl sending;
-  socket.send_to(
-      network::buffer(&sending, sizeof(ntp_impl)), receiver_endpoint);
+  socket.send_to(network::buffer(&sending, sizeof(ntp_impl)), receiver_endpoint);
 
   ntp_impl packet;
   udp::endpoint sender_endpoint;
-  socket.receive_from(
-      network::buffer(&packet, sizeof(ntp_impl)), sender_endpoint);
+  socket.receive_from(network::buffer(&packet, sizeof(ntp_impl)), sender_endpoint);
 
   packet.txTm_s = ntohl(packet.txTm_s);
   packet.txTm_f = ntohl(packet.txTm_f);

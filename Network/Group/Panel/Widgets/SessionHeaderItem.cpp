@@ -5,7 +5,8 @@
 namespace Network
 {
 SessionHeaderItem::SessionHeaderItem(const Client& clt)
-    : QTableWidgetItem{clt.name()}, client{clt.id()}
+    : QTableWidgetItem{clt.name()}
+    , client{clt.id()}
 {
 }
 }

@@ -30,8 +30,7 @@ IpDialog::IpDialog(QWidget* parent)
   m_portBox->setValue(9090);
   widg->layout()->addWidget(m_portBox);
 
-  auto box = new QDialogButtonBox(
-      QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+  auto box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
   layout()->addWidget(box);
 
   connect(box, &QDialogButtonBox::accepted, this, &IpDialog::accepted);

@@ -1,27 +1,30 @@
 #include "DocumentPlugin.hpp"
 #include "PlaceholderPolicy.hpp"
 
-#include <score/tools/Bind.hpp>
+#include <Scenario/Process/ScenarioModel.hpp>
+
+#include <score/model/path/PathSerialization.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
-#include <score/model/path/PathSerialization.hpp>
-
-#include <Scenario/Process/ScenarioModel.hpp>
+#include <score/tools/Bind.hpp>
 
 #include <Network/Group/GroupManager.hpp>
 #include <Network/Session/Session.hpp>
 
-template<typename T>
-void readMetadataMap(DataStreamInput& s, const std::unordered_map<const T*, Network::ObjectMetadata>& map)
+template <typename T>
+void readMetadataMap(
+    DataStreamInput& s, const std::unordered_map<const T*, Network::ObjectMetadata>& map)
 {
   s << (int64_t)map.size();
-  for(const auto& [itv, meta] : map) {
+  for(const auto& [itv, meta] : map)
+  {
     s << Path<T>{*itv} << meta;
   }
 }
 
-template<typename T>
-void writeMetadataMap(DataStreamOutput& s, std::vector<std::pair<Path<T>, Network::ObjectMetadata>>& map)
+template <typename T>
+void writeMetadataMap(
+    DataStreamOutput& s, std::vector<std::pair<Path<T>, Network::ObjectMetadata>>& map)
 {
   int64_t sz{};
   s >> sz;
@@ -35,11 +38,13 @@ void writeMetadataMap(DataStreamOutput& s, std::vector<std::pair<Path<T>, Networ
   }
 }
 
-template<typename T>
-void readMetadataMap(JSONReader& s, const std::unordered_map<const T*, Network::ObjectMetadata>& map)
+template <typename T>
+void readMetadataMap(
+    JSONReader& s, const std::unordered_map<const T*, Network::ObjectMetadata>& map)
 {
   s.stream.StartArray();
-  for(const auto& [itv, meta] : map) {
+  for(const auto& [itv, meta] : map)
+  {
     s.stream.StartObject();
     s.obj["Path"] = Path<T>{*itv};
     s.obj["Data"] = meta;
@@ -48,13 +53,15 @@ void readMetadataMap(JSONReader& s, const std::unordered_map<const T*, Network::
   s.stream.EndArray();
 }
 
-template<typename T>
-void writeMetadataMap(const JsonValue& s, std::vector<std::pair<Path<T>, Network::ObjectMetadata>>& map)
+template <typename T>
+void writeMetadataMap(
+    const JsonValue& s, std::vector<std::pair<Path<T>, Network::ObjectMetadata>>& map)
 {
   for(auto& obj : s.toArray())
   {
     auto val = JsonValue{obj};
-    map.emplace_back(val["Path"].to<Path<T>>(), val["Data"].to<Network::ObjectMetadata>());
+    map.emplace_back(
+        val["Path"].to<Path<T>>(), val["Data"].to<Network::ObjectMetadata>());
   }
 }
 

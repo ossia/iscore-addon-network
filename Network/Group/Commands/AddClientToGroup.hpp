@@ -19,13 +19,9 @@ namespace Command
 class AddClientToGroup : public score::Command
 {
   SCORE_COMMAND_DECL(
-      DistributedScenarioCommandFactoryName(),
-      AddClientToGroup,
-      "AddClientToGroup")
+      DistributedScenarioCommandFactoryName(), AddClientToGroup, "AddClientToGroup")
 public:
-  AddClientToGroup(
-      Id<Client> client,
-      Id<Group> group);
+  AddClientToGroup(Id<Client> client, Id<Group> group);
 
   void undo(const score::DocumentContext& ctx) const override;
   void redo(const score::DocumentContext& ctx) const override;

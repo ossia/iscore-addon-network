@@ -18,7 +18,7 @@ template <typename V>
 void fromJsonValueArray(const QJsonArray& json_arr, QVector<Id<V>>& arr)
 {
   arr.reserve(json_arr.size());
-  for (const auto& elt : json_arr)
+  for(const auto& elt : json_arr)
   {
     arr.push_back(fromJsonValue<Id<V>>(elt));
   }

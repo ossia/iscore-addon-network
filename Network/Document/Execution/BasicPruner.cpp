@@ -1,12 +1,14 @@
 #include "BasicPruner.hpp"
 
 #include <Process/ExecutionContext.hpp>
+
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioInterface.hpp>
 
 #include <Execution/BaseScenarioComponent.hpp>
 #include <Execution/DocumentPlugin.hpp>
+
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/SharedScenarioPolicy.hpp>
 #include <Network/Group/Group.hpp>
@@ -15,11 +17,9 @@
 namespace Network
 {
 BasicPruner::BasicPruner(NetworkDocumentPlugin& d)
-    : ctx{d,
-          *d.policy().session(),
-          d.groupManager(),
-          d.policy().session()->localClient().id(),
-          d.policy().session()->master().id()}
+    : ctx{
+        d, *d.policy().session(), d.groupManager(),
+        d.policy().session()->localClient().id(), d.policy().session()->master().id()}
 {
 }
 
@@ -35,7 +35,7 @@ void BasicPruner::recurse(Execution::IntervalComponent& cst, const Group& cur)
   SharedScenarioPolicy{ctx}(cst, cur);
 }
 
-void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur) {}
+void BasicPruner::recurse(Scenario::ScenarioInterface& ip, const Group& cur) { }
 
 void BasicPruner::recurse(Execution::TimeSyncComponent& comp)
 {
@@ -74,8 +74,7 @@ void BasicPruner::recurse(Execution::TimeSyncComponent& comp)
 }
 
 void BasicPruner::operator()(
-    const Execution::Context& exec_ctx,
-    const Execution::BaseScenarioElement& scenar)
+    const Execution::Context& exec_ctx, const Execution::BaseScenarioElement& scenar)
 {
   // We mute all the processes that are not in a group
   // of this client.

@@ -1,11 +1,13 @@
 #include <Scenario/Application/ScenarioActions.hpp>
 
-#include <score/tools/Bind.hpp>
-#include <score/actions/ActionManager.hpp>
-#include <core/document/Document.hpp>
-#include <core/command/CommandStack.hpp>
-
 #include <Engine/ApplicationPlugin.hpp>
+
+#include <score/actions/ActionManager.hpp>
+#include <score/tools/Bind.hpp>
+
+#include <core/command/CommandStack.hpp>
+#include <core/document/Document.hpp>
+
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
@@ -13,9 +15,10 @@
 namespace Network
 {
 ClientEditionPolicy::ClientEditionPolicy(
-    ClientSession* s,
-    const score::DocumentContext& c)
-    : m_session{s}, m_ctx{c}, m_keep{*s}
+    ClientSession* s, const score::DocumentContext& c)
+    : m_session{s}
+    , m_ctx{c}
+    , m_keep{*s}
 {
   auto& stack = c.document.commandStack();
   auto& locker = c.document.locker();
@@ -23,16 +26,14 @@ ClientEditionPolicy::ClientEditionPolicy(
   /////////////////////////////////////////////////////////////////////////////
   /// To the master
   /////////////////////////////////////////////////////////////////////////////
-  con(stack,
-      &score::CommandStack::localCommand,
-      this,
-      [&](score::Command* cmd) {
+  con(stack, &score::CommandStack::localCommand, this, [&](score::Command* cmd) {
     using namespace std::literals;
     if(!this->sendCommands())
       return;
-    if(this->sendControls() || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
-      m_session->master().sendMessage(m_session->makeMessage(
-                                        mapi.command_new, score::CommandData{*cmd}));
+    if(this->sendControls()
+       || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
+      m_session->master().sendMessage(
+          m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
   });
 
   // Undo-redo
@@ -49,8 +50,7 @@ ClientEditionPolicy::ClientEditionPolicy(
   con(stack, &score::CommandStack::localIndexChanged, this, [&](int32_t idx) {
     if(!this->sendCommands())
       return;
-    m_session->master().sendMessage(
-          m_session->makeMessage(mapi.command_index, idx));
+    m_session->master().sendMessage(m_session->makeMessage(mapi.command_index, idx));
   });
 
   // Lock-unlock
@@ -114,15 +114,13 @@ ClientEditionPolicy::ClientEditionPolicy(
   s->mapper().addHandler(mapi.stop, [&](const NetworkMessage& m) { stop(); });
 
   s->mapper().addHandler(mapi.ping, [&](const NetworkMessage& m) {
-    qint64 t
-        = std::chrono::duration_cast<std::chrono::nanoseconds>(
-              std::chrono::high_resolution_clock::now().time_since_epoch())
-              .count();
+    qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                   std::chrono::high_resolution_clock::now().time_since_epoch())
+                   .count();
     m_session->sendMessage(m.clientId, m_session->makeMessage(mapi.pong, t));
   });
 
-  s->mapper().addHandler(
-      mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
+  s->mapper().addHandler(mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
 
   s->mapper().addHandler(mapi.session_portinfo, [&](const NetworkMessage& m) {
     QString ip;
@@ -131,7 +129,7 @@ ClientEditionPolicy::ClientEditionPolicy(
     stream >> ip >> port;
 
     auto clt = m_session->findClient(m.clientId);
-    if (clt)
+    if(clt)
     {
       clt->m_clientServerAddress = ip;
       clt->m_clientServerPort = port;
@@ -154,8 +152,7 @@ void ClientEditionPolicy::connectToOtherClient(QString ip, int port)
 }
 
 GUIClientEditionPolicy::GUIClientEditionPolicy(
-    ClientSession* s,
-    const score::DocumentContext& c)
+    ClientSession* s, const score::DocumentContext& c)
     : ClientEditionPolicy{s, c}
 {
   auto& mapi = MessagesAPI::instance();
@@ -167,16 +164,14 @@ GUIClientEditionPolicy::GUIClientEditionPolicy(
 
 void GUIClientEditionPolicy::play()
 {
-  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(
-      m_ctx.document);
-  if (sm)
+  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  if(sm)
   {
     Netpit::setCurrentDocument(m_ctx);
-    auto& plug = score::GUIAppContext()
-                     .guiApplicationPlugin<Engine::ApplicationPlugin>();
+    auto& plug
+        = score::GUIAppContext().guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.execution().request_play_interval(
-        sm->baseInterval(),
-        BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
+        sm->baseInterval(), BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
         TimeVal{});
   }
 }
@@ -188,8 +183,7 @@ void GUIClientEditionPolicy::stop()
 }
 
 PlayerClientEditionPolicy::PlayerClientEditionPolicy(
-    ClientSession* s,
-    const score::DocumentContext& c)
+    ClientSession* s, const score::DocumentContext& c)
     : ClientEditionPolicy{s, c}
 {
 }
@@ -197,13 +191,13 @@ PlayerClientEditionPolicy::PlayerClientEditionPolicy(
 void PlayerClientEditionPolicy::play()
 {
   Netpit::setCurrentDocument(m_ctx);
-  if (onPlay)
+  if(onPlay)
     onPlay();
 }
 
 void PlayerClientEditionPolicy::stop()
 {
-  if (onStop)
+  if(onStop)
     onStop();
 }
 }

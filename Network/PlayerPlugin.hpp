@@ -15,8 +15,9 @@ class Servus;
 namespace Network
 {
 class PlayerSessionBuilder;
-class SCORE_ADDON_NETWORK_EXPORT PlayerPlugin : public QObject,
-                                                public score::ApplicationPlugin
+class SCORE_ADDON_NETWORK_EXPORT PlayerPlugin
+    : public QObject
+    , public score::ApplicationPlugin
 {
 public:
   PlayerPlugin(const score::ApplicationContext& ctx);

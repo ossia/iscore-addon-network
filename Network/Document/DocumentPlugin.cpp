@@ -20,6 +20,7 @@
 #include <core/document/Document.hpp>
 #include <core/document/DocumentModel.hpp>
 
+#include <ossia/detail/hash_map.hpp>
 #include <ossia/editor/expression/expression.hpp>
 
 #include <QObject>
@@ -35,7 +36,6 @@
 #include <Network/Group/GroupMetadataWidget.hpp>
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
 #include <Network/Session/Session.hpp>
-#include <ossia/detail/hash_map.hpp>
 
 #include <functional>
 #include <vector>

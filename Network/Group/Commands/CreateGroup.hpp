@@ -20,10 +20,7 @@ namespace Command
 {
 class CreateGroup : public score::Command
 {
-  SCORE_COMMAND_DECL(
-      DistributedScenarioCommandFactoryName(),
-      CreateGroup,
-      "CreateGroup")
+  SCORE_COMMAND_DECL(DistributedScenarioCommandFactoryName(), CreateGroup, "CreateGroup")
 public:
   CreateGroup(const GroupManager& groupMgrPath, QString groupName);
 

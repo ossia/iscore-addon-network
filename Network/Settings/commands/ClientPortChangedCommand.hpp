@@ -33,15 +33,13 @@ public:
 
   void undo(const score::DocumentContext& ctx) const override
   {
-    auto target
-        = qApp->findChild<NetworkSettingsModel*>("NetworkSettingsModel");
+    auto target = qApp->findChild<NetworkSettingsModel*>("NetworkSettingsModel");
     target->setClientPort(m_oldval);
   }
 
   void redo(const score::DocumentContext& ctx) const override
   {
-    auto target
-        = qApp->findChild<NetworkSettingsModel*>("NetworkSettingsModel");
+    auto target = qApp->findChild<NetworkSettingsModel*>("NetworkSettingsModel");
     target->setClientPort(m_newval);
   }
 

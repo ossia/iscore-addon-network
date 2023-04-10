@@ -298,7 +298,6 @@ public:
           disp.submit(
               new SetGroup{this->m_plug, m_ctx.selectionStack.currentSelection(), n});
         });
-
         if(init.group == group->name())
           child_g->toggle();
       }

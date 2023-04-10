@@ -3,8 +3,8 @@
 #include "GroupWidget.hpp"
 
 #include <score/model/Identifier.hpp>
-#include <score/tools/std/Optional.hpp>
 #include <score/tools/Bind.hpp>
+#include <score/tools/std/Optional.hpp>
 
 #include <QBoxLayout>
 #include <QLayout>
@@ -17,10 +17,11 @@
 namespace Network
 {
 GroupListWidget::GroupListWidget(const GroupManager& mgr, QWidget* parent)
-    : QGroupBox{tr("Groups"), parent}, m_mgr{mgr}
+    : QGroupBox{tr("Groups"), parent}
+    , m_mgr{mgr}
 {
   this->setLayout(new QVBoxLayout);
-  for (auto& group : m_mgr.groups())
+  for(auto& group : m_mgr.groups())
   {
     auto widg = new GroupWidget{group, this};
     this->layout()->addWidget(widg);

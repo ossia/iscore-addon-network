@@ -72,7 +72,7 @@ const Group& getGroup(NetworkDocumentPlugin& doc, const GroupManager& gm, const 
   {
     // look for a group of this name
     auto group = gm.findGroup(str);
-    if (group)
+    if(group)
     {
       cur_group = group; // Else we default to the "parent" case.
     }

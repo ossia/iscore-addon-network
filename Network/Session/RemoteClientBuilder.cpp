@@ -25,6 +25,7 @@
 #include <Network/Communication/NetworkSocket.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <sys/types.h>
+
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::RemoteClientBuilder)
 
@@ -32,23 +33,19 @@ namespace Network
 {
 class Client;
 
-RemoteClientBuilder::RemoteClientBuilder(
-    MasterSession& session,
-    QWebSocket* sock)
+RemoteClientBuilder::RemoteClientBuilder(MasterSession& session, QWebSocket* sock)
     : m_session{session}
 {
   m_socket = new NetworkSocket(sock, nullptr);
   connect(
-      m_socket,
-      &NetworkSocket::messageReceived,
-      this,
+      m_socket, &NetworkSocket::messageReceived, this,
       &RemoteClientBuilder::on_messageReceived);
 }
 
 void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
 {
   auto& mapi = MessagesAPI::instance();
-  if (m.address == mapi.session_askNewId)
+  if(m.address == mapi.session_askNewId)
   {
     QDataStream s{m.data};
     s >> m_clientName;
@@ -69,7 +66,7 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
 
     m_socket->sendMessage(idOffer);
   }
-  else if (m.address == mapi.session_join)
+  else if(m.address == mapi.session_join)
   {
     // TODO validation
     NetworkMessage doc;

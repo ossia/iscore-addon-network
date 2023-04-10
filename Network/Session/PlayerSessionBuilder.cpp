@@ -26,28 +26,22 @@
 #include <Network/Document/MasterPolicy.hpp>
 #include <Network/Settings/NetworkSettingsModel.hpp>
 #include <sys/types.h>
+
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::PlayerSessionBuilder)
 namespace Network
 {
 PlayerSessionBuilder::PlayerSessionBuilder(
-    const score::ApplicationContext& ctx,
-    QString ip,
-    int port)
+    const score::ApplicationContext& ctx, QString ip, int port)
     : m_context{ctx}
 {
   qDebug() << "PlayerSessionBuilder(): " << ip << port;
   m_mastersocket = new NetworkSocket(ip, port, nullptr);
   connect(
-      m_mastersocket,
-      &NetworkSocket::messageReceived,
-      this,
+      m_mastersocket, &NetworkSocket::messageReceived, this,
       &PlayerSessionBuilder::on_messageReceived);
   connect(
-      m_mastersocket,
-      &NetworkSocket::connected,
-      this,
-      &PlayerSessionBuilder::connected);
+      m_mastersocket, &NetworkSocket::connected, this, &PlayerSessionBuilder::connected);
 }
 
 void PlayerSessionBuilder::initiateConnection()
@@ -73,8 +67,7 @@ QByteArray PlayerSessionBuilder::documentData() const
   return m_documentData;
 }
 
-const std::vector<score::CommandData>&
-PlayerSessionBuilder::commandStackData() const
+const std::vector<score::CommandData>& PlayerSessionBuilder::commandStackData() const
 {
   return m_commandStack;
 }
@@ -82,7 +75,7 @@ PlayerSessionBuilder::commandStackData() const
 void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
 {
   auto& mapi = MessagesAPI::instance();
-  if (m.address == mapi.session_idOffer)
+  if(m.address == mapi.session_idOffer)
   {
     m_sessionId = m.sessionId; // The session offered
     m_masterId = m.clientId;   // Message is from the master
@@ -98,7 +91,7 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
     m_mastersocket->sendMessage(join);
   }
-  else if (m.address == mapi.session_document)
+  else if(m.address == mapi.session_document)
   {
     auto remoteClient = new RemoteClient(m_mastersocket, m_masterId);
     remoteClient->setName("RemoteMaster");
@@ -110,7 +103,7 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
     DataStreamWriter writer{m.data};
     writer.m_stream >> m_documentData;
 
-    if (!documentLoader)
+    if(!documentLoader)
     {
       qDebug() << "Cannot load document";
       delete m_session;
@@ -122,7 +115,7 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
     score::Document* doc = documentLoader(m_documentData);
 
-    if (!doc)
+    if(!doc)
     {
       qDebug() << "Invalid document received";
       delete m_session;
@@ -145,16 +138,13 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
     if(auto local_server = m_session->localClient().server())
     {
       m_session->master().sendMessage(m_session->makeMessage(
-          mapi.session_portinfo,
-          local_server->m_localAddress,
+          mapi.session_portinfo, local_server->m_localAddress,
           local_server->m_localPort));
     }
     else
     {
       m_session->master().sendMessage(m_session->makeMessage(
-          mapi.session_portinfo,
-          QString("__web_client__"),
-          554433));
+          mapi.session_portinfo, QString("__web_client__"), 554433));
     }
 
     sessionReady();

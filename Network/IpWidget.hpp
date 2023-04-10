@@ -1,9 +1,8 @@
 #pragma once
 #include <QFrame>
 
-#include <verdigris>
-
 #include <array>
+#include <verdigris>
 
 class QEvent;
 class QLineEdit;

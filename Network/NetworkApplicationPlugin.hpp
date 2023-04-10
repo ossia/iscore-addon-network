@@ -1,9 +1,8 @@
 #pragma once
 #include <score/plugins/application/GUIApplicationPlugin.hpp>
 
-#include <verdigris>
-
 #include <memory>
+#include <verdigris>
 
 #ifdef OSSIA_DNSSD
 class ZeroconfBrowser;
@@ -13,8 +12,9 @@ namespace Network
 {
 class ClientSession;
 class ClientSessionBuilder;
-class NetworkApplicationPlugin : public QObject,
-                                 public score::GUIApplicationPlugin
+class NetworkApplicationPlugin
+    : public QObject
+    , public score::GUIApplicationPlugin
 {
   W_OBJECT(NetworkApplicationPlugin)
 
@@ -24,17 +24,11 @@ public:
 
   void on_loadedDocument(score::Document& doc) override;
 
-  void setupClientConnection(
-      QString name,
-      QString ip,
-      int port,
-      QMap<QString, QByteArray>);
+  void
+  setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
   W_SLOT(setupClientConnection)
-  void setupPlayerConnection(
-      QString name,
-      QString ip,
-      int port,
-      QMap<QString, QByteArray>);
+  void
+  setupPlayerConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
   W_SLOT(setupPlayerConnection)
 
 private:

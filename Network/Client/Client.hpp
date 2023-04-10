@@ -13,7 +13,8 @@ public:
   }
 
   template <typename Deserializer>
-  Client(Deserializer&& vis, QObject* parent) : IdentifiedObject{vis, parent}
+  Client(Deserializer&& vis, QObject* parent)
+      : IdentifiedObject{vis, parent}
   {
     vis.writeTo(*this);
   }
@@ -22,7 +23,7 @@ public:
 
   void setName(QString arg)
   {
-    if (m_name == arg)
+    if(m_name == arg)
       return;
 
     m_name = arg;

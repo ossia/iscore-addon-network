@@ -14,8 +14,7 @@ using udp = network::ip::udp;
 class NTP
 {
   static const constexpr auto ntp_delta = 2208988800ull;
-  using duration_t
-      = std::chrono::duration<int64_t, std::ratio<1l, 1000000000l>>;
+  using duration_t = std::chrono::duration<int64_t, std::ratio<1l, 1000000000l>>;
 
 public:
   NTP();

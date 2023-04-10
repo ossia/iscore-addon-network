@@ -14,7 +14,8 @@
 namespace Network
 {
 GroupWidget::GroupWidget(Group* group, QWidget* parent)
-    : QWidget{parent}, m_group{group}
+    : QWidget{parent}
+    , m_group{group}
 {
   auto lay = new QHBoxLayout{this};
   lay->addWidget(new QLabel{group->name()});

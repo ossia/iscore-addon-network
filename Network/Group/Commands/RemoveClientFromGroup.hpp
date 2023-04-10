@@ -20,14 +20,11 @@ namespace Command
 class RemoveClientFromGroup : public score::Command
 {
   SCORE_COMMAND_DECL(
-      DistributedScenarioCommandFactoryName(),
-      RemoveClientFromGroup,
+      DistributedScenarioCommandFactoryName(), RemoveClientFromGroup,
       "RemoveClientFromGroup")
 
 public:
-  RemoveClientFromGroup(
-      Id<Client> client,
-      Id<Group> group);
+  RemoveClientFromGroup(Id<Client> client, Id<Group> group);
 
   void undo(const score::DocumentContext& ctx) const override;
   void redo(const score::DocumentContext& ctx) const override;

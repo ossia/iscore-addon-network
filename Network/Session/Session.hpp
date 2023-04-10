@@ -48,8 +48,7 @@ public:
     m.sessionId = id();
 
     impl_makeMessage(
-        QDataStream{&m.data, QIODevice::WriteOnly},
-        std::forward<Args&&>(args)...);
+        QDataStream{&m.data, QIODevice::WriteOnly}, std::forward<Args&&>(args)...);
 
     return m;
   }
@@ -62,9 +61,7 @@ public:
   void broadcastToOthers(const Id<Client>& sender, const NetworkMessage& m);
 
   void sendMessage(const Id<Client>& target, const NetworkMessage& m);
-  void broadcastToClients(
-      const std::vector<Id<Client>>& clts,
-      const NetworkMessage& m);
+  void broadcastToClients(const std::vector<Id<Client>>& clts, const NetworkMessage& m);
 
   void clearClients();
 

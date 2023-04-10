@@ -4,15 +4,13 @@ namespace Network
 {
 
 void MixedScenarioPolicy::operator()(
-    Execution::ProcessComponent& comp,
-    Scenario::ScenarioInterface& ip,
-    const Group& cur)
+    Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
 {
   // muzukashi
 }
 
-void MixedScenarioPolicy::
-operator()(Execution::TimeSyncComponent& comp, const Group& parent_group)
+void MixedScenarioPolicy::operator()(
+    Execution::TimeSyncComponent& comp, const Group& parent_group)
 { /*
      const auto& gm = doc.groupManager();
      // First fetch the required variables.

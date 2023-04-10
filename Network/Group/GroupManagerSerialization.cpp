@@ -20,7 +20,7 @@ void DataStreamReader::read(const Network::GroupManager& elt)
 {
   const auto& groups = elt.groups();
   m_stream << (int32_t)groups.size();
-  for (const auto& group : groups)
+  for(const auto& group : groups)
   {
     readFrom(*group);
   }
@@ -33,7 +33,7 @@ void DataStreamWriter::write(Network::GroupManager& elt)
 {
   int32_t size;
   m_stream >> size;
-  for (auto i = size; i-- > 0;)
+  for(auto i = size; i-- > 0;)
   {
     elt.addGroup(new Network::Group{*this, &elt});
   }
@@ -56,7 +56,7 @@ template <>
 void JSONWriter::write(Network::GroupManager& elt)
 {
   auto arr = obj["GroupList"].toArray();
-  for (const auto& json_vref : arr)
+  for(const auto& json_vref : arr)
   {
     JSONObject::Deserializer deserializer{json_vref};
     elt.addGroup(new Network::Group{deserializer, &elt});

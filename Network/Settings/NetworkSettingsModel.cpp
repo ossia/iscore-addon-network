@@ -14,12 +14,9 @@ namespace Settings
 namespace Parameters
 {
 
-SETTINGS_PARAMETER_IMPL(ClientName){QStringLiteral("Network/ClientName"),
-                                    "score"};
-SETTINGS_PARAMETER_IMPL(ClientPort){QStringLiteral("Network/ClientPort"),
-                                    7777};
-SETTINGS_PARAMETER_IMPL(MasterPort){QStringLiteral("Network/MasterPort"),
-                                    8888};
+SETTINGS_PARAMETER_IMPL(ClientName){QStringLiteral("Network/ClientName"), "score"};
+SETTINGS_PARAMETER_IMPL(ClientPort){QStringLiteral("Network/ClientPort"), 7777};
+SETTINGS_PARAMETER_IMPL(MasterPort){QStringLiteral("Network/MasterPort"), 8888};
 SETTINGS_PARAMETER_IMPL(PlayerPort){QStringLiteral("Network/PlayerPort"), 0};
 
 static auto list()

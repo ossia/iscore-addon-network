@@ -4,13 +4,13 @@
 #include <score/model/Identifier.hpp>
 #include <score/tools/std/Optional.hpp>
 
-#include <verdigris>
-
 #include <QByteArray>
 #include <QList>
 #include <QObject>
 #include <QPair>
 #include <QString>
+
+#include <verdigris>
 namespace score
 {
 struct GUIApplicationContext;
@@ -29,10 +29,7 @@ class ClientSessionBuilder final : public QObject
 {
   W_OBJECT(ClientSessionBuilder)
 public:
-  ClientSessionBuilder(
-      const score::GUIApplicationContext&,
-      QString ip,
-      int port);
+  ClientSessionBuilder(const score::GUIApplicationContext&, QString ip, int port);
 
   void initiateConnection();
   ClientSession* builtSession() const;

@@ -18,8 +18,9 @@ static inline auto get_now()
       std::chrono::high_resolution_clock::now().time_since_epoch());
 }
 
-class DateExpression : public QObject,
-                       public ossia::expressions::expression_generic_base
+class DateExpression
+    : public QObject
+    , public ossia::expressions::expression_generic_base
 {
 public:
   DateExpression();
@@ -28,10 +29,8 @@ public:
 
   void update() override;
   bool evaluate() const override;
-  void on_first_callback_added(
-      ossia::expressions::expression_generic& self) override;
-  void on_removing_last_callback(
-      ossia::expressions::expression_generic& self) override;
+  void on_first_callback_added(ossia::expressions::expression_generic& self) override;
+  void on_removing_last_callback(ossia::expressions::expression_generic& self) override;
 
 private:
   // The minimal date (in nanosecond epoch) at which this expression shall
@@ -51,10 +50,8 @@ public:
 
   void update() override;
   bool evaluate() const override;
-  void on_first_callback_added(
-      ossia::expressions::expression_generic& self) override;
-  void on_removing_last_callback(
-      ossia::expressions::expression_generic& self) override;
+  void on_first_callback_added(ossia::expressions::expression_generic& self) override;
+  void on_removing_last_callback(ossia::expressions::expression_generic& self) override;
 
 private:
   mutable std::mutex m_mutex;
@@ -64,17 +61,22 @@ private:
 
 struct expression_with_callback
 {
-  expression_with_callback(ossia::expression* e) : expr{e} {}
+  expression_with_callback(ossia::expression* e)
+      : expr{e}
+  {
+  }
   ossia::expression* expr{};
   std::optional<ossia::expressions::expression_callback_iterator> it_finished;
 };
 
 struct ExprNotInGroup
 {
-  ExprNotInGroup(ossia::time_sync& n) : node{n} {}
+  ExprNotInGroup(ossia::time_sync& n)
+      : node{n}
+  {
+  }
   ossia::time_sync& node;
-  std::optional<ossia::callback_container<std::function<void()>>::iterator>
-      it_triggered;
+  std::optional<ossia::callback_container<std::function<void()>>::iterator> it_triggered;
 
   void cleanTriggerCallback();
 };

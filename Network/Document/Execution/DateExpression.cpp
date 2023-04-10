@@ -16,21 +16,21 @@ DateExpression::DateExpression()
 void DateExpression::set_min_date(std::chrono::nanoseconds t)
 {
   m_minDate = t;
-  if (m_curDate < m_minDate && m_cb)
+  if(m_curDate < m_minDate && m_cb)
     m_cb();
 }
 
 void DateExpression::update()
 {
   using namespace std::chrono;
-  m_curDate = duration_cast<nanoseconds>(
-      high_resolution_clock::now().time_since_epoch());
+  m_curDate
+      = duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch());
 }
 
 bool DateExpression::evaluate() const
 {
   bool val = m_curDate < m_minDate;
-  if (val)
+  if(val)
   {
     m_minDate = std::chrono::nanoseconds{
         std::numeric_limits<decltype(m_minDate.count())>::max()};
@@ -50,7 +50,7 @@ void DateExpression::on_removing_last_callback(
   m_cb = {};
 }
 
-AsyncExpression::AsyncExpression() {}
+AsyncExpression::AsyncExpression() { }
 
 void AsyncExpression::ping()
 {
@@ -58,18 +58,18 @@ void AsyncExpression::ping()
   m_mutex.lock();
   m_ping = true;
   m_mutex.unlock();
-  if (m_cb)
+  if(m_cb)
     m_cb();
 }
 
-void AsyncExpression::update() {}
+void AsyncExpression::update() { }
 
 bool AsyncExpression::evaluate() const
 {
   m_mutex.lock();
   bool val = m_ping;
 
-  if (val)
+  if(val)
   {
     qDebug() << "expression evaluated to true" << val;
     // Reset the status for loops.

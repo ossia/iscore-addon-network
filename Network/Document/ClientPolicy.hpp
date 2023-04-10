@@ -31,8 +31,7 @@ public:
   void stop() override;
 };
 
-class SCORE_ADDON_NETWORK_EXPORT PlayerClientEditionPolicy
-    : public ClientEditionPolicy
+class SCORE_ADDON_NETWORK_EXPORT PlayerClientEditionPolicy : public ClientEditionPolicy
 {
 public:
   PlayerClientEditionPolicy(ClientSession* s, const score::DocumentContext& c);

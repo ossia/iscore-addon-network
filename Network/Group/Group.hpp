@@ -6,9 +6,10 @@
 #include <score/tools/std/Optional.hpp>
 
 #include <QString>
-#include <vector>
 
 #include <Network/Client/Client.hpp>
+
+#include <vector>
 
 class DataStream;
 class JSONObject;
@@ -35,7 +36,8 @@ public:
   Group(QString name, Id<Group> id, QObject* parent);
 
   template <typename Deserializer>
-  Group(Deserializer&& vis, QObject* parent) : IdentifiedObject{vis, parent}
+  Group(Deserializer&& vis, QObject* parent)
+      : IdentifiedObject{vis, parent}
   {
     vis.writeTo(*this);
   }

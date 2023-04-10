@@ -16,16 +16,14 @@
 template <typename T>
 struct TSerializer<DataStream, Network::Command::MetadataUndoRedo<T>>
 {
-  static void readFrom(
-      DataStream::Serializer& s,
-      const Network::Command::MetadataUndoRedo<T>& obj)
+  static void
+  readFrom(DataStream::Serializer& s, const Network::Command::MetadataUndoRedo<T>& obj)
   {
     s.stream() << obj.path << obj.before;
   }
 
-  static void writeTo(
-      DataStream::Deserializer& s,
-      Network::Command::MetadataUndoRedo<T>& obj)
+  static void
+  writeTo(DataStream::Deserializer& s, Network::Command::MetadataUndoRedo<T>& obj)
   {
     s.stream() >> obj.path >> obj.before;
   }
@@ -120,7 +118,6 @@ UpdateObjectMetadata::UpdateObjectMetadata(
       init_s(ts);
     else if(auto p = qobject_cast<Process::ProcessModel*>(obj))
       init_p(p);
-
   }
 }
 
@@ -128,28 +125,28 @@ void UpdateObjectMetadata::undo(const score::DocumentContext& ctx) const
 {
   auto& plug = ctx.plugin<NetworkDocumentPlugin>();
 
-  for (auto& elt : m_intervals)
+  for(auto& elt : m_intervals)
   {
     if(elt.before)
       plug.set_metadata(elt.path.find(ctx), *elt.before);
     else
       plug.unset_metadata(elt.path.find(ctx));
   }
-  for (auto& elt : m_events)
+  for(auto& elt : m_events)
   {
     if(elt.before)
       plug.set_metadata(elt.path.find(ctx), *elt.before);
     else
       plug.unset_metadata(elt.path.find(ctx));
   }
-  for (auto& elt : m_nodes)
+  for(auto& elt : m_nodes)
   {
     if(elt.before)
       plug.set_metadata(elt.path.find(ctx), *elt.before);
     else
       plug.unset_metadata(elt.path.find(ctx));
   }
-  for (auto& elt : m_processes)
+  for(auto& elt : m_processes)
   {
     if(elt.before)
       plug.set_metadata(elt.path.find(ctx), *elt.before);
@@ -159,29 +156,28 @@ void UpdateObjectMetadata::undo(const score::DocumentContext& ctx) const
 }
 
 SetSyncMode::SetSyncMode(
-    NetworkDocumentPlugin& plug, const Selection& s,
-    SyncMode newMode)
-  : UpdateObjectMetadata{plug, s}
-  , m_after{newMode}
+    NetworkDocumentPlugin& plug, const Selection& s, SyncMode newMode)
+    : UpdateObjectMetadata{plug, s}
+    , m_after{newMode}
 {
 }
 
 void SetSyncMode::redo(const score::DocumentContext& ctx) const
 {
   auto& plug = ctx.plugin<NetworkDocumentPlugin>();
-  for (auto& elt : m_intervals)
+  for(auto& elt : m_intervals)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_events)
+  for(auto& elt : m_events)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_nodes)
+  for(auto& elt : m_nodes)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_processes)
+  for(auto& elt : m_processes)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
@@ -198,29 +194,28 @@ void SetSyncMode::deserializeImpl(DataStreamOutput& s)
 }
 
 SetShareMode::SetShareMode(
-    NetworkDocumentPlugin& plug,const Selection& s,
-    ShareMode newMode)
-  : UpdateObjectMetadata{plug, s}
-  , m_after{newMode}
+    NetworkDocumentPlugin& plug, const Selection& s, ShareMode newMode)
+    : UpdateObjectMetadata{plug, s}
+    , m_after{newMode}
 {
 }
 
 void SetShareMode::redo(const score::DocumentContext& ctx) const
 {
   auto& plug = ctx.plugin<NetworkDocumentPlugin>();
-  for (auto& elt : m_intervals)
+  for(auto& elt : m_intervals)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_events)
+  for(auto& elt : m_events)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_nodes)
+  for(auto& elt : m_nodes)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_processes)
+  for(auto& elt : m_processes)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
@@ -236,30 +231,28 @@ void SetShareMode::deserializeImpl(DataStreamOutput& s)
   s >> m_intervals >> m_events >> m_nodes >> m_processes >> m_after;
 }
 
-SetGroup::SetGroup(
-    NetworkDocumentPlugin& plug,const Selection& s,
-    QString newMode)
-  : UpdateObjectMetadata{plug, s}
-  , m_after{newMode}
+SetGroup::SetGroup(NetworkDocumentPlugin& plug, const Selection& s, QString newMode)
+    : UpdateObjectMetadata{plug, s}
+    , m_after{newMode}
 {
 }
 
 void SetGroup::redo(const score::DocumentContext& ctx) const
 {
   auto& plug = ctx.plugin<NetworkDocumentPlugin>();
-  for (auto& elt : m_intervals)
+  for(auto& elt : m_intervals)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_events)
+  for(auto& elt : m_events)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_nodes)
+  for(auto& elt : m_nodes)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }
-  for (auto& elt : m_processes)
+  for(auto& elt : m_processes)
   {
     update_metadata(plug, elt.path.find(ctx), m_after);
   }

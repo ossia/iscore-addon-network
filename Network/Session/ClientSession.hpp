@@ -11,9 +11,7 @@ class ClientSession final : public Session
 {
 public:
   ClientSession(
-      RemoteClient& master,
-      LocalClient* client,
-      Id<Session> id,
+      RemoteClient& master, LocalClient* client, Id<Session> id,
       QObject* parent = nullptr);
 
   ~ClientSession();

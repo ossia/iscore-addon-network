@@ -19,10 +19,11 @@ namespace score
 class PanelFactory;
 } // namespace score
 
-class score_addon_network : public score::Plugin_QtInterface,
-                            public score::ApplicationPlugin_QtInterface,
-                            public score::CommandFactory_QtInterface,
-                            public score::FactoryInterface_QtInterface
+class score_addon_network
+    : public score::Plugin_QtInterface
+    , public score::ApplicationPlugin_QtInterface
+    , public score::CommandFactory_QtInterface
+    , public score::FactoryInterface_QtInterface
 {
   SCORE_PLUGIN_METADATA(1, "33508c6d-46a1-4449-bfff-57246d579621")
 
@@ -40,6 +41,5 @@ private:
   score::GUIApplicationPlugin*
   make_guiApplicationPlugin(const score::GUIApplicationContext& app) override;
 
-  std::pair<const CommandGroupKey, CommandGeneratorMap>
-  make_commands() override;
+  std::pair<const CommandGroupKey, CommandGeneratorMap> make_commands() override;
 };

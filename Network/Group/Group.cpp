@@ -15,7 +15,8 @@ W_OBJECT_IMPL(Network::Group)
 namespace Network
 {
 Group::Group(QString name, Id<Group> id, QObject* parent)
-    : IdentifiedObject<Group>{id, "Group", parent}, m_name{name}
+    : IdentifiedObject<Group>{id, "Group", parent}
+    , m_name{name}
 {
 }
 
@@ -26,7 +27,7 @@ QString Group::name() const
 
 void Group::setName(QString arg)
 {
-  if (m_name == arg)
+  if(m_name == arg)
     return;
 
   m_name = arg;
@@ -41,8 +42,7 @@ void Group::addClient(Id<Client> clt)
 
 void Group::removeClient(Id<Client> clt)
 {
-  auto it = std::find(
-      std::begin(m_executingClients), std::end(m_executingClients), clt);
+  auto it = std::find(std::begin(m_executingClients), std::end(m_executingClients), clt);
   SCORE_ASSERT(it != std::end(m_executingClients));
 
   m_executingClients.erase(it);

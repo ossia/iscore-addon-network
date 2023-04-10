@@ -6,7 +6,9 @@ namespace Network
 {
 class GroupManager;
 class Session;
-class PanelDelegate final : public QObject, public score::PanelDelegate
+class PanelDelegate final
+    : public QObject
+    , public score::PanelDelegate
 {
 public:
   PanelDelegate(const score::GUIApplicationContext& ctx);
@@ -18,12 +20,10 @@ private:
 
   const score::PanelStatus& defaultPanelStatus() const override;
 
-  void on_modelChanged(score::MaybeDocument oldm, score::MaybeDocument newm)
-      override;
+  void on_modelChanged(score::MaybeDocument oldm, score::MaybeDocument newm) override;
 
   void setView(
-      const score::DocumentContext& ctx,
-      const GroupManager& mgr,
+      const score::DocumentContext& ctx, const GroupManager& mgr,
       const Session* session);
 
   void setEmptyView();

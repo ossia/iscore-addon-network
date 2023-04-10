@@ -16,10 +16,7 @@ class GroupTableCheckbox;
 class GroupTableWidget : public QWidget
 {
 public:
-  GroupTableWidget(
-      const GroupManager& mgr,
-      const Session* session,
-      QWidget* parent);
+  GroupTableWidget(const GroupManager& mgr, const Session* session, QWidget* parent);
 
   void setup();
 

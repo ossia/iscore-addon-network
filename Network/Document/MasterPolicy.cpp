@@ -1,12 +1,14 @@
 #include <Scenario/Application/ScenarioActions.hpp>
 
+#include <Engine/ApplicationPlugin.hpp>
+
 #include <score/actions/ActionManager.hpp>
 #include <score/tools/Bind.hpp>
-#include <core/document/Document.hpp>
+
 #include <core/command/CommandStack.hpp>
+#include <core/document/Document.hpp>
 
 #include <Netpit/Netpit.hpp>
-#include <Engine/ApplicationPlugin.hpp>
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Document/MasterPolicy.hpp>
@@ -18,9 +20,10 @@ namespace Network
 class Client;
 
 MasterEditionPolicy::MasterEditionPolicy(
-    MasterSession* s,
-    const score::DocumentContext& c)
-    : m_session{s}, m_ctx{c}, m_keep{*s}
+    MasterSession* s, const score::DocumentContext& c)
+    : m_session{s}
+    , m_ctx{c}
+    , m_keep{*s}
 {
   auto& stack = c.document.commandStack();
   auto& mapi = MessagesAPI::instance();
@@ -28,15 +31,14 @@ MasterEditionPolicy::MasterEditionPolicy(
   /////////////////////////////////////////////////////////////////////////////
   /// From the master to the clients
   /////////////////////////////////////////////////////////////////////////////
-  con(stack,
-      &score::CommandStack::localCommand,
-      this,
-      [&](score::Command* cmd) {
+  con(stack, &score::CommandStack::localCommand, this, [&](score::Command* cmd) {
     using namespace std::literals;
     if(!this->sendCommands())
       return;
-    if(this->sendControls() || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
-      m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
+    if(this->sendControls()
+       || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
+      m_session->broadcastToAllClients(
+          m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
   });
 
   // Undo-redo
@@ -44,20 +46,17 @@ MasterEditionPolicy::MasterEditionPolicy(
     if(!this->sendCommands())
       return;
     // FIXME if it's a control which wasn't sent, we mustn't send its undo either
-    m_session->broadcastToAllClients(
-        m_session->makeMessage(mapi.command_undo));
+    m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_undo));
   });
   con(stack, &score::CommandStack::localRedo, this, [&]() {
     if(!this->sendCommands())
       return;
-    m_session->broadcastToAllClients(
-        m_session->makeMessage(mapi.command_redo));
+    m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_redo));
   });
   con(stack, &score::CommandStack::localIndexChanged, this, [&](int32_t idx) {
     if(!this->sendCommands())
       return;
-    m_session->broadcastToAllClients(
-        m_session->makeMessage(mapi.command_index, idx));
+    m_session->broadcastToAllClients(m_session->makeMessage(mapi.command_index, idx));
   });
 
   // Lock - unlock
@@ -142,15 +141,13 @@ MasterEditionPolicy::MasterEditionPolicy(
   });
 
   s->mapper().addHandler(mapi.ping, [&](const NetworkMessage& m) {
-    qint64 t
-        = std::chrono::duration_cast<std::chrono::nanoseconds>(
-              std::chrono::high_resolution_clock::now().time_since_epoch())
-              .count();
+    qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                   std::chrono::high_resolution_clock::now().time_since_epoch())
+                   .count();
     m_session->sendMessage(m.clientId, m_session->makeMessage(mapi.pong, t));
   });
 
-  s->mapper().addHandler(
-      mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
+  s->mapper().addHandler(mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
 
   s->mapper().addHandler(mapi.session_portinfo, [&](const NetworkMessage& m) {
     QString s;
@@ -159,7 +156,7 @@ MasterEditionPolicy::MasterEditionPolicy(
     stream >> s >> p;
 
     auto clt = m_session->findClient(m.clientId);
-    if (clt)
+    if(clt)
     {
       clt->m_clientServerAddress = s;
       clt->m_clientServerPort = p;
@@ -171,24 +168,21 @@ MasterEditionPolicy::MasterEditionPolicy(
 
 void MasterEditionPolicy::play()
 {
-  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(
-      m_ctx.document);
-  if (sm)
+  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  if(sm)
   {
     Netpit::setCurrentDocument(m_ctx);
     auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
     plug.execution().request_play_interval(
-        sm->baseInterval(),
-        BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
+        sm->baseInterval(), BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
         TimeVal{});
   }
 }
 
 void MasterEditionPolicy::stop()
 {
-  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(
-      m_ctx.document);
-  if (sm)
+  auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
+  if(sm)
   {
     auto stop_action = m_ctx.app.actions.action<Actions::Stop>().action();
     stop_action->trigger();

@@ -12,7 +12,8 @@ public:
   LocalClient(Id<Client> id, QObject* parent = nullptr);
 
   template <typename Deserializer>
-  LocalClient(Deserializer&& vis, QObject* parent) : Client{vis, parent}
+  LocalClient(Deserializer&& vis, QObject* parent)
+      : Client{vis, parent}
   {
   }
 

@@ -16,8 +16,6 @@
 #include <QIODevice>
 #include <QJsonDocument>
 
-#include <Network/Group/Group.hpp>
-#include <Network/Group/GroupManager.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
@@ -25,28 +23,24 @@
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/SlavePolicy.hpp>
+#include <Network/Group/Group.hpp>
+#include <Network/Group/GroupManager.hpp>
 #include <sys/types.h>
+
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::ClientSessionBuilder)
 namespace Network
 {
 ClientSessionBuilder::ClientSessionBuilder(
-    const score::GUIApplicationContext& ctx,
-    QString ip,
-    int port)
+    const score::GUIApplicationContext& ctx, QString ip, int port)
     : m_context{ctx}
 {
   m_mastersocket = new NetworkSocket(ip, port, nullptr);
   connect(
-      m_mastersocket,
-      &NetworkSocket::messageReceived,
-      this,
+      m_mastersocket, &NetworkSocket::messageReceived, this,
       &ClientSessionBuilder::on_messageReceived);
   connect(
-      m_mastersocket,
-      &NetworkSocket::connected,
-      this,
-      &ClientSessionBuilder::connected);
+      m_mastersocket, &NetworkSocket::connected, this, &ClientSessionBuilder::connected);
 }
 
 void ClientSessionBuilder::initiateConnection()
@@ -72,8 +66,7 @@ QByteArray ClientSessionBuilder::documentData() const
   return m_documentData;
 }
 
-const std::vector<score::CommandData>&
-ClientSessionBuilder::commandStackData() const
+const std::vector<score::CommandData>& ClientSessionBuilder::commandStackData() const
 {
   return m_commandStack;
 }
@@ -81,7 +74,7 @@ ClientSessionBuilder::commandStackData() const
 void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 {
   auto& mapi = MessagesAPI::instance();
-  if (m.address == mapi.session_idOffer)
+  if(m.address == mapi.session_idOffer)
   {
     m_sessionId = m.sessionId; // The session offered
     m_masterId = m.clientId;   // Message is from the master
@@ -97,7 +90,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
     m_mastersocket->sendMessage(join);
   }
-  else if (m.address == mapi.session_document)
+  else if(m.address == mapi.session_document)
   {
     auto remoteClient = new RemoteClient(m_mastersocket, m_masterId);
     remoteClient->setName("RemoteMaster");
@@ -116,14 +109,10 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     // later can still undo, too.
 
     score::Document* doc = m_context.docManager.loadDocument(
-        m_context,
-        "Untitled",
-        m_documentData,
-        JSONObject::type(),
-        *m_context.interfaces<score::DocumentDelegateList>()
-             .begin()); // TODO id instead
+        m_context, "Untitled", m_documentData, JSONObject::type(),
+        *m_context.interfaces<score::DocumentDelegateList>().begin()); // TODO id instead
 
-    if (!doc)
+    if(!doc)
     {
       qDebug() << "Invalid document received";
       delete m_session;
@@ -133,14 +122,13 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
       return;
     }
 
-    score::loadCommandStack(
-          m_context.components, writer, doc->commandStack(), [](auto) {
+    score::loadCommandStack(m_context.components, writer, doc->commandStack(), [](auto) {
       return true;
     }); // No redo.
 
     auto& ctx = doc->context();
     NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
-    for (auto e : np.groupManager().groups())
+    for(auto e : np.groupManager().groups())
       qDebug() << e->name();
     np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});
     np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
@@ -149,16 +137,13 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     if(auto local_server = m_session->localClient().server())
     {
       m_session->master().sendMessage(m_session->makeMessage(
-          mapi.session_portinfo,
-          local_server->m_localAddress,
+          mapi.session_portinfo, local_server->m_localAddress,
           local_server->m_localPort));
     }
     else
     {
       m_session->master().sendMessage(m_session->makeMessage(
-          mapi.session_portinfo,
-          QString("__web_client__"),
-          554433));
+          mapi.session_portinfo, QString("__web_client__"), 554433));
     }
     sessionReady();
   }

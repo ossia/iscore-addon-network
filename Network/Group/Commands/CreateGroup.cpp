@@ -1,12 +1,12 @@
 
 #include "CreateGroup.hpp"
 
-#include <Network/Document/DocumentPlugin.hpp>
 #include <score/model/path/ObjectPath.hpp>
 #include <score/model/path/PathSerialization.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/tools/IdentifierGeneration.hpp>
 
+#include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
 

@@ -4,9 +4,10 @@
 #include <score/plugins/documentdelegate/plugin/DocumentPlugin.hpp>
 #include <score/serialization/DataStreamFwd.hpp>
 
+#include <ossia/detail/hash_map.hpp>
+
 #include <Netpit/Netpit.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
-#include <ossia/detail/hash_map.hpp>
 
 #include <score_addon_network_export.h>
 

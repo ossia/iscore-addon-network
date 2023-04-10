@@ -13,8 +13,7 @@ struct FreeScenarioPolicy
   NetworkPrunerContext& ctx;
 
   void operator()(
-      Execution::ProcessComponent& comp,
-      Scenario::ScenarioInterface& ip,
+      Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip,
       const Group& cur);
 };
 }

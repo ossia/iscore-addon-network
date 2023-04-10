@@ -6,7 +6,8 @@
 namespace Network
 {
 MessageValidator::MessageValidator(Id<Session> s, MessageMapper& map)
-    : m_session{s}, m_mapper{map}
+    : m_session{s}
+    , m_mapper{map}
 {
 }
 

@@ -5,9 +5,7 @@
 namespace Network
 {
 void FreeScenarioPolicy::operator()(
-    Execution::ProcessComponent& comp,
-    Scenario::ScenarioInterface& ip,
-    const Group& cur)
+    Execution::ProcessComponent& comp, Scenario::ScenarioInterface& ip, const Group& cur)
 {
   // if on the group enable everything, else disable everything (maybe even
   // remove it from the executor)

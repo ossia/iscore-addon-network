@@ -19,7 +19,8 @@ class QWidget;
 W_OBJECT_IMPL(Network::IpWidget)
 namespace Network
 {
-IpWidget::IpWidget(QWidget* parent) : QFrame(parent)
+IpWidget::IpWidget(QWidget* parent)
+    : QFrame(parent)
 {
   setFrameShape(QFrame::StyledPanel);
   setFrameShadow(QFrame::Sunken);
@@ -29,9 +30,9 @@ IpWidget::IpWidget(QWidget* parent) : QFrame(parent)
   pLayout->setContentsMargins(0, 0, 0, 0);
   pLayout->setSpacing(0);
 
-  for (int i = 0; i != QTUTL_IP_SIZE; ++i)
+  for(int i = 0; i != QTUTL_IP_SIZE; ++i)
   {
-    if (i != 0)
+    if(i != 0)
     {
       QLabel* pDot = new QLabel(".", this);
       pLayout->addWidget(pDot);
@@ -66,27 +67,24 @@ IpWidget::IpWidget(QWidget* parent) : QFrame(parent)
   setMaximumWidth(30 * QTUTL_IP_SIZE);
 
   connect(
-      this,
-      SIGNAL(signalTextChanged(QLineEdit*)),
-      this,
-      SLOT(slotTextChanged(QLineEdit*)),
-      Qt::QueuedConnection);
+      this, SIGNAL(signalTextChanged(QLineEdit*)), this,
+      SLOT(slotTextChanged(QLineEdit*)), Qt::QueuedConnection);
 }
 
-IpWidget::~IpWidget() {}
+IpWidget::~IpWidget() { }
 
 void IpWidget::slotTextChanged(QLineEdit* pEdit)
 {
-  for (unsigned int i = 0; i != QTUTL_IP_SIZE; ++i)
+  for(unsigned int i = 0; i != QTUTL_IP_SIZE; ++i)
   {
-    if (pEdit == lineEdits[i])
+    if(pEdit == lineEdits[i])
     {
-      if ((pEdit->text().size() == MAX_DIGITS
-           && pEdit->text().size() == pEdit->cursorPosition())
-          || (pEdit->text() == "0"))
+      if((pEdit->text().size() == MAX_DIGITS
+          && pEdit->text().size() == pEdit->cursorPosition())
+         || (pEdit->text() == "0"))
       {
         // auto-move to next item
-        if (i + 1 != QTUTL_IP_SIZE)
+        if(i + 1 != QTUTL_IP_SIZE)
         {
           lineEdits[i + 1]->setFocus();
           lineEdits[i + 1]->selectAll();
@@ -100,20 +98,20 @@ bool IpWidget::eventFilter(QObject* obj, QEvent* event)
 {
   bool bRes = QFrame::eventFilter(obj, event);
 
-  if (event->type() == QEvent::KeyPress)
+  if(event->type() == QEvent::KeyPress)
   {
     QKeyEvent* pEvent = dynamic_cast<QKeyEvent*>(event);
-    if (pEvent)
+    if(pEvent)
     {
-      for (unsigned int i = 0; i != QTUTL_IP_SIZE; ++i)
+      for(unsigned int i = 0; i != QTUTL_IP_SIZE; ++i)
       {
         QLineEdit* pEdit = lineEdits[i];
-        if (pEdit == obj)
+        if(pEdit == obj)
         {
-          switch (pEvent->key())
+          switch(pEvent->key())
           {
             case Qt::Key_Left:
-              if (pEdit->cursorPosition() == 0)
+              if(pEdit->cursorPosition() == 0)
               {
                 // user wants to move to previous item
                 MovePrevLineEdit(i);
@@ -121,8 +119,8 @@ bool IpWidget::eventFilter(QObject* obj, QEvent* event)
               break;
 
             case Qt::Key_Right:
-              if (pEdit->text().isEmpty()
-                  || (pEdit->text().size() == pEdit->cursorPosition()))
+              if(pEdit->text().isEmpty()
+                 || (pEdit->text().size() == pEdit->cursorPosition()))
               {
                 // user wants to move to next item
                 MoveNextLineEdit(i);
@@ -130,7 +128,7 @@ bool IpWidget::eventFilter(QObject* obj, QEvent* event)
               break;
 
             case Qt::Key_0:
-              if (pEdit->text().isEmpty() || pEdit->text() == "0")
+              if(pEdit->text().isEmpty() || pEdit->text() == "0")
               {
                 pEdit->setText("0");
                 // user wants to move to next item
@@ -140,7 +138,7 @@ bool IpWidget::eventFilter(QObject* obj, QEvent* event)
               break;
 
             case Qt::Key_Backspace:
-              if (pEdit->text().isEmpty() || pEdit->cursorPosition() == 0)
+              if(pEdit->text().isEmpty() || pEdit->cursorPosition() == 0)
               {
                 // user wants to move to previous item
                 MovePrevLineEdit(i);
@@ -166,7 +164,7 @@ bool IpWidget::eventFilter(QObject* obj, QEvent* event)
 
 void IpWidget::MoveNextLineEdit(int i)
 {
-  if (i + 1 != QTUTL_IP_SIZE)
+  if(i + 1 != QTUTL_IP_SIZE)
   {
     lineEdits[i + 1]->setFocus();
     lineEdits[i + 1]->setCursorPosition(0);
@@ -176,7 +174,7 @@ void IpWidget::MoveNextLineEdit(int i)
 
 void IpWidget::MovePrevLineEdit(int i)
 {
-  if (i != 0)
+  if(i != 0)
   {
     lineEdits[i - 1]->setFocus();
     lineEdits[i - 1]->setCursorPosition(lineEdits[i - 1]->text().size());
