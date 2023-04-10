@@ -96,7 +96,7 @@ void SharedScenarioPolicy::operator()(
   {
     auto interval_meta = ctx.doc.get_metadata(interval);
     auto interval_sharemode
-        = interval_meta ? interval_meta->sharemode : ShareMode::Shared;
+        = interval_meta.sharemode ? *interval_meta.sharemode : ShareMode::Shared;
 
     for(const auto& process : cst.processes())
     {
@@ -104,7 +104,8 @@ void SharedScenarioPolicy::operator()(
       if(ip)
       {
         auto process_meta = ctx.doc.get_metadata(process.second->process());
-        auto sharemode = process_meta ? process_meta->sharemode : interval_sharemode;
+        auto sharemode
+            = process_meta.sharemode ? *process_meta.sharemode : interval_sharemode;
 
         switch(sharemode)
         {

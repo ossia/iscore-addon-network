@@ -71,11 +71,6 @@ void DataStreamReader::read(const Network::NetworkDocumentPlugin& elt)
   readFrom(elt.groupManager());
   readFrom(elt.policy());
 
-  readMetadataMap(m_stream, elt.m_intervalsGroups);
-  readMetadataMap(m_stream, elt.m_eventGroups);
-  readMetadataMap(m_stream, elt.m_syncGroups);
-  readMetadataMap(m_stream, elt.m_processGroups);
-
   // Note : we do not save the policy since it will be different on each
   // computer.
   insertDelimiter();
@@ -87,10 +82,6 @@ void DataStreamWriter::write(Network::NetworkDocumentPlugin& elt)
   elt.m_groups = new Network::GroupManager{*this, &elt};
   elt.m_policy = new Network::PlaceholderEditionPolicy{*this, &elt};
 
-  writeMetadataMap(m_stream, elt.m_loadIntervalsGroups);
-  writeMetadataMap(m_stream, elt.m_loadEventGroups);
-  writeMetadataMap(m_stream, elt.m_loadSyncGroups);
-  writeMetadataMap(m_stream, elt.m_loadProcessGroups);
   checkDelimiter();
 }
 
@@ -99,18 +90,6 @@ void JSONReader::read(const Network::NetworkDocumentPlugin& elt)
 {
   obj["Groups"] = elt.groupManager();
   obj["Policy"] = elt.policy();
-
-  stream.Key("Intervals");
-  readMetadataMap(*this, elt.m_intervalsGroups);
-
-  stream.Key("Events");
-  readMetadataMap(*this, elt.m_eventGroups);
-
-  stream.Key("Syncs");
-  readMetadataMap(*this, elt.m_syncGroups);
-
-  stream.Key("Processes");
-  readMetadataMap(*this, elt.m_processGroups);
 }
 
 template <>
@@ -124,19 +103,7 @@ void JSONWriter::write(Network::NetworkDocumentPlugin& elt)
     JSONWriter w(obj["Policy"]);
     elt.m_policy = new Network::PlaceholderEditionPolicy{w, &elt};
   }
-  if(auto v = obj.tryGet("Intervals"))
-    writeMetadataMap(*v, elt.m_loadIntervalsGroups);
-
-  if(auto v = obj.tryGet("Events"))
-    writeMetadataMap(*v, elt.m_loadEventGroups);
-
-  if(auto v = obj.tryGet("Syncs"))
-    writeMetadataMap(*v, elt.m_loadSyncGroups);
-
-  if(auto v = obj.tryGet("Processes"))
-    writeMetadataMap(*v, elt.m_loadProcessGroups);
 }
-
 template <>
 void DataStreamReader::read(const Network::ObjectMetadata& elt)
 {
@@ -149,22 +116,4 @@ void DataStreamWriter::write(Network::ObjectMetadata& elt)
 {
   m_stream >> elt.syncmode >> elt.sharemode >> elt.group;
   checkDelimiter();
-}
-
-template <>
-void JSONReader::read(const Network::ObjectMetadata& elt)
-{
-  stream.StartObject();
-  obj["Sync"] = (int)elt.syncmode;
-  obj["Share"] = (int)elt.sharemode;
-  obj["Group"] = elt.group;
-  stream.EndObject();
-}
-
-template <>
-void JSONWriter::write(Network::ObjectMetadata& elt)
-{
-  elt.syncmode = (Network::SyncMode)obj["Sync"].toInt();
-  elt.sharemode = (Network::ShareMode)obj["Share"].toInt();
-  elt.group = obj["Group"].toString();
 }

@@ -233,131 +233,152 @@ void NetworkDocumentPlugin::on_stop()
 
   compensated.trigger_triggered.clear();
 }
+static auto from_net_metadata(auto& obj, const ObjectMetadata& meta)
+{
+  obj.setNetworkGroup(meta.group);
+  Process::NetworkFlags flags{};
+  if(meta.syncmode)
+  {
+    switch(*meta.syncmode)
+    {
+      case SyncMode::NonCompensatedAsync:
+        flags |= Process::NetworkFlags::Uncompensated | Process::NetworkFlags::Async;
+        break;
+      case SyncMode::CompensatedAsync:
+        flags |= Process::NetworkFlags::Compensated | Process::NetworkFlags::Async;
+        break;
+      case SyncMode::NonCompensatedSync:
+        flags |= Process::NetworkFlags::Uncompensated | Process::NetworkFlags::Sync;
+        break;
+      case SyncMode::CompensatedSync:
+        flags |= Process::NetworkFlags::Compensated | Process::NetworkFlags::Sync;
+        break;
+    }
+  }
 
-const ObjectMetadata*
+  if(meta.sharemode)
+  {
+    switch(*meta.sharemode)
+    {
+      case ShareMode::Free:
+        flags |= Process::NetworkFlags::Free;
+        break;
+      case ShareMode::Mixed:
+        flags |= Process::NetworkFlags::Mixed;
+        break;
+      case ShareMode::Shared:
+        flags |= Process::NetworkFlags::Shared;
+        break;
+    }
+  }
+
+  if(obj.networkFlags() & Process::NetworkFlags::Active)
+    flags |= Process::NetworkFlags::Active;
+
+  obj.setNetworkFlags(flags);
+}
+
+static auto to_net_metadata(auto& obj)
+{
+  ObjectMetadata m;
+  m.group = obj.networkGroup();
+  const auto f = obj.networkFlags();
+  if(f & Process::NetworkFlags::Sync)
+  {
+    if(f & Process::NetworkFlags::Compensated)
+      m.syncmode = SyncMode::CompensatedSync;
+    else
+      m.syncmode = SyncMode::NonCompensatedSync;
+  }
+  else
+  {
+    if(f & Process::NetworkFlags::Compensated)
+      m.syncmode = SyncMode::CompensatedAsync;
+    else
+      m.syncmode = SyncMode::NonCompensatedAsync;
+  }
+
+  if(f & Process::NetworkFlags::Shared)
+  {
+    m.sharemode = ShareMode::Shared;
+  }
+  else if(f & Process::NetworkFlags::Mixed)
+  {
+    m.sharemode = ShareMode::Mixed;
+  }
+  else if(f & Process::NetworkFlags::Free)
+  {
+    m.sharemode = ShareMode::Free;
+  }
+
+  return m;
+}
+ObjectMetadata
 NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj) const noexcept
 {
-  if(auto it = m_intervalsGroups.find(&obj); it != m_intervalsGroups.end())
-    return &it->second;
-  return {};
+  return to_net_metadata(obj);
 }
 
-const ObjectMetadata*
+ObjectMetadata
 NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj) const noexcept
 {
-  if(auto it = m_eventGroups.find(&obj); it != m_eventGroups.end())
-    return &it->second;
-  return {};
+  return to_net_metadata(obj);
 }
 
-const ObjectMetadata*
+ObjectMetadata
 NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj) const noexcept
 {
-  if(auto it = m_syncGroups.find(&obj); it != m_syncGroups.end())
-    return &it->second;
-  return {};
+  return to_net_metadata(obj);
 }
 
-const ObjectMetadata*
+ObjectMetadata
 NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) const noexcept
 {
-  if(auto it = m_processGroups.find(&obj); it != m_processGroups.end())
-    return &it->second;
-  return {};
-}
-ObjectMetadata*
-NetworkDocumentPlugin::get_metadata(const Scenario::IntervalModel& obj) noexcept
-{
-  if(auto it = m_intervalsGroups.find(&obj); it != m_intervalsGroups.end())
-    return &it->second;
-  return {};
-}
-
-ObjectMetadata*
-NetworkDocumentPlugin::get_metadata(const Scenario::EventModel& obj) noexcept
-{
-  if(auto it = m_eventGroups.find(&obj); it != m_eventGroups.end())
-    return &it->second;
-  return {};
-}
-
-ObjectMetadata*
-NetworkDocumentPlugin::get_metadata(const Scenario::TimeSyncModel& obj) noexcept
-{
-  if(auto it = m_syncGroups.find(&obj); it != m_syncGroups.end())
-    return &it->second;
-  return {};
-}
-
-ObjectMetadata*
-NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) noexcept
-{
-  if(auto it = m_processGroups.find(&obj); it != m_processGroups.end())
-    return &it->second;
-  return {};
+  return to_net_metadata(obj);
 }
 
 void NetworkDocumentPlugin::set_metadata(
     const Scenario::IntervalModel& obj, const ObjectMetadata& m)
 {
-  m_intervalsGroups[&obj] = m;
-  connect(
-      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this,
-      [this, ptr = &obj] { m_intervalsGroups.erase(ptr); });
+  from_net_metadata((Scenario::IntervalModel&)obj, m);
 }
 
 void NetworkDocumentPlugin::set_metadata(
     const Scenario::EventModel& obj, const ObjectMetadata& m)
 {
-  m_eventGroups[&obj] = m;
-  connect(
-      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this,
-      [this, ptr = &obj] { m_eventGroups.erase(ptr); });
+  from_net_metadata((Scenario::EventModel&)obj, m);
 }
 
 void NetworkDocumentPlugin::set_metadata(
     const Scenario::TimeSyncModel& obj, const ObjectMetadata& m)
 {
-  m_syncGroups[&obj] = m;
-  connect(
-      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this,
-      [this, ptr = &obj] { m_syncGroups.erase(ptr); });
+  from_net_metadata((Scenario::TimeSyncModel&)obj, m);
 }
 
 void NetworkDocumentPlugin::set_metadata(
     const Process::ProcessModel& obj, const ObjectMetadata& m)
 {
-  m_processGroups[&obj] = m;
-  connect(
-      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this,
-      [this, ptr = &obj] { m_processGroups.erase(ptr); });
+  from_net_metadata((Scenario::ProcessModel&)obj, m);
 }
+
 void NetworkDocumentPlugin::unset_metadata(const Scenario::IntervalModel& obj)
 {
-  m_intervalsGroups.erase(&obj);
-  disconnect(
-      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+  from_net_metadata((Scenario::IntervalModel&)obj, ObjectMetadata{});
 }
 
 void NetworkDocumentPlugin::unset_metadata(const Scenario::EventModel& obj)
 {
-  m_eventGroups.erase(&obj);
-  disconnect(
-      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+  from_net_metadata((Scenario::EventModel&)obj, ObjectMetadata{});
 }
 
 void NetworkDocumentPlugin::unset_metadata(const Scenario::TimeSyncModel& obj)
 {
-  m_syncGroups.erase(&obj);
-  disconnect(
-      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+  from_net_metadata((Scenario::TimeSyncModel&)obj, ObjectMetadata{});
 }
 
 void NetworkDocumentPlugin::unset_metadata(const Process::ProcessModel& obj)
 {
-  m_processGroups.erase(&obj);
-  disconnect(
-      &obj, &IdentifiedObjectAbstract::identified_object_destroying, this, nullptr);
+  from_net_metadata((Process::ProcessModel&)obj, ObjectMetadata{});
 }
 
 void NetworkDocumentPlugin::register_message_context(
@@ -396,51 +417,7 @@ void NetworkDocumentPlugin::unregister_video_context(
   m_video.erase(ctx->instance);
 }
 
-void NetworkDocumentPlugin::finish_loading()
-{
-  auto& ctx = this->context();
-  for(auto& [p, m] : m_loadIntervalsGroups)
-    m_intervalsGroups[&p.find(ctx)] = std::move(m);
-  for(auto& [p, m] : m_loadEventGroups)
-    m_eventGroups[&p.find(ctx)] = std::move(m);
-  for(auto& [p, m] : m_loadSyncGroups)
-    m_syncGroups[&p.find(ctx)] = std::move(m);
-  for(auto& [p, m] : m_loadProcessGroups)
-    m_processGroups[&p.find(ctx)] = std::move(m);
-
-  m_loadIntervalsGroups.clear();
-  m_loadIntervalsGroups.shrink_to_fit();
-  m_loadEventGroups.clear();
-  m_loadEventGroups.shrink_to_fit();
-  m_loadSyncGroups.clear();
-  m_loadSyncGroups.shrink_to_fit();
-  m_loadProcessGroups.clear();
-  m_loadProcessGroups.shrink_to_fit();
-}
-
-const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>&
-NetworkDocumentPlugin::intervalMetadatas() const noexcept
-{
-  return m_intervalsGroups;
-}
-
-const std::unordered_map<const Scenario::EventModel*, ObjectMetadata>&
-NetworkDocumentPlugin::eventMetadatas() const noexcept
-{
-  return m_eventGroups;
-}
-
-const std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>&
-NetworkDocumentPlugin::syncMetadatas() const noexcept
-{
-  return m_syncGroups;
-}
-
-const std::unordered_map<const Process::ProcessModel*, ObjectMetadata>&
-NetworkDocumentPlugin::processMetadatas() const noexcept
-{
-  return m_processGroups;
-}
+void NetworkDocumentPlugin::finish_loading() { }
 
 ExecutionPolicy::~ExecutionPolicy() { }
 

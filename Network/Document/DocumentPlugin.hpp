@@ -55,8 +55,8 @@ namespace Network
 
 struct ObjectMetadata
 {
-  SyncMode syncmode{SyncMode::NonCompensatedAsync};
-  ShareMode sharemode{ShareMode::Shared};
+  std::optional<SyncMode> syncmode{SyncMode::NonCompensatedAsync};
+  std::optional<ShareMode> sharemode{ShareMode::Shared};
   QString group;
 };
 
@@ -194,14 +194,10 @@ public:
 
   void sessionChanged() W_SIGNAL(sessionChanged);
 
-  const ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj) const noexcept;
-  const ObjectMetadata* get_metadata(const Scenario::EventModel& obj) const noexcept;
-  const ObjectMetadata* get_metadata(const Scenario::TimeSyncModel& obj) const noexcept;
-  const ObjectMetadata* get_metadata(const Process::ProcessModel& obj) const noexcept;
-  ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj) noexcept;
-  ObjectMetadata* get_metadata(const Scenario::EventModel& obj) noexcept;
-  ObjectMetadata* get_metadata(const Scenario::TimeSyncModel& obj) noexcept;
-  ObjectMetadata* get_metadata(const Process::ProcessModel& obj) noexcept;
+  ObjectMetadata get_metadata(const Scenario::IntervalModel& obj) const noexcept;
+  ObjectMetadata get_metadata(const Scenario::EventModel& obj) const noexcept;
+  ObjectMetadata get_metadata(const Scenario::TimeSyncModel& obj) const noexcept;
+  ObjectMetadata get_metadata(const Process::ProcessModel& obj) const noexcept;
   void set_metadata(const Scenario::IntervalModel& obj, const ObjectMetadata& m);
   void set_metadata(const Scenario::EventModel& obj, const ObjectMetadata& m);
   void set_metadata(const Scenario::TimeSyncModel& obj, const ObjectMetadata& m);
@@ -220,39 +216,11 @@ public:
 
   void finish_loading();
 
-  const std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>&
-  intervalMetadatas() const noexcept;
-  const std::unordered_map<const Scenario::EventModel*, ObjectMetadata>&
-  eventMetadatas() const noexcept;
-  const std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>&
-  syncMetadatas() const noexcept;
-  const std::unordered_map<const Process::ProcessModel*, ObjectMetadata>&
-  processMetadatas() const noexcept;
-  // std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata>& intervalMetadatas() noexcept
-  // { return m_intervalsGroups; }
-  // std::unordered_map<const Scenario::EventModel*, ObjectMetadata>& eventMetadatas() noexcept
-  // { return m_eventGroups; }
-  // std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata>& syncMetadatas() noexcept
-  // { return m_syncGroups; }
-  // std::unordered_map<const Process::ProcessModel*, ObjectMetadata>& processMetadatas() noexcept
-  // { return m_processGroups; }
 private:
   void timerEvent(QTimerEvent* event) override;
   EditionPolicy* m_policy{};
   ExecutionPolicy* m_exec{};
   GroupManager* m_groups{};
-
-  std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata> m_intervalsGroups;
-  std::unordered_map<const Scenario::EventModel*, ObjectMetadata> m_eventGroups;
-  std::unordered_map<const Scenario::TimeSyncModel*, ObjectMetadata> m_syncGroups;
-  std::unordered_map<const Process::ProcessModel*, ObjectMetadata> m_processGroups;
-
-  std::vector<std::pair<Path<Scenario::IntervalModel>, ObjectMetadata>>
-      m_loadIntervalsGroups;
-  std::vector<std::pair<Path<Scenario::EventModel>, ObjectMetadata>> m_loadEventGroups;
-  std::vector<std::pair<Path<Scenario::TimeSyncModel>, ObjectMetadata>> m_loadSyncGroups;
-  std::vector<std::pair<Path<Process::ProcessModel>, ObjectMetadata>>
-      m_loadProcessGroups;
 
   std::unordered_map<uint64_t, std::shared_ptr<Netpit::MessageContext>> m_messages;
   std::unordered_map<uint64_t, std::shared_ptr<Netpit::AudioContext>> m_audio;

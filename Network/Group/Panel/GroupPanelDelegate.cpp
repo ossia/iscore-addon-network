@@ -174,26 +174,26 @@ public:
     } selectedType{Other};
     if(auto itv = qobject_cast<Scenario::IntervalModel*>(obj))
     {
-      if(auto m = m_plug.get_metadata(*itv))
-        init = *m;
+      if(auto m = m_plug.get_metadata(*itv); !m.group.isEmpty())
+        init = m;
       selectedType = Interval;
     }
     else if(auto e = qobject_cast<Scenario::EventModel*>(obj))
     {
-      if(auto m = m_plug.get_metadata(*e))
-        init = *m;
+      if(auto m = m_plug.get_metadata(*e); !m.group.isEmpty())
+        init = m;
       selectedType = Event;
     }
     else if(auto ts = qobject_cast<Scenario::TimeSyncModel*>(obj))
     {
-      if(auto m = m_plug.get_metadata(*ts))
-        init = *m;
+      if(auto m = m_plug.get_metadata(*ts); !m.group.isEmpty())
+        init = m;
       selectedType = Sync;
     }
     else if(auto p = qobject_cast<Process::ProcessModel*>(obj))
     {
-      if(auto m = m_plug.get_metadata(*p))
-        init = *m;
+      if(auto m = m_plug.get_metadata(*p); !m.group.isEmpty())
+        init = m;
       selectedType = Process;
     }
     if(selectedType == Other)
@@ -241,7 +241,9 @@ public:
       // auto sync_c = setup("Sync (Compensated)", l1bis, g, [=] {
       //   disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedSync});
       // });
-      switch(init.syncmode)
+      auto syncmode = init.syncmode ? *init.syncmode
+                                    : SyncMode::NonCompensatedAsync; // FIXME use parent
+      switch(syncmode)
       {
         case SyncMode::NonCompensatedAsync:
           async_uc->toggle();

@@ -33,43 +33,22 @@ namespace Network::Command
 
 void update_metadata(NetworkDocumentPlugin& plug, auto& obj, SyncMode m)
 {
-  if(auto p = plug.get_metadata(obj))
-  {
-    p->syncmode = m;
-  }
-  else
-  {
-    ObjectMetadata meta;
-    meta.syncmode = m;
-    plug.set_metadata(obj, std::move(meta));
-  }
+  auto meta = plug.get_metadata(obj);
+  meta.syncmode = m;
+  plug.set_metadata(obj, std::move(meta));
 }
 void update_metadata(NetworkDocumentPlugin& plug, auto& obj, ShareMode m)
 {
-  if(auto p = plug.get_metadata(obj))
-  {
-    p->sharemode = m;
-  }
-  else
-  {
-    ObjectMetadata meta;
-    meta.sharemode = m;
-    plug.set_metadata(obj, std::move(meta));
-  }
+  auto meta = plug.get_metadata(obj);
+  meta.sharemode = m;
+  plug.set_metadata(obj, std::move(meta));
 }
 
 void update_metadata(NetworkDocumentPlugin& plug, auto& obj, QString group)
 {
-  if(auto p = plug.get_metadata(obj))
-  {
-    p->group = group;
-  }
-  else
-  {
-    ObjectMetadata meta;
-    meta.group = group;
-    plug.set_metadata(obj, std::move(meta));
-  }
+  auto meta = plug.get_metadata(obj);
+  meta.group = group;
+  plug.set_metadata(obj, std::move(meta));
 }
 
 UpdateObjectMetadata::UpdateObjectMetadata(
@@ -78,29 +57,25 @@ UpdateObjectMetadata::UpdateObjectMetadata(
   auto init_itv = [&](Scenario::IntervalModel* elt) {
     MetadataUndoRedo<Scenario::IntervalModel> m;
     m.path = score::IDocument::path(*elt);
-    if(auto p = plug.get_metadata(*elt))
-      m.before = *p;
+    m.before = plug.get_metadata(*elt);
     m_intervals.push_back(std::move(m));
   };
   auto init_ev = [&](Scenario::EventModel* elt) {
     MetadataUndoRedo<Scenario::EventModel> m;
     m.path = score::IDocument::path(*elt);
-    if(auto p = plug.get_metadata(*elt))
-      m.before = *p;
+    m.before = plug.get_metadata(*elt);
     m_events.push_back(std::move(m));
   };
   auto init_s = [&](Scenario::TimeSyncModel* elt) {
     MetadataUndoRedo<Scenario::TimeSyncModel> m;
     m.path = score::IDocument::path(*elt);
-    if(auto p = plug.get_metadata(*elt))
-      m.before = *p;
+    m.before = plug.get_metadata(*elt);
     m_nodes.push_back(std::move(m));
   };
   auto init_p = [&](Process::ProcessModel* elt) {
     MetadataUndoRedo<Process::ProcessModel> m;
     m.path = score::IDocument::path(*elt);
-    if(auto p = plug.get_metadata(*elt))
-      m.before = *p;
+    m.before = plug.get_metadata(*elt);
     m_processes.push_back(std::move(m));
   };
 
