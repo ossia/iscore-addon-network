@@ -163,6 +163,7 @@ public:
       return;
 
     QObject* obj = *sel.begin();
+
     ObjectMetadata init{};
     enum
     {
@@ -174,26 +175,22 @@ public:
     } selectedType{Other};
     if(auto itv = qobject_cast<Scenario::IntervalModel*>(obj))
     {
-      if(auto m = m_plug.get_metadata(*itv); !m.group.isEmpty())
-        init = m;
+      init = m_plug.get_metadata(*itv);
       selectedType = Interval;
     }
     else if(auto e = qobject_cast<Scenario::EventModel*>(obj))
     {
-      if(auto m = m_plug.get_metadata(*e); !m.group.isEmpty())
-        init = m;
+      init = m_plug.get_metadata(*e);
       selectedType = Event;
     }
     else if(auto ts = qobject_cast<Scenario::TimeSyncModel*>(obj))
     {
-      if(auto m = m_plug.get_metadata(*ts); !m.group.isEmpty())
-        init = m;
+      init = m_plug.get_metadata(*ts);
       selectedType = Sync;
     }
     else if(auto p = qobject_cast<Process::ProcessModel*>(obj))
     {
-      if(auto m = m_plug.get_metadata(*p); !m.group.isEmpty())
-        init = m;
+      init = m_plug.get_metadata(*p);
       selectedType = Process;
     }
     if(selectedType == Other)
@@ -238,9 +235,11 @@ public:
             this->m_plug, m_ctx.selectionStack.currentSelection(),
             SyncMode::NonCompensatedSync});
       });
-      // auto sync_c = setup("Sync (Compensated)", l1bis, g, [=] {
-      //   disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedSync});
-      // });
+      auto sync_c = setup("Sync (Compensated)", l1bis, g, [=] {
+        disp.submit(new SetSyncMode{
+            this->m_plug, m_ctx.selectionStack.currentSelection(),
+            SyncMode::CompensatedSync});
+      });
       auto syncmode = init.syncmode ? *init.syncmode
                                     : SyncMode::NonCompensatedAsync; // FIXME use parent
       switch(syncmode)
@@ -248,13 +247,15 @@ public:
         case SyncMode::NonCompensatedAsync:
           async_uc->toggle();
           break;
-        // case SyncMode::CompensatedAsync:
-        //   async_c->toggle(); break;
+        case SyncMode::CompensatedAsync:
+          async_c->toggle();
+          break;
         case SyncMode::NonCompensatedSync:
           sync_uc->toggle();
           break;
-          // case SyncMode::CompensatedSync:
-          //   sync_c->toggle(); break;
+        case SyncMode::CompensatedSync:
+          sync_c->toggle();
+          break;
       }
     }
 
@@ -313,12 +314,12 @@ public:
 
 <b>Async / sync</b>: relevant for triggers & conditions.<br/>
 - <b>Sync</b>: expression state is shared.<br/>
-- <b>Async</b>: expression can be different across clients.<br/>)_"
-        // - <b>Compensated</b>: when the trigger is ready, <br/>
-        //    set its execution date at a date in the future to ensure synchronisation.<br/>
-        // - <b>Uncompensated</b>: when the trigger is ready, go immediately.<br/>
-        R"_(<br/><br/>
-<b>Shared / mixed / free</b>: relevant for Scenario processes.<br/>
+- <b>Async</b>: expression can be different across clients.<br/>
+- <b>Compensated</b>: when the trigger is ready, <br/>
+   set its execution date at a date in the future to ensure synchronisation.<br/>
+- <b>Uncompensated</b>: when the trigger is ready, go immediately.<br/>
+<br/><br/>
+<b>Shared / free</b>: relevant for Scenario processes.<br/>
 - If shared: the scenario's execution is shared across clients.<br/>
 - If free: for every client in the scenario's group, it executes independently.<br/>
 <br/><br/>

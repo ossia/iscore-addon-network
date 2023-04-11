@@ -198,14 +198,6 @@ public:
   ObjectMetadata get_metadata(const Scenario::EventModel& obj) const noexcept;
   ObjectMetadata get_metadata(const Scenario::TimeSyncModel& obj) const noexcept;
   ObjectMetadata get_metadata(const Process::ProcessModel& obj) const noexcept;
-  void set_metadata(const Scenario::IntervalModel& obj, const ObjectMetadata& m);
-  void set_metadata(const Scenario::EventModel& obj, const ObjectMetadata& m);
-  void set_metadata(const Scenario::TimeSyncModel& obj, const ObjectMetadata& m);
-  void set_metadata(const Process::ProcessModel& obj, const ObjectMetadata& m);
-  void unset_metadata(const Scenario::IntervalModel& obj);
-  void unset_metadata(const Scenario::EventModel& obj);
-  void unset_metadata(const Scenario::TimeSyncModel& obj);
-  void unset_metadata(const Process::ProcessModel& obj);
 
   void register_message_context(std::shared_ptr<Netpit::MessageContext> ctx);
   void unregister_message_context(std::shared_ptr<Netpit::MessageContext> ctx);

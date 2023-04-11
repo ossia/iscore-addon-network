@@ -4,6 +4,7 @@
 
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
+#include <Scenario/Document/NetworkMetadata.hpp>
 #include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 
@@ -281,8 +282,8 @@ static auto from_net_metadata(auto& obj, const ObjectMetadata& meta)
 static auto to_net_metadata(auto& obj)
 {
   ObjectMetadata m;
-  m.group = obj.networkGroup();
-  const auto f = obj.networkFlags();
+  m.group = Scenario::networkGroup(obj);
+  const auto f = Scenario::networkFlags(obj);
   if(f & Process::NetworkFlags::Sync)
   {
     if(f & Process::NetworkFlags::Compensated)
@@ -335,50 +336,6 @@ ObjectMetadata
 NetworkDocumentPlugin::get_metadata(const Process::ProcessModel& obj) const noexcept
 {
   return to_net_metadata(obj);
-}
-
-void NetworkDocumentPlugin::set_metadata(
-    const Scenario::IntervalModel& obj, const ObjectMetadata& m)
-{
-  from_net_metadata((Scenario::IntervalModel&)obj, m);
-}
-
-void NetworkDocumentPlugin::set_metadata(
-    const Scenario::EventModel& obj, const ObjectMetadata& m)
-{
-  from_net_metadata((Scenario::EventModel&)obj, m);
-}
-
-void NetworkDocumentPlugin::set_metadata(
-    const Scenario::TimeSyncModel& obj, const ObjectMetadata& m)
-{
-  from_net_metadata((Scenario::TimeSyncModel&)obj, m);
-}
-
-void NetworkDocumentPlugin::set_metadata(
-    const Process::ProcessModel& obj, const ObjectMetadata& m)
-{
-  from_net_metadata((Scenario::ProcessModel&)obj, m);
-}
-
-void NetworkDocumentPlugin::unset_metadata(const Scenario::IntervalModel& obj)
-{
-  from_net_metadata((Scenario::IntervalModel&)obj, ObjectMetadata{});
-}
-
-void NetworkDocumentPlugin::unset_metadata(const Scenario::EventModel& obj)
-{
-  from_net_metadata((Scenario::EventModel&)obj, ObjectMetadata{});
-}
-
-void NetworkDocumentPlugin::unset_metadata(const Scenario::TimeSyncModel& obj)
-{
-  from_net_metadata((Scenario::TimeSyncModel&)obj, ObjectMetadata{});
-}
-
-void NetworkDocumentPlugin::unset_metadata(const Process::ProcessModel& obj)
-{
-  from_net_metadata((Process::ProcessModel&)obj, ObjectMetadata{});
 }
 
 void NetworkDocumentPlugin::register_message_context(

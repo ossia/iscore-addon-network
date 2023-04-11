@@ -1,11 +1,12 @@
 #pragma once
+#include <Process/ProcessFlags.hpp>
+
 #include <score/command/Command.hpp>
 #include <score/selection/Selection.hpp>
 
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Group/Commands/DistributedScenarioCommandFactory.hpp>
-
 namespace Process
 {
 class ProcessModel;
@@ -23,29 +24,22 @@ class NetworkDocumentPlugin;
 }
 namespace Network::Command
 {
-template <typename T>
+template <typename T, typename V>
 struct MetadataUndoRedo
 {
   Path<T> path;
-  std::optional<ObjectMetadata> before;
+  V before;
 };
-
-class UpdateObjectMetadata : public score::Command
+template <typename V>
+struct MetadataUndoRedos
 {
-public:
-  using score::Command::Command;
-  UpdateObjectMetadata(NetworkDocumentPlugin& plug, const Selection& s);
-
-protected:
-  void undo(const score::DocumentContext& ctx) const override;
-
-  std::vector<MetadataUndoRedo<Scenario::IntervalModel>> m_intervals;
-  std::vector<MetadataUndoRedo<Scenario::EventModel>> m_events;
-  std::vector<MetadataUndoRedo<Scenario::TimeSyncModel>> m_nodes;
-  std::vector<MetadataUndoRedo<Process::ProcessModel>> m_processes;
+  std::vector<MetadataUndoRedo<Scenario::IntervalModel, V>> intervals;
+  std::vector<MetadataUndoRedo<Scenario::EventModel, V>> events;
+  std::vector<MetadataUndoRedo<Scenario::TimeSyncModel, V>> nodes;
+  std::vector<MetadataUndoRedo<Process::ProcessModel, V>> processes;
 };
 
-class SetSyncMode : public UpdateObjectMetadata
+class SetSyncMode : public score::Command
 {
   SCORE_COMMAND_DECL(
       DistributedScenarioCommandFactoryName(), SetSyncMode, "Set Sync mode")
@@ -53,7 +47,10 @@ class SetSyncMode : public UpdateObjectMetadata
 public:
   SetSyncMode(NetworkDocumentPlugin& plug, const Selection& s, SyncMode newMode);
 
+  void undo(const score::DocumentContext& ctx) const override;
   void redo(const score::DocumentContext& ctx) const override;
+
+  MetadataUndoRedos<Process::NetworkFlags> metadatas;
 
 private:
   void serializeImpl(DataStreamInput& s) const override;
@@ -61,7 +58,7 @@ private:
   SyncMode m_after{};
 };
 
-class SetShareMode : public UpdateObjectMetadata
+class SetShareMode : public score::Command
 {
   SCORE_COMMAND_DECL(
       DistributedScenarioCommandFactoryName(), SetShareMode, "Set Share mode")
@@ -69,7 +66,10 @@ class SetShareMode : public UpdateObjectMetadata
 public:
   SetShareMode(NetworkDocumentPlugin& plug, const Selection& s, ShareMode newMode);
 
+  void undo(const score::DocumentContext& ctx) const override;
   void redo(const score::DocumentContext& ctx) const override;
+
+  MetadataUndoRedos<Process::NetworkFlags> metadatas;
 
 private:
   void serializeImpl(DataStreamInput& s) const override;
@@ -77,14 +77,17 @@ private:
   ShareMode m_after{};
 };
 
-class SetGroup : public UpdateObjectMetadata
+class SetGroup : public score::Command
 {
   SCORE_COMMAND_DECL(DistributedScenarioCommandFactoryName(), SetGroup, "Set group")
 
 public:
   SetGroup(NetworkDocumentPlugin& plug, const Selection& s, QString newMode);
 
+  void undo(const score::DocumentContext& ctx) const override;
   void redo(const score::DocumentContext& ctx) const override;
+
+  MetadataUndoRedos<QString> metadatas;
 
 private:
   void serializeImpl(DataStreamInput& s) const override;
