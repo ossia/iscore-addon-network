@@ -17,7 +17,7 @@ namespace Network
 MasterExecutionPolicy::MasterExecutionPolicy(
     Session& s, NetworkDocumentPlugin& doc, const score::DocumentContext& c)
     : m_session{s}
-    , m_keep{dynamic_cast<MasterEditionPolicy&>(doc.policy()).timekeeper()}
+    , m_keep{safe_cast<MasterEditionPolicy&>(doc.policy()).timekeeper()}
 {
   qDebug("MasterExecutionPolicy");
   auto& mapi = MessagesAPI::instance();

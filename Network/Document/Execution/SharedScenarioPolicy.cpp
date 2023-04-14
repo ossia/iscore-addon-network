@@ -178,10 +178,11 @@ void SharedScenarioPolicy::operator()(
 {
   auto& mapi = ctx.mapi;
   // First fetch the required variables.
-  const Group& tn_group = getGroup(ctx.doc, ctx.gm, parent_group, comp.scoreTimeSync());
+  auto& ts = ((Scenario::TimeSyncModel&)comp.scoreTimeSync());
+  const Group& tn_group = getGroup(ctx.doc, ctx.gm, parent_group, ts);
 
-  auto sync = getInfos(ctx.doc, comp.scoreTimeSync());
-  Path<Scenario::TimeSyncModel> path{comp.scoreTimeSync()};
+  auto sync = getInfos(ctx.doc, ts);
+  Path<Scenario::TimeSyncModel> path{ts};
 
   if(comp.scoreTimeSync().active())
   {
@@ -197,6 +198,7 @@ void SharedScenarioPolicy::operator()(
     if(tn_group.hasClient(ctx.self))
     {
       // We will actually evaluate the expression.
+      ts.setNetworkFlags(ts.networkFlags() | Process::NetworkFlags::Active);
 
       switch(sync)
       {
@@ -217,6 +219,7 @@ void SharedScenarioPolicy::operator()(
     else
     {
       // Not in the group : we wait.
+      ts.setNetworkFlags(ts.networkFlags() | Process::NetworkFlags::Inactive);
       switch(sync)
       {
         case SyncMode::NonCompensatedSync:
