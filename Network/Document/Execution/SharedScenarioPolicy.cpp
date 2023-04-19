@@ -86,10 +86,23 @@ void SharedScenarioPolicy::operator()(
         isMuted ? Scenario::IntervalExecutionState::Muted
                 : Scenario::IntervalExecutionState::Enabled);
 
+    // FIXME refactor with FreeScenarioPolicy
+    auto set_flag = [runs = !isMuted](auto& obj) {
+      auto flags = obj.networkFlags();
+
+      if(runs)
+        flags = flags | Process::NetworkFlags::Active;
+      else
+        flags = (Process::NetworkFlags)(flags & ~Process::NetworkFlags::Active);
+      obj.setNetworkFlags(flags);
+    };
+    set_flag(interval);
+
     for(const auto& process : cst.processes())
     {
       auto& proc = process.second->OSSIAProcess();
       proc.mute(isMuted);
+      set_flag(process.second->process());
     }
   }
 
