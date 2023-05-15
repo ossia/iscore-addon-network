@@ -167,8 +167,7 @@ void GUIClientEditionPolicy::play()
   if(sm)
   {
     Netpit::setCurrentDocument(m_ctx);
-    auto& plug
-        = score::GUIAppContext().guiApplicationPlugin<Engine::ApplicationPlugin>();
+    auto& plug = score::AppContext().applicationPlugin<Engine::ApplicationPlugin>();
     plug.execution().request_play_interval(
         sm->baseInterval(), BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
         TimeVal{});

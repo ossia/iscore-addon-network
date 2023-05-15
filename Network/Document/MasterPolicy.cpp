@@ -181,7 +181,7 @@ void MasterEditionPolicy::play()
   if(sm)
   {
     Netpit::setCurrentDocument(m_ctx);
-    auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
+    auto& plug = m_ctx.app.applicationPlugin<Engine::ApplicationPlugin>();
     plug.execution().request_play_interval(
         sm->baseInterval(), BasicPruner{m_ctx.plugin<NetworkDocumentPlugin>()},
         TimeVal{});

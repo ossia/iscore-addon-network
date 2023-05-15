@@ -113,7 +113,7 @@ public:
     auto add_tex = [&](auto... bytes) {
       for(int i = 0; i < N; i++)
       {
-        out_tex.bytes[i] += std::clamp((int(bytes[i]) + ...), 0, 255);
+        out_tex.bytes[i] = std::clamp((int(bytes[i]) + ...), 0, 255);
       }
     };
 
