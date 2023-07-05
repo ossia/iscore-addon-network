@@ -56,11 +56,11 @@ score_addon_network::make_guiApplicationPlugin(const score::GUIApplicationContex
   return new Network::NetworkApplicationPlugin{app};
 }
 
-std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_network::factories(
+std::vector<score::InterfaceBase*> score_addon_network::factories(
     const score::ApplicationContext& ctx, const score::InterfaceKey& key) const
 {
   {
-    std::vector<std::unique_ptr<score::InterfaceBase>> fx;
+    std::vector<score::InterfaceBase*> fx;
     oscr::instantiate_fx<Netpit::MessagePit, Netpit::AudioPit, Netpit::VideoPit>(
         fx, ctx, key);
     if(!fx.empty())
