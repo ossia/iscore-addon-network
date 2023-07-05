@@ -50,20 +50,21 @@ void NetworkSocket::init()
 #else
       &QWebSocket::errorOccurred,
 #endif
-      this, [=]() { qDebug() << "Error: " << m_socket->errorString(); });
-  connect(m_socket, &QWebSocket::connected, this, [=]() {
+      this, [this]() { qDebug() << "Error: " << m_socket->errorString(); });
+  connect(m_socket, &QWebSocket::connected, this, [this]() {
     qDebug() << "WS Connected";
     connected();
   });
   connect(m_socket, &QWebSocket::disconnected, this, []() { qDebug("Disconnected"); });
 
-  connect(m_socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray& b) {
-    QDataStream reader(b);
-    NetworkMessage m;
-    reader >> m;
+  connect(
+      m_socket, &QWebSocket::binaryMessageReceived, this, [this](const QByteArray& b) {
+        QDataStream reader(b);
+        NetworkMessage m;
+        reader >> m;
 
-    messageReceived(m);
-  });
+        messageReceived(m);
+      });
 
   // m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 }
