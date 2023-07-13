@@ -44,7 +44,7 @@ NetworkServer::NetworkServer(int port, QObject* parent)
   m_localPort = m_server->serverPort();
   qDebug() << "Server: " << m_localAddress << ":" << m_localPort;
 
-  connect(m_server, &QWebSocketServer::newConnection, this, [=]() {
+  connect(m_server, &QWebSocketServer::newConnection, this, [this]() {
     auto sock = m_server->nextPendingConnection();
     sock->setOutgoingFrameSize(2000);
     newSocket(sock);

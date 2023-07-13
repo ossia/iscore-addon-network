@@ -1,9 +1,10 @@
+#include <score/tools/Bind.hpp>
+
 #include <QTcpSocket>
 
 #include <Network/PlayerPlugin.hpp>
 #include <Network/Session/PlayerSessionBuilder.hpp>
 #include <Network/Settings/NetworkSettingsModel.hpp>
-#include <score/tools/Bind.hpp>
 #undef OSSIA_DNSSD
 #if defined(OSSIA_DNSSD)
 #include <servus/servus.h>
@@ -16,14 +17,12 @@ PlayerPlugin::PlayerPlugin(const score::ApplicationContext& ctx)
 {
 }
 
-PlayerPlugin::~PlayerPlugin() {}
+PlayerPlugin::~PlayerPlugin() { }
 
 void PlayerPlugin::initialize()
 {
   auto& s = context.settings<Network::Settings::Model>();
-  con(s, &Network::Settings::Model::PlayerPortChanged, this, [this] {
-    setupServer();
-  });
+  con(s, &Network::Settings::Model::PlayerPortChanged, this, [this] { setupServer(); });
 
   setupServer();
 }
@@ -37,7 +36,7 @@ void PlayerPlugin::setupServer()
 
   connect(&m_listenServer, &QTcpServer::newConnection, this, [&] {
     QTcpSocket* connection = m_listenServer.nextPendingConnection();
-    connect(connection, &QTcpSocket::readyRead, this, [=] {
+    connect(connection, &QTcpSocket::readyRead, this, [this, connection] {
       auto dat = connection->readAll();
 
       m_sessionBuilder = std::make_unique<PlayerSessionBuilder>(
@@ -46,31 +45,24 @@ void PlayerPlugin::setupServer()
       connection->close();
       connection->deleteLater();
 
-      connect(
-          m_sessionBuilder.get(),
-          &PlayerSessionBuilder::sessionReady,
-          this,
-          [&]() {
-            m_sessionBuilder.reset();
-            if (onDocumentLoaded)
-              onDocumentLoaded();
-          });
+      connect(m_sessionBuilder.get(), &PlayerSessionBuilder::sessionReady, this, [&]() {
+        m_sessionBuilder.reset();
+        if(onDocumentLoaded)
+          onDocumentLoaded();
+      });
 
-      connect(
-          m_sessionBuilder.get(),
-          &PlayerSessionBuilder::sessionFailed,
-          this,
-          [&]() { m_sessionBuilder.reset(); });
+      connect(m_sessionBuilder.get(), &PlayerSessionBuilder::sessionFailed, this, [&]() {
+        m_sessionBuilder.reset();
+      });
 
-      connect(
-          m_sessionBuilder.get(), &PlayerSessionBuilder::connected, this, [&] {
-            m_sessionBuilder->initiateConnection();
-          });
+      connect(m_sessionBuilder.get(), &PlayerSessionBuilder::connected, this, [&] {
+        m_sessionBuilder->initiateConnection();
+      });
     });
   });
 
   auto name = s.getClientName();
-  if (name.isEmpty())
+  if(name.isEmpty())
     name = "i-score player";
 
 #if defined(OSSIA_DNSSD)
@@ -79,7 +71,7 @@ void PlayerPlugin::setupServer()
     m_zeroconf = std::make_unique<servus::Servus>("_score_player._tcp");
     m_zeroconf->announce(m_listenServer.serverPort(), name.toStdString());
   }
-  catch (...)
+  catch(...)
   {
   }
 #endif

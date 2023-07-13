@@ -1,7 +1,7 @@
 #pragma once
-#include <score/tools/std/HashMap.hpp>
-#include <score/tools/Bind.hpp>
 #include <score/model/IdentifierDebug.hpp>
+#include <score/tools/Bind.hpp>
+#include <score/tools/std/HashMap.hpp>
 
 #include <QObject>
 
@@ -14,44 +14,41 @@ namespace Network
 using clk = std::chrono::high_resolution_clock;
 struct ClientTimes
 {
-  std::chrono::nanoseconds
-      last_sent; //! Last time a ping was sent from the master
+  std::chrono::nanoseconds last_sent; //! Last time a ping was sent from the master
   std::chrono::nanoseconds
       last_received; //! Last time a pong was received from the client.
-  std::chrono::nanoseconds
-      roundtrip_latency; //! Latency from client to master and back
+  std::chrono::nanoseconds roundtrip_latency; //! Latency from client to master and back
   std::chrono::nanoseconds
       clock_difference; //! Difference between client clock and master clock
 };
 
 struct Timekeeper final : public QObject
 {
-  Timekeeper(Session& s) : m_session{s}
+  Timekeeper(Session& s)
+      : m_session{s}
   {
     startTimer(1000, Qt::PreciseTimer);
 
-    for (auto client : m_session.remoteClients())
+    for(auto client : m_session.remoteClients())
     {
       m_timestamps.insert({client->id(), ClientTimes{}});
     }
 
-    con(m_session, &Session::clientAdded, this, [=](auto client) {
+    con(m_session, &Session::clientAdded, this, [this](auto client) {
       m_timestamps.insert({client->id(), ClientTimes{}});
     });
-    con(m_session, &Session::clientRemoved, this, [=](auto client) {
-      m_timestamps.erase(client->id());
-    });
+    con(m_session, &Session::clientRemoved, this,
+        [this](auto client) { m_timestamps.erase(client->id()); });
   }
 
   void ping_all()
   {
     auto t = clk::now().time_since_epoch();
-    m_session.broadcastToAllClients(
-        m_session.makeMessage(MessagesAPI::instance().ping));
+    m_session.broadcastToAllClients(m_session.makeMessage(MessagesAPI::instance().ping));
 
     auto b = m_timestamps.begin();
     auto e = m_timestamps.end();
-    for (auto it = b; it != e; ++it)
+    for(auto it = b; it != e; ++it)
     {
       it->second.last_sent = t;
     }
@@ -66,7 +63,7 @@ struct Timekeeper final : public QObject
     reader >> ns;
 
     auto it = m_timestamps.find(m.clientId);
-    if (it != m_timestamps.end())
+    if(it != m_timestamps.end())
     {
       ClientTimes& times = it->second;
       times.last_received = pong_date;
@@ -74,9 +71,8 @@ struct Timekeeper final : public QObject
 
       // Note : here we just assume that the half-trip latency is half the
       // round trip latency.
-      times.clock_difference
-          = std::chrono::nanoseconds(ns)
-            - (times.last_sent + times.roundtrip_latency / 2);
+      times.clock_difference = std::chrono::nanoseconds(ns)
+                               - (times.last_sent + times.roundtrip_latency / 2);
     }
   }
 
@@ -87,7 +83,7 @@ struct Timekeeper final : public QObject
 
   void debug()
   {
-    for (auto clt : m_timestamps)
+    for(auto clt : m_timestamps)
     {
       qDebug() << clt.first << us(clt.second.roundtrip_latency)
                << us(clt.second.clock_difference);

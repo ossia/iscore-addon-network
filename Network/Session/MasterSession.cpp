@@ -1,12 +1,11 @@
 #include "MasterSession.hpp"
 
-#include <QWebSocket>
-
 #include <score/model/Identifier.hpp>
-#include <score/tools/std/Optional.hpp>
 #include <score/tools/Bind.hpp>
+#include <score/tools/std/Optional.hpp>
 
 #include <QHostAddress>
+#include <QWebSocket>
 #include <qnamespace.h>
 
 #include <Network/Client/LocalClient.hpp>
@@ -25,15 +24,12 @@ namespace Network
 {
 class Client;
 MasterSession::MasterSession(
-    const score::DocumentContext& doc,
-    LocalClient* theclient,
-    Id<Session> id,
+    const score::DocumentContext& doc, LocalClient* theclient, Id<Session> id,
     QObject* parent)
-    : Session{theclient, id, parent}, m_ctx{doc}
+    : Session{theclient, id, parent}
+    , m_ctx{doc}
 {
-  con(localClient(),
-      &LocalClient::createNewClient,
-      this,
+  con(localClient(), &LocalClient::createNewClient, this,
       &MasterSession::on_createNewClient);
 
 #if defined(OSSIA_DNSSD)
@@ -51,29 +47,20 @@ void MasterSession::on_createNewClient(QWebSocket* sock)
 {
   RemoteClientBuilder* builder = new RemoteClientBuilder(*this, sock);
   connect(
-      builder,
-      &RemoteClientBuilder::clientReady,
-      this,
-      &MasterSession::on_clientReady);
+      builder, &RemoteClientBuilder::clientReady, this, &MasterSession::on_clientReady);
   m_clientBuilders.append(builder);
 }
 
-void MasterSession::on_clientReady(
-    RemoteClientBuilder* bldr,
-    RemoteClient* clt)
+void MasterSession::on_clientReady(RemoteClientBuilder* bldr, RemoteClient* clt)
 {
   m_clientBuilders.removeOne(bldr);
   delete bldr;
 
   connect(
-      clt,
-      &RemoteClient::messageReceived,
-      this,
-      &Session::validateMessage,
+      clt, &RemoteClient::messageReceived, this, &Session::validateMessage,
       Qt::QueuedConnection);
-  con(clt->socket().socket(), &QWebSocket::disconnected, this, [=] {
-    removeClient(clt);
-  });
+  con(clt->socket().socket(), &QWebSocket::disconnected, this,
+      [this, clt] { removeClient(clt); });
 
   addClient(clt);
 }

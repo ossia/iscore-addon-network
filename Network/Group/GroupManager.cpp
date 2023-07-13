@@ -10,6 +10,7 @@
 #include <QSignalBlocker>
 
 #include <Network/Client/RemoteClient.hpp>
+
 #include <wobjectimpl.h>
 
 #include <algorithm>
@@ -30,9 +31,8 @@ void GroupManager::addGroup(Group* group)
 
 Group* GroupManager::findGroup(const QString& str) const
 {
-  auto it
-      = ossia::find_if(m_groups, [&](auto ptr) { return ptr->name() == str; });
-  if (it != m_groups.end())
+  auto it = ossia::find_if(m_groups, [&](auto ptr) { return ptr->name() == str; });
+  if(it != m_groups.end())
     return *it;
   else
     return nullptr;
@@ -62,13 +62,13 @@ Id<Group> GroupManager::defaultGroup() const
 
 void GroupManager::cleanup(QList<RemoteClient*> c)
 {
-  for (Group* group : m_groups)
+  for(Group* group : m_groups)
   {
     QSignalBlocker b(group);
     auto clients = group->clients();
-    for (const auto& clt : clients)
+    for(const auto& clt : clients)
     {
-      if (ossia::none_of(c, [&](auto rc) { return rc->id() == clt; }))
+      if(ossia::none_of(c, [&](auto rc) { return rc->id() == clt; }))
       {
         group->removeClient(clt);
       }
@@ -79,25 +79,24 @@ void GroupManager::cleanup(QList<RemoteClient*> c)
 std::size_t GroupManager::clientsCount(const std::vector<Id<Group>>& grps)
 {
   return std::accumulate(
-      grps.begin(), grps.end(), 0, [=](const auto& lhs, const auto& rhs) {
+      grps.begin(), grps.end(), 0, [this](const auto& lhs, const auto& rhs) {
         return lhs + this->group(rhs)->clients().size();
       });
 }
 
-std::vector<Id<Client>>
-GroupManager::clients(const std::vector<Id<Group>>& grps)
+std::vector<Id<Client>> GroupManager::clients(const std::vector<Id<Group>>& grps)
 {
   //! TODO cache this and update it each time the clients change instead.
   std::vector<Id<Client>> theClients;
 
-  for (auto& id : grps)
+  for(auto& id : grps)
   {
-    if (auto grp = this->group(id))
+    if(auto grp = this->group(id))
     {
-      for (auto& clt : grp->clients())
+      for(auto& clt : grp->clients())
       {
         auto it = ossia::find(theClients, clt);
-        if (it == theClients.end())
+        if(it == theClients.end())
           theClients.push_back(clt);
       }
     }

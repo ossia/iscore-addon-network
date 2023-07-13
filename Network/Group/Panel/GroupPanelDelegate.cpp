@@ -1,26 +1,32 @@
 #include "GroupPanelDelegate.hpp"
-#include <score/selection/SelectionStack.hpp>
+
+#include <Process/Process.hpp>
+
+#include <Scenario/Document/Event/EventModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 
 #include <score/actions/ActionManager.hpp>
+#include <score/application/GUIApplicationContext.hpp>
 #include <score/document/DocumentInterface.hpp>
+#include <score/selection/SelectionStack.hpp>
 #include <score/widgets/ClearLayout.hpp>
 #include <score/widgets/MarginLess.hpp>
 #include <score/widgets/Separator.hpp>
+
 #include <core/document/Document.hpp>
 
-
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <QGridLayout>
 #include <QInputDialog>
 #include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
-#include <QVBoxLayout>
 #include <QSpacerItem>
 #include <QTabWidget>
-#include <QCheckBox>
+#include <QVBoxLayout>
 
-#include <score/application/GUIApplicationContext.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/Context.hpp>
 #include <Network/Group/Commands/AddCustomMetadata.hpp>
@@ -30,14 +36,11 @@
 #include <Network/Group/Panel/Widgets/GroupListWidget.hpp>
 #include <Network/Group/Panel/Widgets/GroupTableWidget.hpp>
 #include <Network/Session/Session.hpp>
-#include <Scenario/Document/Interval/IntervalModel.hpp>
-#include <Scenario/Document/Event/EventModel.hpp>
-#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
-#include <Process/Process.hpp>
 namespace Network
 {
 PanelDelegate::PanelDelegate(const score::GUIApplicationContext& ctx)
-    : score::PanelDelegate{ctx}, m_widget{new QWidget}
+    : score::PanelDelegate{ctx}
+    , m_widget{new QWidget}
 {
   new QVBoxLayout{m_widget};
 }
@@ -49,22 +52,22 @@ QWidget* PanelDelegate::widget()
 
 const score::PanelStatus& PanelDelegate::defaultPanelStatus() const
 {
-  static const score::PanelStatus status{false, false,
-                                         Qt::LeftDockWidgetArea,
-                                         1,
-                                         QObject::tr("Sync"),
-                                         "sync",
-                                         QObject::tr("Ctrl+G")};
+  static const score::PanelStatus status{
+      false,
+      false,
+      Qt::LeftDockWidgetArea,
+      1,
+      QObject::tr("Sync"),
+      "sync",
+      QObject::tr("Ctrl+G")};
 
   return status;
 }
 
-void PanelDelegate::on_modelChanged(
-    score::MaybeDocument oldm,
-    score::MaybeDocument newm)
+void PanelDelegate::on_modelChanged(score::MaybeDocument oldm, score::MaybeDocument newm)
 {
   disconnect(m_con);
-  if (!newm)
+  if(!newm)
   {
     setEmptyView();
     return;
@@ -72,10 +75,10 @@ void PanelDelegate::on_modelChanged(
 
   NetworkDocumentPlugin* netplug = newm->findPlugin<NetworkDocumentPlugin>();
 
-  if (netplug)
+  if(netplug)
   {
     m_con = connect(
-        netplug, &NetworkDocumentPlugin::sessionChanged, this, [=]() {
+        netplug, &NetworkDocumentPlugin::sessionChanged, this, [this, newm, netplug]() {
           setView(*newm, netplug->groupManager(), netplug->policy().session());
         });
 
@@ -90,11 +93,12 @@ class ClientListWidget : public QGroupBox
 
 public:
   ClientListWidget(const Session& s, QWidget* p)
-      : QGroupBox{tr("Clients"), p}, m_session{const_cast<Session&>(s)}
+      : QGroupBox{tr("Clients"), p}
+      , m_session{const_cast<Session&>(s)}
   {
     recompute();
-    connect(&s, &Session::clientAdded, this, [=] { recompute(); });
-    connect(&s, &Session::clientRemoved, this, [=] { recompute(); });
+    connect(&s, &Session::clientAdded, this, [this] { recompute(); });
+    connect(&s, &Session::clientRemoved, this, [this] { recompute(); });
   }
 
   void recompute()
@@ -106,17 +110,17 @@ public:
     this->setLayout(lay);
 
     int i = 0;
-    for (auto& c : m_session.remoteClients())
+    for(auto& c : m_session.remoteClients())
     {
       auto name = new QLabel(c->name());
       auto play = new QPushButton(tr("Play"));
       auto stop = new QPushButton(tr("Stop"));
 
-      connect(play, &QPushButton::clicked, this, [=] {
+      connect(play, &QPushButton::clicked, this, [this, c] {
         auto& mapi = MessagesAPI::instance();
         m_session.sendMessage(c->id(), m_session.makeMessage(mapi.play));
       });
-      connect(stop, &QPushButton::clicked, this, [=] {
+      connect(stop, &QPushButton::clicked, this, [this, c] {
         auto& mapi = MessagesAPI::instance();
         m_session.sendMessage(c->id(), m_session.makeMessage(mapi.stop));
       });
@@ -138,18 +142,17 @@ class NetworkMetadataWidget : public QWidget
 
 public:
   NetworkMetadataWidget(
-      const score::DocumentContext& ctx,
-      const GroupManager& mgr,
-      QWidget* parent)
+      const score::DocumentContext& ctx, const GroupManager& mgr, QWidget* parent)
       : QWidget{parent}
       , m_ctx{ctx}
       , m_mgr{mgr}
       , m_plug{m_ctx.plugin<NetworkDocumentPlugin>()}
   {
-    connect(&mgr, &GroupManager::groupAdded, this, [=] { recompute(); });
-    connect(&mgr, &GroupManager::groupRemoved, this, [=] { recompute(); });
-    connect(&m_ctx.selectionStack, &score::SelectionStack::currentSelectionChanged,
-            this, [=] { recompute(); });
+    connect(&mgr, &GroupManager::groupAdded, this, [this] { recompute(); });
+    connect(&mgr, &GroupManager::groupRemoved, this, [this] { recompute(); });
+    connect(
+        &m_ctx.selectionStack, &score::SelectionStack::currentSelectionChanged, this,
+        [this] { recompute(); });
     recompute();
   }
 
@@ -161,23 +164,34 @@ public:
 
     QObject* obj = *sel.begin();
     ObjectMetadata init{};
-    enum { Other, Interval, Event, Sync, Process } selectedType{Other};
-    if(auto itv = qobject_cast<Scenario::IntervalModel*>(obj)) {
+    enum
+    {
+      Other,
+      Interval,
+      Event,
+      Sync,
+      Process
+    } selectedType{Other};
+    if(auto itv = qobject_cast<Scenario::IntervalModel*>(obj))
+    {
       if(auto m = m_plug.get_metadata(*itv))
         init = *m;
       selectedType = Interval;
     }
-    else if(auto e = qobject_cast<Scenario::EventModel*>(obj)) {
+    else if(auto e = qobject_cast<Scenario::EventModel*>(obj))
+    {
       if(auto m = m_plug.get_metadata(*e))
         init = *m;
       selectedType = Event;
     }
-    else if(auto ts = qobject_cast<Scenario::TimeSyncModel*>(obj)) {
+    else if(auto ts = qobject_cast<Scenario::TimeSyncModel*>(obj))
+    {
       if(auto m = m_plug.get_metadata(*ts))
         init = *m;
       selectedType = Sync;
     }
-    else if(auto p = qobject_cast<Process::ProcessModel*>(obj)) {
+    else if(auto p = qobject_cast<Process::ProcessModel*>(obj))
+    {
       if(auto m = m_plug.get_metadata(*p))
         init = *m;
       selectedType = Process;
@@ -188,14 +202,14 @@ public:
     if(init.group.isEmpty())
       init.group = "all";
 
-    auto setup = [=](const QString& txt, auto l, auto g, auto func) {
+    auto setup = [this](const QString& txt, auto l, auto g, auto func) {
       auto btn = new QRadioButton{txt};
       g->addButton(btn);
       l->addWidget(btn);
       connect(btn, &QRadioButton::clicked, this, func);
       return btn;
     };
-    if (auto l = this->layout())
+    if(auto l = this->layout())
     {
       QWidget{}.setLayout(this->layout());
     }
@@ -210,14 +224,18 @@ public:
     lay->addLayout(l1bis);
     {
       auto g = new QButtonGroup{this};
-      auto async_uc = setup("Async", l1, g, [=] {
-        disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::NonCompensatedAsync});
+      auto async_uc = setup("Async", l1, g, [this] {
+        disp.submit(new SetSyncMode{
+            this->m_plug, m_ctx.selectionStack.currentSelection(),
+            SyncMode::NonCompensatedAsync});
       });
       // auto async_c = setup("Async (Compensated)", l1, g, [=] {
       //   disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedAsync});
       // });
-      auto sync_uc = setup("Sync", l1bis, g, [=] {
-        disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::NonCompensatedSync});
+      auto sync_uc = setup("Sync", l1bis, g, [this] {
+        disp.submit(new SetSyncMode{
+            this->m_plug, m_ctx.selectionStack.currentSelection(),
+            SyncMode::NonCompensatedSync});
       });
       // auto sync_c = setup("Sync (Compensated)", l1bis, g, [=] {
       //   disp.submit(new SetSyncMode{this->m_plug, m_ctx.selectionStack.currentSelection(), SyncMode::CompensatedSync});
@@ -225,13 +243,15 @@ public:
       switch(init.syncmode)
       {
         case SyncMode::NonCompensatedAsync:
-          async_uc->toggle(); break;
+          async_uc->toggle();
+          break;
         // case SyncMode::CompensatedAsync:
         //   async_c->toggle(); break;
         case SyncMode::NonCompensatedSync:
-          sync_uc->toggle(); break;
-        // case SyncMode::CompensatedSync:
-        //   sync_c->toggle(); break;
+          sync_uc->toggle();
+          break;
+          // case SyncMode::CompensatedSync:
+          //   sync_c->toggle(); break;
       }
     }
 
@@ -240,23 +260,24 @@ public:
     lay->addLayout(l2);
     {
       auto g = new QButtonGroup{this};
-      auto shared = setup("Shared", l2, g, [=] {
-        disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Shared});
+      auto shared = setup("Shared", l2, g, [this] {
+        disp.submit(new SetShareMode{
+            this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Shared});
       });
       // auto mixed = setup("Mixed", l2, g, [=] {
       //   disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Mixed});
       // });
-      auto free = setup("Free", l2, g, [=] {
-        disp.submit(new SetShareMode{this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Free});
+      auto free = setup("Free", l2, g, [this] {
+        disp.submit(new SetShareMode{
+            this->m_plug, m_ctx.selectionStack.currentSelection(), ShareMode::Free});
       });
-      if(init.sharemode==ShareMode::Shared)
+      if(init.sharemode == ShareMode::Shared)
         shared->toggle();
       //else if(init.sharemode==ShareMode::Mixed)
       //  mixed->toggle();
-      else if(init.sharemode==ShareMode::Free)
+      else if(init.sharemode == ShareMode::Free)
         free->toggle();
     }
-
 
     auto l4 = new QVBoxLayout{};
     lay->addWidget(new QLabel{"Group"});
@@ -264,16 +285,18 @@ public:
     lay->addSpacing(10);
     {
       auto g = new QButtonGroup{this};
-      auto parent_g = setup("Parent", l4, g, [=] {
-        disp.submit(new SetGroup{this->m_plug, m_ctx.selectionStack.currentSelection(), "parent"});
+      auto parent_g = setup("Parent", l4, g, [this] {
+        disp.submit(new SetGroup{
+            this->m_plug, m_ctx.selectionStack.currentSelection(), "parent"});
       });
       if(init.group == "parent")
         parent_g->toggle();
 
-      for (Group* group : m_mgr.groups())
+      for(Group* group : m_mgr.groups())
       {
-        auto child_g = setup(group->name(), l4, g, [=, n = group->name()] {
-          disp.submit(new SetGroup{this->m_plug, m_ctx.selectionStack.currentSelection(), n});
+        auto child_g = setup(group->name(), l4, g, [this, n = group->name()] {
+          disp.submit(
+              new SetGroup{this->m_plug, m_ctx.selectionStack.currentSelection(), n});
         });
 
         if(init.group == group->name())
@@ -281,19 +304,18 @@ public:
       }
     }
 
-
     auto helplabel = new QLabel;
     helplabel->setTextFormat(Qt::RichText);
     helplabel->setText(tr(
-R"_(<b>Network configuration</b><br/><br/>
+        R"_(<b>Network configuration</b><br/><br/>
 
 <b>Async / sync</b>: relevant for triggers & conditions.<br/>
 - <b>Sync</b>: expression state is shared.<br/>
 - <b>Async</b>: expression can be different across clients.<br/>)_"
-// - <b>Compensated</b>: when the trigger is ready, <br/>
-//    set its execution date at a date in the future to ensure synchronisation.<br/>
-// - <b>Uncompensated</b>: when the trigger is ready, go immediately.<br/>
-R"_(<br/><br/>
+        // - <b>Compensated</b>: when the trigger is ready, <br/>
+        //    set its execution date at a date in the future to ensure synchronisation.<br/>
+        // - <b>Uncompensated</b>: when the trigger is ready, go immediately.<br/>
+        R"_(<br/><br/>
 <b>Shared / mixed / free</b>: relevant for Scenario processes.<br/>
 - If shared: the scenario's execution is shared across clients.<br/>
 - If free: for every client in the scenario's group, it executes independently.<br/>
@@ -311,9 +333,7 @@ Two special groups are:<br/>
 };
 
 void PanelDelegate::setView(
-    const score::DocumentContext& ctx,
-    const GroupManager& mgr,
-    const Session* session)
+    const score::DocumentContext& ctx, const GroupManager& mgr, const Session* session)
 {
   // Make the containing widget
   delete m_subWidget;
@@ -329,18 +349,13 @@ void PanelDelegate::setView(
 
   // Add group button
   auto button = new QPushButton{QObject::tr("Add group")};
-  connect(button, &QPushButton::pressed, this, [=, &mgr]() {
-    if (auto doc = this->document())
+  connect(button, &QPushButton::pressed, this, [this, &mgr]() {
+    if(auto doc = this->document())
     {
       bool ok;
       QString text = QInputDialog::getText(
-          m_widget,
-          tr("New group"),
-          tr("Group name:"),
-          QLineEdit::Normal,
-          "",
-          &ok);
-      if (ok && !text.isEmpty())
+          m_widget, tr("New group"), tr("Group name:"), QLineEdit::Normal, "", &ok);
+      if(ok && !text.isEmpty())
       {
         auto cmd = new Command::CreateGroup{mgr, text};
 
@@ -359,28 +374,29 @@ void PanelDelegate::setView(
   auto transport_lay = new QVBoxLayout{transport_widg};
   transport_lay->addWidget(new ClientListWidget{*session, m_widget});
   auto play = new QPushButton{tr("Play (all)")};
-  connect(play, &QPushButton::clicked, this, [=] {
+  connect(play, &QPushButton::clicked, this, [this] {
     auto act = context().actions.action<Actions::NetworkPlay>().action();
     act->trigger();
   });
 
   auto stop = new QPushButton{tr("Stop (all)")};
-  connect(stop, &QPushButton::clicked, this, [=] {
+  connect(stop, &QPushButton::clicked, this, [this] {
     auto act = context().actions.action<Actions::NetworkStop>().action();
     act->trigger();
   });
 
   auto plug = ctx.findPlugin<NetworkDocumentPlugin>();
 
-  auto enableCommands = new QCheckBox{tr("Send edition commands (false: very dangerous!)")};
+  auto enableCommands
+      = new QCheckBox{tr("Send edition commands (false: very dangerous!)")};
   enableCommands->setChecked(plug && plug->policy().sendCommands());
-  connect(enableCommands, &QCheckBox::toggled, this, [&ctx] (bool state) {
+  connect(enableCommands, &QCheckBox::toggled, this, [&ctx](bool state) {
     if(auto plug = ctx.findPlugin<NetworkDocumentPlugin>())
       plug->policy().setSendCommands(state);
   });
   auto enableControls = new QCheckBox{tr("Send control updates (false: dangerous!)")};
   enableControls->setChecked(plug && plug->policy().sendControls());
-  connect(enableControls, &QCheckBox::toggled, this, [&ctx] (bool state) {
+  connect(enableControls, &QCheckBox::toggled, this, [&ctx](bool state) {
     if(auto plug = ctx.findPlugin<NetworkDocumentPlugin>())
       plug->policy().setSendControls(state);
   });
@@ -389,8 +405,7 @@ void PanelDelegate::setView(
   transport_lay->addWidget(stop);
   transport_lay->addWidget(enableCommands);
   transport_lay->addWidget(enableControls);
-  transport_lay->addWidget(
-        new QLabel{tr(R"_(<br/><br/><b>Warning</b><br/><br/>
+  transport_lay->addWidget(new QLabel{tr(R"_(<br/><br/><b>Warning</b><br/><br/>
 Disabling commands means that this instance will not inform <br/>
 the server when its local state changes. <br/>
 If this is used anywhere in the network, undo<br/>
