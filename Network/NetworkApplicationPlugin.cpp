@@ -71,6 +71,8 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(
 
   parser.parse(app.applicationSettings.arguments);
   this->m_arg_net_join = parser.value(net_join_opt);
+  if(int n = this->m_arg_net_join.toInt(); n < 1 || n > 65535)
+    this->m_arg_net_join = QString::number(9090);
   this->m_arg_net_host = parser.value(net_host_opt);
   // FIXME
   // if(!m_arg_net_host.isEmpty() || !m_arg_net_join.isEmpty())
