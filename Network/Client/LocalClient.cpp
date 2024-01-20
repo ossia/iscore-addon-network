@@ -4,10 +4,10 @@
 
 namespace Network
 {
-LocalClient::LocalClient(Id<Client> id, QObject* parent)
+LocalClient::LocalClient(int local_port, Id<Client> id, QObject* parent)
     : Client{id, parent}
 #if !defined(__EMSCRIPTEN__)
-    , m_server{new NetworkServer{9090, this}}
+    , m_server{new NetworkServer{local_port, this}}
 #endif
 {
 #if !defined(__EMSCRIPTEN__)

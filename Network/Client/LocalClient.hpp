@@ -9,7 +9,7 @@ class LocalClient : public Client
 {
   W_OBJECT(LocalClient)
 public:
-  LocalClient(Id<Client> id, QObject* parent = nullptr);
+  LocalClient(int local_port, Id<Client> id, QObject* parent = nullptr);
 
   template <typename Deserializer>
   LocalClient(Deserializer&& vis, QObject* parent)

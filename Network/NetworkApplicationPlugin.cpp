@@ -189,7 +189,7 @@ void NetworkApplicationPlugin::do_makeServer(score::Document& doc)
   qDebug() << Q_FUNC_INFO << (QObject*)plug;
   if(plug)
   {
-    auto clt = new LocalClient(Id<Client>(0));
+    auto clt = new LocalClient(m_arg_net_host.toInt(), Id<Client>(0));
     clt->setName(tr("Master"));
     auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
     auto editpol = new MasterEditionPolicy{serv, ctx};
@@ -199,7 +199,7 @@ void NetworkApplicationPlugin::do_makeServer(score::Document& doc)
   }
   else
   {
-    auto clt = new LocalClient(Id<Client>(0));
+    auto clt = new LocalClient(m_arg_net_host.toInt(), Id<Client>(0));
     clt->setName(tr("Master"));
     auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
     auto policy = new MasterEditionPolicy{serv, ctx};

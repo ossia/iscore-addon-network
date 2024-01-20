@@ -96,7 +96,7 @@ void PlayerSessionBuilder::on_messageReceived(const NetworkMessage& m)
     auto remoteClient = new RemoteClient(m_mastersocket, m_masterId);
     remoteClient->setName("RemoteMaster");
     m_session = new ClientSession(
-        *remoteClient, new LocalClient(m_clientId), m_sessionId, nullptr);
+        *remoteClient, new LocalClient(9090, m_clientId), m_sessionId, nullptr);
     m_session->localClient().setName(m_clientName);
 
     // We start building our document.
