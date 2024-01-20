@@ -16,7 +16,6 @@ public:
 protected:
   void connectToOtherClient(QString ip, int port);
   ClientSession* m_session{};
-  const score::DocumentContext& m_ctx;
   Timekeeper m_keep{*m_session};
 
   std::vector<std::unique_ptr<ClientSessionBuilder>> m_connections;

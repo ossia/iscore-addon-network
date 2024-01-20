@@ -105,7 +105,7 @@ class GroupMetadata;
 class SCORE_ADDON_NETWORK_EXPORT EditionPolicy : public QObject
 {
 public:
-  using QObject::QObject;
+  explicit EditionPolicy(const score::DocumentContext& ctx, QObject* parent = nullptr);
   virtual ~EditionPolicy();
   virtual Session* session() const = 0;
   virtual void play() = 0;
@@ -116,7 +116,10 @@ public:
   bool sendCommands() const noexcept { return m_sendCommands; }
   void setSendCommands(bool b);
 
-private:
+  bool canSendCommand(score::Command* cmd) const;
+
+protected:
+  const score::DocumentContext& m_ctx;
   bool m_sendControls{true};
   bool m_sendCommands{true};
 };

@@ -21,8 +21,8 @@ class Client;
 
 MasterEditionPolicy::MasterEditionPolicy(
     MasterSession* s, const score::DocumentContext& c)
-    : m_session{s}
-    , m_ctx{c}
+    : EditionPolicy{c}
+    , m_session{s}
     , m_keep{*s}
 {
   auto& stack = c.document.commandStack();
@@ -32,11 +32,7 @@ MasterEditionPolicy::MasterEditionPolicy(
   /// From the master to the clients
   /////////////////////////////////////////////////////////////////////////////
   con(stack, &score::CommandStack::localCommand, this, [&](score::Command* cmd) {
-    using namespace std::literals;
-    if(!this->sendCommands())
-      return;
-    if(this->sendControls()
-       || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
+    if(canSendCommand(cmd))
       m_session->broadcastToAllClients(
           m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
   });
@@ -149,20 +145,33 @@ MasterEditionPolicy::MasterEditionPolicy(
 
   s->mapper().addHandler(mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
 
+  // When a client finishes connecting, it informs the server of its open port
   s->mapper().addHandler(mapi.session_portinfo, [&](const NetworkMessage& m) {
-    QString s;
-    int p;
+    QString name, ip;
+    int port;
     QDataStream stream{m.data};
-    stream >> s >> p;
+    stream >> name >> ip >> port;
 
     auto clt = m_session->findClient(m.clientId);
     if(clt)
     {
-      clt->m_clientServerAddress = s;
-      clt->m_clientServerPort = p;
+      clt->m_clientServerAddress = ip;
+      clt->m_clientServerPort = port;
     }
-    qDebug() << "REMOTE CLIENT IP" << s << p;
+    qDebug() << "(master) REMOTE CLIENT IP" << name << ip << port;
+    // The server notifies the other client so that everyone can connect to everyone
     m_session->broadcastToOthers(m.clientId, m);
+
+    // The server notifies the client of the open ports of all the other clients
+    for(const RemoteClient* remote_clt : m_session->remoteClients())
+    {
+      if(remote_clt->id() != m.clientId)
+      {
+        clt->sendMessage(m_session->makeMessageAs(
+            mapi.session_portinfo, remote_clt->id(), remote_clt->name(),
+            remote_clt->m_clientServerAddress, remote_clt->m_clientServerPort));
+      }
+    }
   });
 }
 

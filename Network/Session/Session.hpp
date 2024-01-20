@@ -53,6 +53,21 @@ public:
     return m;
   }
 
+  template <typename... Args>
+  NetworkMessage
+  makeMessageAs(const QByteArray& address, const Id<Client>& origClient, Args&&... args)
+  {
+    NetworkMessage m;
+    m.address = address;
+    m.clientId = origClient;
+    m.sessionId = id();
+
+    impl_makeMessage(
+        QDataStream{&m.data, QIODevice::WriteOnly}, std::forward<Args&&>(args)...);
+
+    return m;
+  }
+
   //! Does not include self
   void broadcastToAllClients(const NetworkMessage& m);
 

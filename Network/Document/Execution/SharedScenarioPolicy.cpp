@@ -1,6 +1,7 @@
 #include "SharedScenarioPolicy.hpp"
 
 #include <Scenario/Document/Event/EventExecution.hpp>
+#include <Scenario/Document/NetworkMetadata.hpp>
 
 #include <score/model/ComponentUtils.hpp>
 #include <score/tools/Bind.hpp>
@@ -94,20 +95,21 @@ void SharedScenarioPolicy::operator()(
 
   // Recursion
   {
-    auto interval_meta = ctx.doc.get_metadata(interval);
-    auto interval_sharemode
-        = interval_meta.sharemode ? *interval_meta.sharemode : ShareMode::Shared;
+    constexpr auto shareMode = [](Process::NetworkFlags flags) {
+      return flags & Process::NetworkFlags::Free    ? ShareMode::Free
+             : flags & Process::NetworkFlags::Mixed ? ShareMode::Mixed
+                                                    : ShareMode::Shared;
+    };
 
     for(const auto& process : cst.processes())
     {
       auto ip = dynamic_cast<Scenario::ScenarioInterface*>(&process.second->process());
       if(ip)
       {
-        auto process_meta = ctx.doc.get_metadata(process.second->process());
-        auto sharemode
-            = process_meta.sharemode ? *process_meta.sharemode : interval_sharemode;
+        const auto process_flags = Scenario::networkFlags(process.second->process());
+        const auto process_sharemode = shareMode(process_flags);
 
-        switch(sharemode)
+        switch(process_sharemode)
         {
           case ShareMode::Shared:
             SharedScenarioPolicy{ctx}(*process.second, *ip, cur_group);

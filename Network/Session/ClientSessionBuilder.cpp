@@ -6,6 +6,7 @@
 #include <score/plugins/StringFactoryKey.hpp>
 #include <score/plugins/documentdelegate/DocumentDelegateFactory.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
+#include <score/tools/RandomNameProvider.hpp>
 
 #include <core/command/CommandStackSerialization.hpp>
 #include <core/document/Document.hpp>
@@ -25,9 +26,9 @@
 #include <Network/Document/Execution/SlavePolicy.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
-#include <sys/types.h>
 
 #include <wobjectimpl.h>
+
 W_OBJECT_IMPL(Network::ClientSessionBuilder)
 namespace Network
 {
@@ -35,12 +36,21 @@ ClientSessionBuilder::ClientSessionBuilder(
     const score::GUIApplicationContext& ctx, QString ip, int port)
     : m_context{ctx}
 {
+  m_clientName = RandomNameProvider::generateShortRandomName();
+  SCORE_ASSERT(!m_clientName.isEmpty());
+  m_clientName[0] = m_clientName[0].toUpper();
+
   m_mastersocket = new NetworkSocket(ip, port, nullptr);
   connect(
       m_mastersocket, &NetworkSocket::messageReceived, this,
       &ClientSessionBuilder::on_messageReceived);
   connect(
       m_mastersocket, &NetworkSocket::connected, this, &ClientSessionBuilder::connected);
+}
+
+ClientSessionBuilder::~ClientSessionBuilder()
+{
+  qDebug(Q_FUNC_INFO);
 }
 
 void ClientSessionBuilder::initiateConnection()
@@ -137,13 +147,13 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     if(auto local_server = m_session->localClient().server())
     {
       m_session->master().sendMessage(m_session->makeMessage(
-          mapi.session_portinfo, local_server->m_localAddress,
+          mapi.session_portinfo, m_clientName, local_server->m_localAddress,
           local_server->m_localPort));
     }
     else
     {
       m_session->master().sendMessage(m_session->makeMessage(
-          mapi.session_portinfo, QString("__web_client__"), 554433));
+          mapi.session_portinfo, m_clientName, QString("__web_client__"), 554433));
     }
     sessionReady();
   }

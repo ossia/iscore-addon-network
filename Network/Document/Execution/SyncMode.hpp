@@ -42,6 +42,7 @@ struct MessagesAPI
   const QByteArray stop;
 
   const QByteArray session_portinfo;
+  const QByteArray session_newclientinfo;
   const QByteArray session_askNewId;
   const QByteArray session_idOffer;
   const QByteArray session_join;

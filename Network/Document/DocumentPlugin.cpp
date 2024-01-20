@@ -1,5 +1,6 @@
 #include "DocumentPlugin.hpp"
 
+#include <Process/Commands/SetControlValue.hpp>
 #include <Process/Process.hpp>
 
 #include <Scenario/Document/Event/EventModel.hpp>
@@ -67,6 +68,7 @@ MessagesAPI::MessagesAPI()
     ,
 
     session_portinfo{QByteArrayLiteral("/session/portinfo")}
+    , session_newclientinfo{QByteArrayLiteral("/session/newclientinfo")}
     , session_askNewId{QByteArrayLiteral("/session/askNewId")}
     , session_idOffer{QByteArrayLiteral("/session/idOffer")}
     , session_join{QByteArrayLiteral("/session/join")}
@@ -378,6 +380,11 @@ void NetworkDocumentPlugin::finish_loading() { }
 
 ExecutionPolicy::~ExecutionPolicy() { }
 
+EditionPolicy::EditionPolicy(const score::DocumentContext& ctx, QObject* parent)
+    : QObject{parent}
+    , m_ctx{ctx}
+{
+}
 EditionPolicy::~EditionPolicy() { }
 
 void EditionPolicy::setSendControls(bool b)
@@ -387,6 +394,26 @@ void EditionPolicy::setSendControls(bool b)
 void EditionPolicy::setSendCommands(bool b)
 {
   m_sendCommands = b;
+}
+
+bool EditionPolicy::canSendCommand(score::Command* cmd) const
+{
+  using namespace std::literals;
+  if(!this->sendCommands())
+    return false;
+  if(cmd->key().toString() != "SetControlValue"sv)
+    return true;
+  if(this->sendControls())
+  {
+    auto ccmd = safe_cast<Process::SetControlValue*>(cmd);
+    auto proc = qobject_cast<Process::ProcessModel*>(ccmd->path().find(m_ctx).parent());
+    auto flags = Scenario::networkFlags(*proc);
+    if(flags & Process::NetworkFlags::Shared)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 }
 

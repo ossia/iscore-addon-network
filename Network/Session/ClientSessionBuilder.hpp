@@ -30,6 +30,7 @@ class ClientSessionBuilder final : public QObject
   W_OBJECT(ClientSessionBuilder)
 public:
   ClientSessionBuilder(const score::GUIApplicationContext&, QString ip, int port);
+  ~ClientSessionBuilder();
 
   void initiateConnection();
   ClientSession* builtSession() const;

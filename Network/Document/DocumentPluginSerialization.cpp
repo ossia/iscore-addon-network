@@ -80,7 +80,7 @@ template <>
 void DataStreamWriter::write(Network::NetworkDocumentPlugin& elt)
 {
   elt.m_groups = new Network::GroupManager{*this, &elt};
-  elt.m_policy = new Network::PlaceholderEditionPolicy{*this, &elt};
+  elt.m_policy = new Network::PlaceholderEditionPolicy{*this, elt.context(), &elt};
 
   checkDelimiter();
 }
@@ -101,7 +101,7 @@ void JSONWriter::write(Network::NetworkDocumentPlugin& elt)
   }
   {
     JSONWriter w(obj["Policy"]);
-    elt.m_policy = new Network::PlaceholderEditionPolicy{w, &elt};
+    elt.m_policy = new Network::PlaceholderEditionPolicy{w, elt.context(), &elt};
   }
 }
 template <>

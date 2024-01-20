@@ -16,8 +16,8 @@ namespace Network
 {
 ClientEditionPolicy::ClientEditionPolicy(
     ClientSession* s, const score::DocumentContext& c)
-    : m_session{s}
-    , m_ctx{c}
+    : EditionPolicy{c}
+    , m_session{s}
     , m_keep{*s}
 {
   auto& stack = c.document.commandStack();
@@ -27,11 +27,7 @@ ClientEditionPolicy::ClientEditionPolicy(
   /// To the master
   /////////////////////////////////////////////////////////////////////////////
   con(stack, &score::CommandStack::localCommand, this, [&](score::Command* cmd) {
-    using namespace std::literals;
-    if(!this->sendCommands())
-      return;
-    if(this->sendControls()
-       || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
+    if(canSendCommand(cmd))
       m_session->master().sendMessage(
           m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
   });
@@ -123,14 +119,17 @@ ClientEditionPolicy::ClientEditionPolicy(
   s->mapper().addHandler(mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
 
   s->mapper().addHandler(mapi.session_portinfo, [&](const NetworkMessage& m) {
-    QString ip;
+    QString name, ip;
     int port;
     QDataStream stream{m.data};
-    stream >> ip >> port;
+    stream >> name >> ip >> port;
 
     auto clt = m_session->findClient(m.clientId);
+    qDebug() << "(client) REMOTE CLIENT IP" << name << ip << port << (bool)clt
+             << m.clientId.val();
     if(clt)
     {
+      clt->setName(name);
       clt->m_clientServerAddress = ip;
       clt->m_clientServerPort = port;
     }
@@ -139,10 +138,10 @@ ClientEditionPolicy::ClientEditionPolicy(
       connectToOtherClient(ip, port);
       auto sock = new NetworkSocket{ip, port, nullptr};
       auto clt = new RemoteClient{sock, m.clientId};
+      clt->setName(name);
 
       m_session->addClient(clt);
     }
-    qDebug() << "REMOTE CLIENT IP" << ip << port;
   });
 }
 

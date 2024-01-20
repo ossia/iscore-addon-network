@@ -18,7 +18,6 @@ public:
 
 private:
   MasterSession* m_session{};
-  const score::DocumentContext& m_ctx;
   Timekeeper m_keep{*m_session};
 };
 }
