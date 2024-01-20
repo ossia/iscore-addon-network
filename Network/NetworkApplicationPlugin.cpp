@@ -1,3 +1,4 @@
+
 #include "NetworkApplicationPlugin.hpp"
 
 #include "IpDialog.hpp"
@@ -11,6 +12,7 @@
 #include <score/tools/IdentifierGeneration.hpp>
 #include <score/tools/std/Optional.hpp>
 
+#include <core/application/ApplicationSettings.hpp>
 #include <core/command/CommandStack.hpp>
 #include <core/document/Document.hpp>
 #include <core/document/DocumentModel.hpp>
@@ -42,6 +44,8 @@
 #include <Explorer/Widgets/ZeroConf/ZeroconfBrowser.hpp>
 #endif
 
+#include <QCommandLineParser>
+
 #include <wobjectimpl.h>
 W_OBJECT_IMPL(Network::NetworkApplicationPlugin)
 struct VisitorVariant;
@@ -55,16 +59,77 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(
     const score::GUIApplicationContext& app)
     : GUIApplicationPlugin{app}
 {
+  // Command-line option parsing
+  QCommandLineParser parser;
+
+  QCommandLineOption net_join_opt(
+      "network-join", QCoreApplication::translate("net", "ip:port"), "Name", "");
+  parser.addOption(net_join_opt);
+  QCommandLineOption net_host_opt(
+      "network-host", QCoreApplication::translate("net", "port"), "Name", "");
+  parser.addOption(net_host_opt);
+
+  parser.parse(app.applicationSettings.arguments);
+  this->m_arg_net_join = parser.value(net_join_opt);
+  this->m_arg_net_host = parser.value(net_host_opt);
+  // FIXME
+  // if(!m_arg_net_host.isEmpty() || !m_arg_net_join.isEmpty())
+  // {
+  //   ((score::ApplicationSettings&)app.applicationSettings).tryToRestore = false;
+  // }
 }
 
 NetworkApplicationPlugin::~NetworkApplicationPlugin() { }
 
-void NetworkApplicationPlugin::on_loadedDocument(score::Document& doc)
+void NetworkApplicationPlugin::on_createdDocument(score::Document& doc)
 {
-  if(auto np = doc.context().findPlugin<NetworkDocumentPlugin>())
+  qDebug() << Q_FUNC_INFO;
+  if(!m_arg_net_host.isEmpty())
   {
-    np->finish_loading();
+    do_makeServer(doc);
+    m_arg_net_host = {};
+    m_arg_net_join = {};
+    return;
   }
+
+  if(!m_arg_net_join.isEmpty())
+  {
+    QString name, host, ip;
+    int port{};
+
+    if(m_arg_net_join.contains("@"))
+    {
+      auto v = m_arg_net_join.split("@");
+      name = v[0];
+      host = v[1];
+    }
+    else
+    {
+      name = "cmd";
+      host = m_arg_net_join;
+    }
+
+    auto v = host.split(":");
+
+    if(v.size() >= 1)
+      ip = v[0];
+    else
+      ip = "127.0.0.1";
+
+    if(v.size() >= 2)
+      port = v[1].toInt();
+    else
+      port = 9090;
+
+    m_arg_net_host = {};
+    m_arg_net_join = {};
+    setupClientConnection(name, ip, port, {});
+  }
+}
+
+bool NetworkApplicationPlugin::handleStartup()
+{
+  return false;
 }
 
 void NetworkApplicationPlugin::setupClientConnection(
@@ -117,6 +182,38 @@ void NetworkApplicationPlugin::setupPlayerConnection(
       });
 }
 
+void NetworkApplicationPlugin::do_makeServer(score::Document& doc)
+{
+  const auto& ctx = doc.context();
+  NetworkDocumentPlugin* plug = ctx.findPlugin<NetworkDocumentPlugin>();
+  qDebug() << Q_FUNC_INFO << (QObject*)plug;
+  if(plug)
+  {
+    auto clt = new LocalClient(Id<Client>(0));
+    clt->setName(tr("Master"));
+    auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
+    auto editpol = new MasterEditionPolicy{serv, ctx};
+    plug->setEditPolicy(editpol);
+    auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
+    plug->setExecPolicy(execpol);
+  }
+  else
+  {
+    auto clt = new LocalClient(Id<Client>(0));
+    clt->setName(tr("Master"));
+    auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
+    auto policy = new MasterEditionPolicy{serv, ctx};
+    auto plug = new NetworkDocumentPlugin{ctx, policy, &doc};
+    auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
+
+    plug->setExecPolicy(execpol);
+    doc.model().addPluginModel(plug);
+  }
+
+  auto& panel = context.panel<Network::PanelDelegate>();
+  panel.networkPluginReady();
+}
+
 score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 {
   using namespace score;
@@ -143,37 +240,9 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 #endif
 
   QAction* makeServer = new QAction{tr("Make Server"), this};
-  connect(makeServer, &QAction::triggered, this, [&]() {
+  connect(makeServer, &QAction::triggered, this, [this] {
     if(auto doc = currentDocument())
-    {
-      const auto& ctx = doc->context();
-      NetworkDocumentPlugin* plug = ctx.findPlugin<NetworkDocumentPlugin>();
-      if(plug)
-      {
-        auto clt = new LocalClient(Id<Client>(0));
-        clt->setName(tr("Master"));
-        auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
-        auto editpol = new MasterEditionPolicy{serv, ctx};
-        plug->setEditPolicy(editpol);
-        auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
-        plug->setExecPolicy(execpol);
-      }
-      else
-      {
-        auto clt = new LocalClient(Id<Client>(0));
-        clt->setName(tr("Master"));
-        auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
-        auto policy = new MasterEditionPolicy{serv, ctx};
-        auto plug = new NetworkDocumentPlugin{ctx, policy, doc};
-        auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
-
-        plug->setExecPolicy(execpol);
-        doc->model().addPluginModel(plug);
-      }
-
-      auto& panel = context.panel<Network::PanelDelegate>();
-      panel.networkPluginReady();
-    }
+      do_makeServer(*doc);
   });
 
   fileMenu->addAction(makeServer);

@@ -22,7 +22,8 @@ public:
   NetworkApplicationPlugin(const score::GUIApplicationContext& app);
   ~NetworkApplicationPlugin();
 
-  void on_loadedDocument(score::Document& doc) override;
+  void on_createdDocument(score::Document& doc) override;
+  bool handleStartup() override;
 
   void
   setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
@@ -32,8 +33,12 @@ public:
   W_SLOT(setupPlayerConnection)
 
 private:
+  void do_makeServer(score::Document& doc);
   GUIElements makeGUIElements() override;
   std::unique_ptr<ClientSessionBuilder> m_sessionBuilder;
+
+  QString m_arg_net_join;
+  QString m_arg_net_host;
 
 #if defined(OSSIA_DNSSD)
   ZeroconfBrowser* m_serverBrowser{};
