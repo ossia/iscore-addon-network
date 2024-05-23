@@ -342,7 +342,7 @@ void PanelDelegate::setView(
 
   auto topology = new QWidget;
   auto topology_layout = new QVBoxLayout{topology};
-  m_subWidget->addTab(topology, tr("Topology"));
+  m_subWidget->addTab(topology, tr("Groups"));
   // The sub-widgets (group data presentation)
   topology_layout->addWidget(new QLabel{session->metaObject()->className()});
   topology_layout->addWidget(new GroupListWidget{mgr, m_subWidget});
@@ -419,8 +419,8 @@ It is only (barely) safe for small things such as:<br/>
 But not for anything that adds / removes objects.)_")});
   transport_lay->addStretch();
 
-  m_subWidget->addTab(transport_widg, tr("Transport"));
-  m_subWidget->addTab(new NetworkMetadataWidget{ctx, mgr, m_widget}, tr("Object"));
+  m_subWidget->addTab(transport_widg, tr("Control"));
+  m_subWidget->addTab(new NetworkMetadataWidget{ctx, mgr, m_widget}, tr("Settings"));
 }
 
 void PanelDelegate::setEmptyView()
