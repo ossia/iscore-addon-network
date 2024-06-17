@@ -142,8 +142,8 @@ void NetworkApplicationPlugin::setupClientConnection(
   m_sessionBuilder = std::make_unique<ClientSessionBuilder>(context, ip, port);
 
   connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady, this, [&]() {
-    auto& panel = context.panel<Network::PanelDelegate>();
-    panel.networkPluginReady();
+    if(auto panel = context.findPanel<Network::PanelDelegate>())
+      panel->networkPluginReady();
 
     m_sessionBuilder.reset();
   });
@@ -214,8 +214,8 @@ void NetworkApplicationPlugin::do_makeServer(score::Document& doc)
     doc.model().addPluginModel(plug);
   }
 
-  auto& panel = context.panel<Network::PanelDelegate>();
-  panel.networkPluginReady();
+  if(auto panel = context.findPanel<Network::PanelDelegate>())
+    panel->networkPluginReady();
 }
 
 score::GUIElements NetworkApplicationPlugin::makeGUIElements()

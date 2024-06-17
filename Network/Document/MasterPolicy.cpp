@@ -72,16 +72,19 @@ MasterEditionPolicy::MasterEditionPolicy(
   });
 
   // Play
-  auto& play_act = c.app.actions.action<Actions::NetworkPlay>();
-  connect(play_act.action(), &QAction::triggered, this, [&] {
-    m_session->broadcastToAllClients(m_session->makeMessage(mapi.play));
-    play();
-  });
-  auto& stop_act = c.app.actions.action<Actions::NetworkStop>();
-  connect(stop_act.action(), &QAction::triggered, this, [&] {
-    m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop));
-    stop();
-  });
+  if(c.app.mainWindow)
+  {
+    auto& play_act = c.app.actions.action<Actions::NetworkPlay>();
+    connect(play_act.action(), &QAction::triggered, this, [&] {
+      m_session->broadcastToAllClients(m_session->makeMessage(mapi.play));
+      play();
+    });
+    auto& stop_act = c.app.actions.action<Actions::NetworkStop>();
+    connect(stop_act.action(), &QAction::triggered, this, [&] {
+      m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop));
+      stop();
+    });
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   /// From a client to the master and the other clients
