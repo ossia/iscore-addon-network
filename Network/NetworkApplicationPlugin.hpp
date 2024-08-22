@@ -23,7 +23,7 @@ public:
   ~NetworkApplicationPlugin();
 
   void on_createdDocument(score::Document& doc) override;
-  bool handleStartup() override;
+  bool handleLoading() override;
 
   void
   setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);

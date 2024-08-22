@@ -71,8 +71,11 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(
 
   parser.parse(app.applicationSettings.arguments);
   this->m_arg_net_join = parser.value(net_join_opt);
-  if(int n = this->m_arg_net_join.toInt(); n < 1 || n > 65535)
-    this->m_arg_net_join = QString::number(9090);
+  {
+    bool ok = false;
+    if(int n = this->m_arg_net_join.toInt(&ok); ok && (n < 1 || n > 65535))
+      this->m_arg_net_join = QString::number(9090);
+  }
   this->m_arg_net_host = parser.value(net_host_opt);
   if(this->m_arg_net_host.isEmpty())
     this->m_arg_net_host = QString::number(9090);
@@ -87,7 +90,6 @@ NetworkApplicationPlugin::~NetworkApplicationPlugin() { }
 
 void NetworkApplicationPlugin::on_createdDocument(score::Document& doc)
 {
-  qDebug() << Q_FUNC_INFO;
   if(!m_arg_net_host.isEmpty())
   {
     do_makeServer(doc);
@@ -95,7 +97,10 @@ void NetworkApplicationPlugin::on_createdDocument(score::Document& doc)
     m_arg_net_join = {};
     return;
   }
+}
 
+bool NetworkApplicationPlugin::handleLoading()
+{
   if(!m_arg_net_join.isEmpty())
   {
     QString name, host, ip;
@@ -128,11 +133,8 @@ void NetworkApplicationPlugin::on_createdDocument(score::Document& doc)
     m_arg_net_host = {};
     m_arg_net_join = {};
     setupClientConnection(name, ip, port, {});
+    return true;
   }
-}
-
-bool NetworkApplicationPlugin::handleStartup()
-{
   return false;
 }
 
