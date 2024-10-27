@@ -78,7 +78,6 @@ public:
       case mode_type::Sum: {
         for(int i = 0; i < N; i++)
         {
-          int client_c = 0;
           for(auto& [channels, client] : current)
           {
             const int chans
@@ -86,8 +85,6 @@ public:
             bool next = false;
             for(int c = 0; c < chans; ++c)
             {
-              // qDebug() << "client: " << client_c << " ; channels: " << channels.size()
-              //          << " ; samples available: " << channels[c].size();
               if(channels[c].empty())
               {
                 next = true;
@@ -97,7 +94,6 @@ public:
               channels[c].pop_front();
             }
 
-            client_c++;
             if(next)
               break;
           }
