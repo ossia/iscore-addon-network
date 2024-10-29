@@ -77,8 +77,6 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(
       this->m_arg_net_join = QString::number(9090);
   }
   this->m_arg_net_host = parser.value(net_host_opt);
-  if(this->m_arg_net_host.isEmpty())
-    this->m_arg_net_host = QString::number(9090);
   // FIXME
   // if(!m_arg_net_host.isEmpty() || !m_arg_net_join.isEmpty())
   // {
@@ -193,6 +191,9 @@ void NetworkApplicationPlugin::do_makeServer(score::Document& doc)
   const auto& ctx = doc.context();
   NetworkDocumentPlugin* plug = ctx.findPlugin<NetworkDocumentPlugin>();
   qDebug() << Q_FUNC_INFO << (QObject*)plug;
+  if(m_arg_net_host.isEmpty())
+    m_arg_net_host = "9090";
+
   if(plug)
   {
     auto clt = new LocalClient(m_arg_net_host.toInt(), Id<Client>(0));
