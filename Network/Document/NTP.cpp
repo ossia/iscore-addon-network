@@ -1,7 +1,7 @@
 #include <Network/Document/NTP.hpp>
 
 #include <cmath>
-
+#if 0
 namespace Network
 {
 // NTP3 according to RFC 4330
@@ -69,3 +69,4 @@ NTP::duration_t NTP::ntp_to_duration(const NTP::ntp_impl& packet)
   return t;
 }
 }
+#endif

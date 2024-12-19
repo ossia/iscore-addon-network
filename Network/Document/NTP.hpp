@@ -6,6 +6,7 @@
 #include <chrono>
 #include <thread>
 
+#if 0
 namespace Network
 {
 namespace network = boost::asio;
@@ -33,3 +34,4 @@ private:
   udp::socket socket;
 };
 }
+#endif
