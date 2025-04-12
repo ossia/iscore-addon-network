@@ -1,5 +1,7 @@
 #include "GroupTableCheckbox.hpp"
 
+#include <score/widgets/SignalUtils.hpp>
+
 #include <QBoxLayout>
 #include <QCheckBox>
 #include <qnamespace.h>
@@ -11,7 +13,9 @@ namespace Network
 GroupTableCheckbox::GroupTableCheckbox()
 {
   m_cb = new QCheckBox;
-  connect(m_cb, &QCheckBox::stateChanged, this, &GroupTableCheckbox::stateChanged);
+  connect(
+      m_cb, SignalUtils::QCheckBox_checkStateChanged(), this,
+      &GroupTableCheckbox::stateChanged);
 
   auto lay = new QHBoxLayout{this};
   lay->addWidget(m_cb);
