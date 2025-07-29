@@ -34,7 +34,7 @@ AudioContext::AudioContext(uint64_t i, const score::DocumentContext& ctx)
 
 AudioContext::~AudioContext() { }
 
-void AudioContext::push(tcb::span<float*> data, int N)
+void AudioContext::push(std::span<float*> data, int N)
 {
   const int channels = data.size();
   const auto samples = data.data();

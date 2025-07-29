@@ -7,7 +7,7 @@
 #include <QByteArray>
 
 #include <halp/texture.hpp>
-#include <tcb/span.hpp>
+#include <span>
 
 #include <memory>
 
@@ -88,7 +88,7 @@ struct IMessageContext
 struct IAudioContext
 {
   virtual ~IAudioContext();
-  virtual void push(tcb::span<float*> samples, int N) = 0;
+  virtual void push(std::span<float*> samples, int N) = 0;
   virtual bool read(std::vector<AudioBuffer>&, int N) = 0;
 };
 

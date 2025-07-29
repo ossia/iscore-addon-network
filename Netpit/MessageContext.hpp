@@ -30,7 +30,7 @@ struct AudioContext : IAudioContext
 
   ~AudioContext();
 
-  void push(tcb::span<float*> samples, int N) override;
+  void push(std::span<float*> samples, int N) override;
   bool read(std::vector<AudioBuffer>&, int N) override;
 
   ossia::mpmc_queue<OutboundAudio> to_network;

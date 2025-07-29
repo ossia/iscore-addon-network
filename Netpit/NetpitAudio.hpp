@@ -64,7 +64,7 @@ public:
       return;
 
     // Send our current audio to the network
-    context->push(tcb::span<float*>(inputs.audio.samples, inputs.audio.channels), N);
+    context->push(std::span<float*>(inputs.audio.samples, inputs.audio.channels), N);
 
     // Read what the network has to say
     context->read(current, N);
