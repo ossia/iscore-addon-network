@@ -61,8 +61,10 @@ std::vector<score::InterfaceBase*> score_addon_network::factories(
 {
   {
     std::vector<score::InterfaceBase*> fx;
-    oscr::instantiate_fx<Netpit::MessagePit, Netpit::AudioPit, Netpit::VideoPit>(
-        fx, ctx, key);
+    oscr::instantiate_fx<Netpit::MessagePit>(fx, ctx, key);
+    oscr::instantiate_fx<Netpit::AudioPit>(fx, ctx, key);
+    oscr::instantiate_fx<Netpit::VideoPit>(fx, ctx, key);
+    
     if(!fx.empty())
       return fx;
   }
