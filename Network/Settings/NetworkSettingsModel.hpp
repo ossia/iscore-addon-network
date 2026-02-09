@@ -4,6 +4,10 @@
 #include <QString>
 
 #include <score_addon_network_export.h>
+namespace score
+{
+class SettingsDelegateFactory;
+}
 namespace Network
 {
 namespace Settings
