@@ -13,6 +13,9 @@ class SCORE_ADDON_NETWORK_EXPORT Model : public score::SettingsDelegateModel
   W_OBJECT(Model)
 public:
   Model(QSettings& set, const score::ApplicationContext& ctx);
+  Model(
+      const UuidKey<score::SettingsDelegateFactory>& k, QSettings& set,
+      const score::ApplicationContext& ctx);
 
   SCORE_SETTINGS_PARAMETER_HPP(SCORE_ADDON_NETWORK_EXPORT, QString, ClientName)
   SCORE_SETTINGS_PARAMETER_HPP(SCORE_ADDON_NETWORK_EXPORT, int, ClientPort)

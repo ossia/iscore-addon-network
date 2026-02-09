@@ -25,6 +25,18 @@ static auto list()
 }
 }
 Model::Model(QSettings& set, const score::ApplicationContext& ctx)
+    : score::SettingsDelegateModel{
+          score::uuids::string_generator::compute(
+              "ae3f6080-4414-417f-b9b2-83d87de934bd"),
+          nullptr}
+{
+  score::setupDefaultSettings(set, Parameters::list(), *this);
+}
+
+Model::Model(
+    const UuidKey<score::SettingsDelegateFactory>& k, QSettings& set,
+    const score::ApplicationContext& ctx)
+    : score::SettingsDelegateModel{k, nullptr}
 {
   score::setupDefaultSettings(set, Parameters::list(), *this);
 }
