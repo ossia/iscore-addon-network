@@ -1,3 +1,9 @@
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+
+if(NOT TARGET score_lib_base)
+  include(ScoreExternalAddon)
+endif()
+
 project(score_addon_network LANGUAGES CXX)
 
 if(NOT TARGET score_plugin_avnd)
