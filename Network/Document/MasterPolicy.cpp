@@ -12,6 +12,7 @@
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Document/MasterPolicy.hpp>
+#include <Network/Document/RemoteCommand.hpp>
 #include <Network/Group/NetworkActions.hpp>
 
 namespace Network
@@ -90,13 +91,18 @@ MasterEditionPolicy::MasterEditionPolicy(
   /// From a client to the master and the other clients
   /////////////////////////////////////////////////////////////////////////////
   s->mapper().addHandler(mapi.command_new, [&](const NetworkMessage& m) {
-    score::CommandData cmd;
-    DataStreamWriter writer{m.data};
-    writer.writeTo(cmd);
+    if(applyRemoteCommand(m_ctx, m.data, OnCommandFailure::Decline))
+    {
+      m_session->broadcastToOthers(m.clientId, m);
+      return;
+    }
 
-    stack.redoAndPushQuiet(m_ctx.app.instantiateUndoCommand(cmd));
-
-    m_session->broadcastToOthers(m.clientId, m);
+    // Not broadcast: the master and the other clients all stay on the state
+    // before this command, so the only peer out of sync is the one that sent
+    // it -- it applied the command locally before telling us about it. Say so,
+    // so that it stops sending edits built on a model we do not share.
+    m_session->sendMessage(
+        m.clientId, m_session->makeMessage(mapi.command_rejected));
   });
 
   // Undo-redo

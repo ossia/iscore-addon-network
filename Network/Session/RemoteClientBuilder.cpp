@@ -7,7 +7,10 @@
 #include <score/plugins/StringFactoryKey.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
+#include <score/application/ApplicationContext.hpp>
 #include <score/tools/IdentifierGeneration.hpp>
+
+#include <core/application/ApplicationSettings.hpp>
 
 #include <core/command/CommandStack.hpp>
 #include <core/document/Document.hpp>
@@ -33,6 +36,34 @@ namespace Network
 {
 class Client;
 
+namespace
+{
+//! Empty when the joining peer is compatible with us, otherwise why not.
+QString incompatibility(QDataStream& s)
+{
+  if(s.atEnd())
+    return QObject::tr(
+        "it runs a version of score too old to say which formats it speaks");
+
+  qint32 saveFormat{}, streamVersion{};
+  s >> saveFormat >> streamVersion;
+
+  const auto ourSaveFormat
+      = score::AppContext().applicationSettings.saveFormatVersion.value();
+  if(saveFormat != ourSaveFormat)
+    return QObject::tr("it uses document format %1, we use %2")
+        .arg(saveFormat)
+        .arg(ourSaveFormat);
+
+  if(streamVersion != QDataStream::Qt_DefaultCompiledVersion)
+    return QObject::tr("it encodes commands with Qt stream version %1, we use %2")
+        .arg(streamVersion)
+        .arg((int)QDataStream::Qt_DefaultCompiledVersion);
+
+  return {};
+}
+}
+
 RemoteClientBuilder::RemoteClientBuilder(MasterSession& session, QWebSocket* sock)
     : m_session{session}
 {
@@ -50,7 +81,26 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
     QDataStream s{m.data};
     s >> m_clientName;
 
-    // TODO validation
+    // Peers exchange commands as raw QDataStream payloads and mirror each
+    // other's document, so both ends have to agree on how those are encoded
+    // and on what the model means. Neither is negotiable after the fact: a
+    // mismatch does not fail loudly, it reads the wrong bytes into the right
+    // fields. Refuse the join instead.
+    if(auto reason = incompatibility(s); !reason.isEmpty())
+    {
+      NetworkMessage rejected;
+      rejected.address = mapi.session_rejected;
+      rejected.sessionId = m_session.id();
+      rejected.clientId = m_session.localClient().id();
+      {
+        QDataStream stream(&rejected.data, QIODevice::WriteOnly);
+        stream << reason;
+      }
+      qWarning() << "Refused a client:" << reason;
+      m_socket->sendMessage(rejected);
+      return;
+    }
+
     NetworkMessage idOffer;
     idOffer.address = mapi.session_idOffer;
     idOffer.sessionId = m_session.id();

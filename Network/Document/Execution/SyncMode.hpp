@@ -33,6 +33,9 @@ struct MessagesAPI
   const QByteArray command_undo;
   const QByteArray command_redo;
   const QByteArray command_index;
+  //! Master -> the client whose command it could not apply. That client is now
+  //! the one out of sync with the session, so it marks itself diverged.
+  const QByteArray command_rejected;
   const QByteArray lock;
   const QByteArray unlock;
 
@@ -46,6 +49,8 @@ struct MessagesAPI
   const QByteArray session_idOffer;
   const QByteArray session_join;
   const QByteArray session_document;
+  //! Master -> a client it will not accept, carrying the reason.
+  const QByteArray session_rejected;
 
   const QByteArray trigger_expression_true;
   const QByteArray trigger_previous_completed;

@@ -192,6 +192,21 @@ public:
 
   void on_stop();
 
+  //! True once a message from another peer could not be applied, so this copy
+  //! of the document no longer matches the rest of the session.
+  //!
+  //! Peers do not necessarily run the same build -- protocols and processes are
+  //! compiled in conditionally -- so a command can be unreadable or name a
+  //! factory we do not have. Applying the rest of the stream on top of a model
+  //! that already diverged corrupts it silently, and paths start resolving to
+  //! the wrong objects, so we stop and say so instead. Recovering means
+  //! rejoining the session.
+  bool diverged() const noexcept { return !m_divergence.isEmpty(); }
+  const QString& divergenceReason() const noexcept { return m_divergence; }
+  void setDiverged(const QString& reason);
+
+  void divergedChanged(const QString& reason) W_SIGNAL(divergedChanged, reason);
+
   void sessionChanged() W_SIGNAL(sessionChanged);
 
   const ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj) const noexcept;
@@ -241,6 +256,7 @@ private:
   EditionPolicy* m_policy{};
   ExecutionPolicy* m_exec{};
   GroupManager* m_groups{};
+  QString m_divergence;
 
   std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata> m_intervalsGroups;
   std::unordered_map<const Scenario::EventModel*, ObjectMetadata> m_eventGroups;

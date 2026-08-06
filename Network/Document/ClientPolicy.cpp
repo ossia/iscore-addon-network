@@ -10,6 +10,7 @@
 
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/ClientPolicy.hpp>
+#include <Network/Document/RemoteCommand.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Group/NetworkActions.hpp>
 namespace Network
@@ -73,23 +74,32 @@ ClientEditionPolicy::ClientEditionPolicy(
   // - command comes from the master
   //   -> apply it to the computer only
   s->mapper().addHandler(mapi.command_new, [&](const NetworkMessage& m) {
-    score::CommandData cmd;
-    DataStreamWriter writer{m.data};
-    writer.writeTo(cmd);
+    applyRemoteCommand(m_ctx, m.data);
+  });
 
-    m_ctx.document.commandStack().redoAndPushQuiet(
-        m_ctx.app.instantiateUndoCommand(cmd));
+  // The master could not apply a command we sent, so it did not relay it: we
+  // applied it locally and nobody else did.
+  s->mapper().addHandler(mapi.command_rejected, [&](const NetworkMessage&) {
+    if(auto* plug = m_ctx.findPlugin<NetworkDocumentPlugin>())
+      plug->setDiverged(
+          QStringLiteral("the master could not apply one of our commands"));
   });
 
   s->mapper().addHandler(mapi.command_undo, [&](const NetworkMessage&) {
+    if(!canApplyRemoteEdit(m_ctx))
+      return;
     m_ctx.document.commandStack().undoQuiet();
   });
 
   s->mapper().addHandler(mapi.command_redo, [&](const NetworkMessage&) {
+    if(!canApplyRemoteEdit(m_ctx))
+      return;
     m_ctx.document.commandStack().redoQuiet();
   });
 
   s->mapper().addHandler(mapi.command_index, [&](const NetworkMessage& m) {
+    if(!canApplyRemoteEdit(m_ctx))
+      return;
     QDataStream stream{m.data};
     int32_t idx;
     stream >> idx;

@@ -21,6 +21,7 @@ set(HDRS
     Network/Communication/NetworkSocket.hpp
     Network/Document/ClientPolicy.hpp
     Network/Document/DocumentPlugin.hpp
+    Network/Document/RemoteCommand.hpp
     Network/Document/MasterPolicy.hpp
     Network/Document/Timekeeper.hpp
     Network/Document/NTP.hpp
@@ -92,6 +93,7 @@ set(SRCS
     Network/Document/DocumentPluginSerialization.cpp
     Network/Document/PlaceholderPolicy.cpp
     Network/Document/MasterPolicy.cpp
+    Network/Document/RemoteCommand.cpp
     Network/Document/NTP.cpp
     Network/Document/Execution/BasicPruner.cpp
     Network/Document/Execution/DateExpression.cpp

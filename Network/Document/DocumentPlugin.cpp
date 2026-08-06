@@ -55,6 +55,7 @@ MessagesAPI::MessagesAPI()
     , command_undo{QByteArrayLiteral("/command/undo")}
     , command_redo{QByteArrayLiteral("/command/redo")}
     , command_index{QByteArrayLiteral("/command/index")}
+    , command_rejected{QByteArrayLiteral("/command/rejected")}
     , lock{QByteArrayLiteral("/lock")}
     , unlock{QByteArrayLiteral("/unlock")}
     ,
@@ -70,6 +71,7 @@ MessagesAPI::MessagesAPI()
     , session_idOffer{QByteArrayLiteral("/session/idOffer")}
     , session_join{QByteArrayLiteral("/session/join")}
     , session_document{QByteArrayLiteral("/session/document")}
+    , session_rejected{QByteArrayLiteral("/session/rejected")}
     ,
 
     trigger_expression_true{QByteArrayLiteral("/trigger/expression_true")}
@@ -221,6 +223,20 @@ GroupManager& NetworkDocumentPlugin::groupManager() const
 EditionPolicy& NetworkDocumentPlugin::policy() const
 {
   return *m_policy;
+}
+
+void NetworkDocumentPlugin::setDiverged(const QString& reason)
+{
+  // Only the first divergence is meaningful: everything after it is a
+  // consequence of applying the stream to a model that no longer matches.
+  if(!m_divergence.isEmpty())
+    return;
+
+  m_divergence = reason;
+  qWarning() << "Network session diverged:" << reason
+             << "- this document no longer matches the session and must be "
+                "rejoined to edit it safely.";
+  divergedChanged(reason);
 }
 
 void NetworkDocumentPlugin::on_stop()

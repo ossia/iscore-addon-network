@@ -10,6 +10,7 @@
 #include <core/command/CommandStackSerialization.hpp>
 #include <core/document/Document.hpp>
 #include <core/presenter/DocumentManager.hpp>
+#include <core/application/ApplicationSettings.hpp>
 #include <core/presenter/Presenter.hpp>
 
 #include <QDataStream>
@@ -25,6 +26,7 @@
 #include <Network/Document/Execution/SlavePolicy.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
+#include <Network/Settings/NetworkSettingsModel.hpp>
 #include <sys/types.h>
 
 #include <wobjectimpl.h>
@@ -51,6 +53,8 @@ void ClientSessionBuilder::initiateConnection()
   {
     QDataStream s{&askId.data, QIODevice::WriteOnly};
     s << m_clientName;
+    s << (qint32)m_context.applicationSettings.saveFormatVersion.value();
+    s << (qint32)QDataStream::Qt_DefaultCompiledVersion;
   }
 
   m_mastersocket->sendMessage(askId);
@@ -74,7 +78,16 @@ const std::vector<score::CommandData>& ClientSessionBuilder::commandStackData() 
 void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 {
   auto& mapi = MessagesAPI::instance();
-  if(m.address == mapi.session_idOffer)
+  if(m.address == mapi.session_rejected)
+  {
+    QDataStream s{m.data};
+    QString reason;
+    s >> reason;
+    qWarning() << "The session refused us:" << reason;
+    sessionFailed();
+    return;
+  }
+  else if(m.address == mapi.session_idOffer)
   {
     m_sessionId = m.sessionId; // The session offered
     m_masterId = m.clientId;   // Message is from the master
@@ -95,7 +108,10 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     auto remoteClient = new RemoteClient(m_mastersocket, m_masterId);
     remoteClient->setName("RemoteMaster");
     m_session = new ClientSession(
-        *remoteClient, new LocalClient(9090, m_clientId), m_sessionId, nullptr);
+        *remoteClient,
+        new LocalClient(
+            m_context.settings<Network::Settings::Model>().getClientPort(), m_clientId),
+        m_sessionId, nullptr);
     m_session->localClient().setName(m_clientName);
 
     // We start building our document.
