@@ -28,6 +28,7 @@
 
 #include <Netpit/MessageContext.hpp>
 #include <Network/Client/Client.hpp>
+#include <Network/Client/RemoteClient.hpp>
 #include <Network/Document/DeviceQueries.hpp>
 #include <Network/Document/FileQueries.hpp>
 #include <Network/Client/LocalClient.hpp>
@@ -116,6 +117,15 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   bindDeviceQueries(*m_rpc, m_context);
   bindFileQueries(*m_rpc, m_context);
 
+  // A question put to a peer that then leaves would otherwise wait out its
+  // timeout with nothing to wait for.
+  connect(
+      m_policy->session(), &Session::clientRemoved, m_rpc.get(),
+      [this](RemoteClient* c) {
+    if(c && m_rpc)
+      m_rpc->peerLost(c->id());
+      });
+
   // Base group set-up
   auto allGroup = new Group{"all", Id<Group>{0}, &groupManager()};
   allGroup->addClient(m_policy->session()->localClient().id());
@@ -151,6 +161,15 @@ void NetworkDocumentPlugin::setEditPolicy(EditionPolicy* pol)
   m_rpc = std::make_unique<RpcChannel>(*m_policy->session());
   bindDeviceQueries(*m_rpc, m_context);
   bindFileQueries(*m_rpc, m_context);
+
+  // A question put to a peer that then leaves would otherwise wait out its
+  // timeout with nothing to wait for.
+  connect(
+      m_policy->session(), &Session::clientRemoved, m_rpc.get(),
+      [this](RemoteClient* c) {
+    if(c && m_rpc)
+      m_rpc->peerLost(c->id());
+      });
 
   m_groups->cleanup(m_policy->session()->remoteClients());
 
@@ -253,6 +272,14 @@ void NetworkDocumentPlugin::setDiverged(const QString& reason)
     return;
 
   m_divergence = reason;
+
+  // Stop sending as well as stop applying. Our edits are now expressed against
+  // a document nobody else has, and the paths in them name different objects
+  // on the other side: one command we could not apply would otherwise become
+  // open-ended corruption of everybody else's copy.
+  if(m_policy)
+    m_policy->setSendCommands(false);
+
   qWarning() << "Network session diverged:" << reason
              << "- this document no longer matches the session and must be "
                 "rejoined to edit it safely.";

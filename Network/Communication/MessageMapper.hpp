@@ -1,4 +1,5 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/tools/std/HashMap.hpp>
 
@@ -17,7 +18,7 @@ namespace Network
 {
 struct NetworkMessage;
 
-class MessageMapper
+class SCORE_ADDON_NETWORK_EXPORT MessageMapper
 {
 public:
   /**

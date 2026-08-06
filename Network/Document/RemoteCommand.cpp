@@ -11,10 +11,12 @@
 
 #include <QByteArray>
 #include <QDebug>
+#include <QObject>
 
 #include <Network/Document/DocumentPlugin.hpp>
 
 #include <exception>
+#include <memory>
 
 namespace Network
 {
@@ -34,6 +36,20 @@ bool fail(
   else
     qWarning() << "Network session diverged:" << reason;
   return false;
+}
+
+//! A command that threw part-way through has already changed the model, and
+//! nothing puts that back. Whichever side we are, we no longer match the rest
+//! of the session -- declining is not available once the damage is done.
+bool failedWhileApplying(
+    const score::DocumentContext& ctx, const score::CommandData& cmd,
+    const QString& why)
+{
+  return fail(
+      ctx, OnCommandFailure::MarkDiverged,
+      QStringLiteral("command %1 failed part-way through: %2")
+          .arg(QString::fromUtf8(cmd.commandKey.toString()))
+          .arg(why));
 }
 }
 
@@ -70,7 +86,8 @@ bool applyRemoteCommand(
         QStringLiteral("a command from another peer could not be read"));
   }
 
-  auto* command = ctx.app.instantiateUndoCommandIfAvailable(cmd);
+  std::unique_ptr<score::Command> command{
+      ctx.app.instantiateUndoCommandIfAvailable(cmd)};
   if(!command)
   {
     return fail(
@@ -82,22 +99,16 @@ bool applyRemoteCommand(
 
   try
   {
-    ctx.document.commandStack().redoAndPushQuiet(command);
+    ctx.document.commandStack().redoAndPushQuiet(command.release());
   }
   catch(const std::exception& e)
   {
-    return fail(
-        ctx, onFailure,
-        QStringLiteral("command %1 could not be applied: %2")
-            .arg(QString::fromUtf8(cmd.commandKey.toString()))
-            .arg(QString::fromUtf8(e.what())));
+    return failedWhileApplying(
+        ctx, cmd, QString::fromUtf8(e.what()));
   }
   catch(...)
   {
-    return fail(
-        ctx, onFailure,
-        QStringLiteral("command %1 could not be applied")
-            .arg(QString::fromUtf8(cmd.commandKey.toString())));
+    return failedWhileApplying(ctx, cmd, QObject::tr("it could not be applied"));
   }
 
   return true;

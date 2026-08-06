@@ -1,6 +1,8 @@
 
 #include "Session.hpp"
 
+#include <stdexcept>
+
 #include <score/tools/std/Optional.hpp>
 
 #include <ossia/detail/algorithms.hpp>
@@ -41,7 +43,9 @@ MessageMapper& Session::mapper() const
 
 Client& Session::master() const
 {
-  throw;
+  // `throw;` with nothing in flight is std::terminate. A plain Session has no
+  // master -- PlaceholderEditionPolicy makes one -- so say that instead.
+  throw std::logic_error{"this session has no master"};
 }
 
 LocalClient& Session::localClient() const

@@ -30,9 +30,18 @@ void reportGone(const score::Environment::Callback<QString>& onFailed)
 }
 
 RemoteEnvironment::RemoteEnvironment(RpcChannel& rpc, Id<Client> peer)
-    : m_rpc{rpc}
+    : m_rpc{&rpc}
     , m_peer{std::move(peer)}
 {
+}
+
+bool RemoteEnvironment::stillConnected(const Callback<Failure>& onFailed) const
+{
+  if(m_rpc)
+    return true;
+  if(onFailed)
+    onFailed(QObject::tr("this document is no longer part of a session"));
+  return false;
 }
 
 RemoteEnvironment::~RemoteEnvironment() = default;
@@ -47,7 +56,10 @@ void RemoteEnvironment::list(
     const score::Uri& uri, Callback<std::vector<score::DirEntry>> onListed,
     Callback<Failure> onFailed)
 {
-  m_rpc.call(
+  if(!stillConnected(onFailed))
+    return;
+
+  m_rpc->call(
       m_peer, "fs.list", uriParams(uri),
       [onListed = std::move(onListed)](const rapidjson::Value& result) {
     if(!onListed)
@@ -79,7 +91,10 @@ void RemoteEnvironment::list(
 void RemoteEnvironment::read(
     const score::Uri& uri, Callback<QByteArray> onRead, Callback<Failure> onFailed)
 {
-  m_rpc.call(
+  if(!stillConnected(onFailed))
+    return;
+
+  m_rpc->call(
       m_peer, "fs.read", uriParams(uri),
       [onRead = std::move(onRead), onFailed](const rapidjson::Value& result) {
     if(!result.IsObject() || !result.HasMember("data") || !result["data"].IsString())
@@ -97,6 +112,9 @@ void RemoteEnvironment::read(
 void RemoteEnvironment::write(
     const score::Uri& uri, QByteArray data, Done onWritten, Callback<Failure> onFailed)
 {
+  if(!stillConnected(onFailed))
+    return;
+
   const auto text = uri.toString().toUtf8();
   const auto encoded = data.toBase64();
 
@@ -109,7 +127,7 @@ void RemoteEnvironment::write(
   w.String(encoded.constData(), encoded.size());
   w.EndObject();
 
-  m_rpc.call(
+  m_rpc->call(
       m_peer, "fs.write", QByteArray{buf.GetString(), (int)buf.GetLength()},
       [onWritten = std::move(onWritten)](const rapidjson::Value&) {
     if(onWritten)

@@ -2,6 +2,8 @@
 #include <score/model/Identifier.hpp>
 #include <score/tools/Environment.hpp>
 
+#include <QPointer>
+
 #include <score_addon_network_export.h>
 
 namespace Network
@@ -40,7 +42,13 @@ public:
       Callback<Failure> onFailed) override;
 
 private:
-  RpcChannel& m_rpc;
+  //! False, and reports, once the channel it was made with is gone.
+  bool stillConnected(const Callback<Failure>& onFailed) const;
+
+  //! Not a reference: setEditPolicy replaces the channel -- hosting from a
+  //! document that was joined does exactly that -- and the environment
+  //! outlives the one it was made with.
+  QPointer<RpcChannel> m_rpc;
   Id<Client> m_peer;
 };
 }

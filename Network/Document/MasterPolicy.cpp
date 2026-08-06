@@ -106,21 +106,33 @@ MasterEditionPolicy::MasterEditionPolicy(
   });
 
   // Undo-redo
+  // Movements of the stack are as much a message from the wire as a command
+  // is. undoQuiet pops whether or not there is anything to pop, and
+  // setIndexQuiet walks toward whatever number it is handed.
   s->mapper().addHandler(this, mapi.command_undo, [&](const NetworkMessage& m) {
-    stack.undoQuiet();
-    m_session->broadcastToOthers(m.clientId, m);
+    if(stack.canUndo())
+    {
+      stack.undoQuiet();
+      m_session->broadcastToOthers(m.clientId, m);
+    }
   });
   s->mapper().addHandler(this, mapi.command_redo, [&](const NetworkMessage& m) {
-    stack.redoQuiet();
-    m_session->broadcastToOthers(m.clientId, m);
+    if(stack.canRedo())
+    {
+      stack.redoQuiet();
+      m_session->broadcastToOthers(m.clientId, m);
+    }
   });
 
   s->mapper().addHandler(this, mapi.command_index, [&](const NetworkMessage& m) {
     QDataStream stream{m.data};
-    int32_t idx;
+    int32_t idx{};
     stream >> idx;
-    stack.setIndexQuiet(idx);
-    m_session->broadcastToOthers(m.clientId, m);
+    if(idx >= 0 && idx <= stack.size())
+    {
+      stack.setIndexQuiet(idx);
+      m_session->broadcastToOthers(m.clientId, m);
+    }
   });
 
   // Lock-unlock

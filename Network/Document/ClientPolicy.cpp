@@ -86,24 +86,26 @@ ClientEditionPolicy::ClientEditionPolicy(
   });
 
   s->mapper().addHandler(this, mapi.command_undo, [&](const NetworkMessage&) {
-    if(!canApplyRemoteEdit(m_ctx))
-      return;
-    m_ctx.document.commandStack().undoQuiet();
+    auto& stack = m_ctx.document.commandStack();
+    if(canApplyRemoteEdit(m_ctx) && stack.canUndo())
+      stack.undoQuiet();
   });
 
   s->mapper().addHandler(this, mapi.command_redo, [&](const NetworkMessage&) {
-    if(!canApplyRemoteEdit(m_ctx))
-      return;
-    m_ctx.document.commandStack().redoQuiet();
+    auto& stack = m_ctx.document.commandStack();
+    if(canApplyRemoteEdit(m_ctx) && stack.canRedo())
+      stack.redoQuiet();
   });
 
   s->mapper().addHandler(this, mapi.command_index, [&](const NetworkMessage& m) {
     if(!canApplyRemoteEdit(m_ctx))
       return;
     QDataStream stream{m.data};
-    int32_t idx;
+    int32_t idx{};
     stream >> idx;
-    m_ctx.document.commandStack().setIndexQuiet(idx);
+    auto& stack = m_ctx.document.commandStack();
+    if(idx >= 0 && idx <= stack.size())
+      stack.setIndexQuiet(idx);
   });
 
   s->mapper().addHandler(this, mapi.lock, [&](const NetworkMessage& m) {

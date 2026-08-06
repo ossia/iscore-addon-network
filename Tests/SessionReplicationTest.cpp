@@ -34,6 +34,7 @@
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Communication/Capabilities.hpp>
+#include <Network/Communication/MessageMapper.hpp>
 #include <score/serialization/JSONVisitor.hpp>
 #include <score/tools/Environment.hpp>
 #include <score/tools/FilePath.hpp>
@@ -698,5 +699,90 @@ TEST_CASE("A peer cannot reach outside the score's own files", "[session]")
     INFO(failure.toStdString());
     CHECK(written);
     CHECK(QFile::exists(projectDir + "/sub/ok.txt"));
+  });
+}
+
+TEST_CASE("A question to a peer that never answers still comes back", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* clientRpc
+        = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+    REQUIRE(clientRpc);
+
+    // Nobody by that id, so sendMessage drops it silently. Without a timeout
+    // neither callback ever runs and the caller waits for good.
+    QString failure;
+    bool answered = false;
+    clientRpc->call(
+        Id<Network::Client>{31337}, "device.protocols", {},
+        [&](const rapidjson::Value&) { answered = true; },
+        [&](const QString& e) { failure = e; }, 300);
+
+    REQUIRE(spin_until([&] { return answered || !failure.isEmpty(); }));
+    CHECK_FALSE(answered);
+    CHECK_FALSE(failure.isEmpty());
+  });
+}
+
+TEST_CASE("A diverged peer stops sending its edits too", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* plug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(plug);
+
+    score::CommandData unknown;
+    unknown.parentKey = CommandGroupKey{"NoSuchCommandGroup"};
+    unknown.commandKey = CommandKey{"NoSuchCommand"};
+    master.session->broadcastToAllClients(
+        master.session->makeMessage(
+            Network::MessagesAPI::instance().command_new, unknown));
+    REQUIRE(spin_until([&] { return plug->diverged(); }));
+
+    // Its edits are now expressed against a document nobody else has, and the
+    // paths in them name different objects on the other side.
+    auto& masterItv = rootInterval(*master.document);
+    const auto before = masterItv.metadata().getLabel();
+
+    auto& clientItv = rootInterval(*client);
+    client->context().document.commandStack().redoAndPush(
+        new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
+            clientItv, QStringLiteral("edited after diverging")});
+
+    spin_until([&] { return masterItv.metadata().getLabel() != before; }, 1000);
+    CHECK(masterItv.metadata().getLabel() == before);
+  });
+}
+
+TEST_CASE("The master ignores stack movements it cannot make", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    // undoQuiet pops whether or not there is anything to pop, and setIndexQuiet
+    // walks toward whatever number arrives.
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto& stack = master.document->context().document.commandStack();
+    const auto before = stack.size();
+
+    auto* session = master.session;
+    auto& mapi = Network::MessagesAPI::instance();
+    for(int i = 0; i < 20; i++)
+      session->mapper().map(session->makeMessage(mapi.command_undo));
+    session->mapper().map(session->makeMessage(mapi.command_index, (int32_t)999999));
+    session->mapper().map(session->makeMessage(mapi.command_index, (int32_t)-42));
+
+    QCoreApplication::processEvents();
+    CHECK(stack.size() == before);
+    CHECK(stack.currentIndex() >= 0);
+    CHECK(stack.currentIndex() <= stack.size());
   });
 }

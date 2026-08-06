@@ -51,19 +51,29 @@ public:
   //! Offer `method` to peers.
   void bind(QByteArray method, Handler handler);
 
-  //! Ask `peer`. `onError` is called if it refuses, cannot, or does not know
-  //! the method.
+  //! Ask `peer`. `onError` is called if it refuses, cannot, does not know the
+  //! method, or does not answer within `timeoutMs`. Exactly one of the two
+  //! callbacks runs, once.
   void call(
       const Id<Client>& peer, QByteArray method, const QByteArray& params,
-      OnResult onResult, OnError onError = {});
+      OnResult onResult, OnError onError = {}, int timeoutMs = 15000);
+
+  //! Fail everything still waiting on `peer`, which has gone.
+  void peerLost(const Id<Client>& peer);
 
 private:
   void onRequest(const NetworkMessage& m);
   void onResponse(const NetworkMessage& m);
   void send(const Id<Client>& target, const NetworkMessage& m);
 
+  void resolve(int64_t id, const rapidjson::Value* result, const QString& error);
+
   struct Pending
   {
+    //! Answers are matched on who was asked as well as on the number. Ids are
+    //! sequential and shared across peers, so without this any peer could
+    //! answer a question put to another.
+    Id<Client> peer;
     OnResult onResult;
     OnError onError;
   };

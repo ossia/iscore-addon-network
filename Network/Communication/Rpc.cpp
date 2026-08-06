@@ -3,14 +3,16 @@
 #include <score/serialization/JSONVisitor.hpp>
 
 #include <QDebug>
+#include <QTimer>
 
-#include <Network/Client/RemoteClient.hpp>
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Session/Session.hpp>
 
 #include <exception>
+#include <utility>
+#include <vector>
 
 namespace Network
 {
@@ -88,12 +90,48 @@ RpcChannel::RpcChannel(Session& session)
 
 RpcChannel::~RpcChannel()
 {
-  // Anything still waiting will never be answered now.
-  for(auto& [id, pending] : m_pending)
+  // Anything still waiting will never be answered now. Taken first, since a
+  // callback may start another request and would otherwise be adding to the
+  // container being walked.
+  auto pending = std::exchange(m_pending, {});
+  for(auto& [id, p] : pending)
   {
-    if(pending.onError)
-      pending.onError(QObject::tr("the session ended"));
+    if(p.onError)
+      p.onError(QObject::tr("the session ended"));
   }
+}
+
+void RpcChannel::resolve(
+    int64_t id, const rapidjson::Value* result, const QString& error)
+{
+  auto it = m_pending.find(id);
+  if(it == m_pending.end())
+    return;
+
+  const auto pending = it->second;
+  m_pending.erase(it);
+
+  if(result)
+  {
+    if(pending.onResult)
+      pending.onResult(*result);
+  }
+  else if(pending.onError)
+  {
+    pending.onError(error);
+  }
+}
+
+void RpcChannel::peerLost(const Id<Client>& peer)
+{
+  std::vector<int64_t> lost;
+  for(const auto& [id, pending] : m_pending)
+  {
+    if(pending.peer == peer)
+      lost.push_back(id);
+  }
+  for(auto id : lost)
+    resolve(id, nullptr, QObject::tr("that machine left the session"));
 }
 
 void RpcChannel::bind(QByteArray method, Handler handler)
@@ -103,26 +141,18 @@ void RpcChannel::bind(QByteArray method, Handler handler)
 
 void RpcChannel::send(const Id<Client>& target, const NetworkMessage& m)
 {
-  // A client reaches its one peer, the master, directly. Session::sendMessage
-  // looks through the remote clients, which on a client is not where the master
-  // is kept. On a master, master() is the local client and this does not apply.
-  if(target == m_session.master().id())
-  {
-    if(auto* remote = dynamic_cast<RemoteClient*>(&m_session.master()))
-    {
-      remote->sendMessage(m);
-      return;
-    }
-  }
+  // ClientSession adds its master to the remote clients, so sendMessage finds
+  // it like any other peer. Asking master() first was both unnecessary and
+  // fatal on a session that has none: the base returns by throwing.
   m_session.sendMessage(target, m);
 }
 
 void RpcChannel::call(
     const Id<Client>& peer, QByteArray method, const QByteArray& params,
-    OnResult onResult, OnError onError)
+    OnResult onResult, OnError onError, int timeoutMs)
 {
   const auto id = m_nextId++;
-  m_pending[id] = Pending{std::move(onResult), std::move(onError)};
+  m_pending[id] = Pending{peer, std::move(onResult), std::move(onError)};
 
   auto& mapi = MessagesAPI::instance();
   NetworkMessage m;
@@ -131,6 +161,16 @@ void RpcChannel::call(
   m.sessionId = m_session.id();
   m.data = requestBody(id, method, params);
   send(peer, m);
+
+  // Session::sendMessage drops a message whose target is gone, and a peer may
+  // simply never answer. Without this the caller waits forever and neither
+  // callback ever runs.
+  if(timeoutMs > 0)
+  {
+    QTimer::singleShot(timeoutMs, this, [this, id] {
+      resolve(id, nullptr, QObject::tr("that machine did not answer"));
+    });
+  }
 }
 
 void RpcChannel::onRequest(const NetworkMessage& m)
@@ -138,6 +178,12 @@ void RpcChannel::onRequest(const NetworkMessage& m)
   auto doc = readJson(m.data);
   if(doc.HasParseError() || !doc.IsObject() || !doc.HasMember("id")
      || !doc.HasMember("method"))
+  {
+    qWarning() << "Ignoring a malformed request";
+    return;
+  }
+
+  if(!doc["id"].IsInt64() || !doc["method"].IsString())
   {
     qWarning() << "Ignoring a malformed request";
     return;
@@ -183,26 +229,34 @@ void RpcChannel::onRequest(const NetworkMessage& m)
 void RpcChannel::onResponse(const NetworkMessage& m)
 {
   auto doc = readJson(m.data);
-  if(doc.HasParseError() || !doc.IsObject() || !doc.HasMember("id"))
+  if(doc.HasParseError() || !doc.IsObject() || !doc.HasMember("id")
+     || !doc["id"].IsInt64())
     return;
 
   const auto it = m_pending.find(doc["id"].GetInt64());
   if(it == m_pending.end())
     return;
 
-  const auto pending = it->second;
-  m_pending.erase(it);
+  // From whoever was asked, and nobody else.
+  if(!(it->second.peer == m.clientId))
+  {
+    qWarning() << "Ignoring an answer from a peer that was not asked";
+    return;
+  }
 
+  const auto id = it->first;
   if(doc.HasMember("error"))
   {
-    if(pending.onError)
-      pending.onError(QString::fromUtf8(
-          doc["error"].GetString(), doc["error"].GetStringLength()));
+    resolve(
+        id, nullptr,
+        doc["error"].IsString()
+            ? QString::fromUtf8(
+                  doc["error"].GetString(), doc["error"].GetStringLength())
+            : QObject::tr("the request failed"));
+    return;
   }
-  else if(pending.onResult)
-  {
-    static const rapidjson::Value nullResult;
-    pending.onResult(doc.HasMember("result") ? doc["result"] : nullResult);
-  }
+
+  static const rapidjson::Value nullResult;
+  resolve(id, doc.HasMember("result") ? &doc["result"] : &nullResult, {});
 }
 }
