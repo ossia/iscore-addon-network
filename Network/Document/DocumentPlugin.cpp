@@ -56,6 +56,8 @@ MessagesAPI::MessagesAPI()
     , command_redo{QByteArrayLiteral("/command/redo")}
     , command_index{QByteArrayLiteral("/command/index")}
     , command_rejected{QByteArrayLiteral("/command/rejected")}
+    , rpc_request{QByteArrayLiteral("/rpc/request")}
+    , rpc_response{QByteArrayLiteral("/rpc/response")}
     , lock{QByteArrayLiteral("/lock")}
     , unlock{QByteArrayLiteral("/unlock")}
     ,
@@ -108,6 +110,8 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   SCORE_ASSERT(policy);
   m_policy->setParent(this);
 
+  m_rpc = std::make_unique<RpcChannel>(*m_policy->session());
+
   // Base group set-up
   auto allGroup = new Group{"all", Id<Group>{0}, &groupManager()};
   allGroup->addClient(m_policy->session()->localClient().id());
@@ -137,6 +141,11 @@ void NetworkDocumentPlugin::setEditPolicy(EditionPolicy* pol)
   delete m_policy;
   pol->setParent(this);
   m_policy = pol;
+
+  // Its handlers live on the session's mapper, so it belongs to whichever
+  // session we are now part of rather than to the one we just left.
+  m_rpc = std::make_unique<RpcChannel>(*m_policy->session());
+
   m_groups->cleanup(m_policy->session()->remoteClients());
 
   sessionChanged();

@@ -37,6 +37,11 @@ struct SCORE_ADDON_NETWORK_EXPORT MessagesAPI
   //! Master -> the client whose command it could not apply. That client is now
   //! the one out of sync with the session, so it marks itself diverged.
   const QByteArray command_rejected;
+  //! A question addressed to one peer, and its answer. Alongside the document
+  //! channel rather than part of it: nothing here changes the document.
+  const QByteArray rpc_request;
+  const QByteArray rpc_response;
+
   const QByteArray lock;
   const QByteArray unlock;
 

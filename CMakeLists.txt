@@ -15,6 +15,7 @@ set(HDRS
     Network/Client/LocalClient.hpp
     Network/Client/RemoteClient.hpp
     Network/Communication/Capabilities.hpp
+    Network/Communication/Rpc.hpp
     Network/Communication/MessageMapper.hpp
     Network/Communication/MessageValidator.hpp
     Network/Communication/NetworkMessage.hpp
@@ -85,6 +86,7 @@ set(SRCS
 
     Network/Client/LocalClient.cpp
     Network/Communication/Capabilities.cpp
+    Network/Communication/Rpc.cpp
     Network/Communication/MessageMapper.cpp
     Network/Communication/MessageValidator.cpp
     Network/Communication/NetworkMessage.cpp

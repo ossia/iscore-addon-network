@@ -26,9 +26,11 @@
 #include <QElapsedTimer>
 
 #include <memory>
+#include <stdexcept>
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Communication/Capabilities.hpp>
+#include <Network/Communication/Rpc.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Document/MasterPolicy.hpp>
@@ -248,5 +250,93 @@ TEST_CASE("A build that lacks something is told which things", "[session]")
     // The other direction has nothing to report: the richer build lacks nothing.
     CHECK(rich.lacking(poor).isEmpty());
     CHECK(rich.lacking(poor).summary().isEmpty());
+  });
+}
+
+TEST_CASE("A peer can be asked something and answer", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* hostRpc = master.plugin->rpc();
+    auto* clientPlug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(hostRpc);
+    REQUIRE(clientPlug);
+    auto* clientRpc = clientPlug->rpc();
+    REQUIRE(clientRpc);
+
+    hostRpc->bind("test.echo", [](const rapidjson::Value& params) -> QByteArray {
+      REQUIRE(params.IsObject());
+      return QByteArrayLiteral(R"({"said":")")
+             + QByteArray{params["say"].GetString()} + QByteArrayLiteral(R"("})");
+    });
+
+    QString answer;
+    QString failure;
+    clientRpc->call(
+        master.session->localClient().id(), "test.echo",
+        QByteArrayLiteral(R"({"say":"hello"})"),
+        [&](const rapidjson::Value& result) {
+      answer = QString::fromUtf8(result["said"].GetString());
+        },
+        [&](const QString& e) { failure = e; });
+
+    REQUIRE(spin_until([&] { return !answer.isEmpty() || !failure.isEmpty(); }));
+    CHECK(failure.isEmpty());
+    CHECK(answer == "hello");
+  });
+}
+
+TEST_CASE("Asking for something a peer does not offer is answered, not dropped",
+          "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    // Peers do not all offer the same methods, for the same reason they do not
+    // all have the same plug-ins. A caller has to hear about that rather than
+    // wait forever.
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* clientRpc
+        = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+    REQUIRE(clientRpc);
+
+    QString failure;
+    bool answered = false;
+    clientRpc->call(
+        master.session->localClient().id(), "test.nothingImplementsThis", {},
+        [&](const rapidjson::Value&) { answered = true; },
+        [&](const QString& e) { failure = e; });
+
+    REQUIRE(spin_until([&] { return answered || !failure.isEmpty(); }));
+    CHECK_FALSE(answered);
+    CHECK(failure.contains("no such method"));
+  });
+}
+
+TEST_CASE("A handler that fails reports back instead of taking the peer down",
+          "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    master.plugin->rpc()->bind("test.fails", [](const rapidjson::Value&) -> QByteArray {
+      throw std::runtime_error{"the camera is unplugged"};
+    });
+
+    auto* clientRpc
+        = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+    QString failure;
+    clientRpc->call(
+        master.session->localClient().id(), "test.fails", {},
+        [](const rapidjson::Value&) {}, [&](const QString& e) { failure = e; });
+
+    REQUIRE(spin_until([&] { return !failure.isEmpty(); }));
+    CHECK(failure == "the camera is unplugged");
   });
 }

@@ -8,10 +8,12 @@
 
 #include <Netpit/Netpit.hpp>
 #include <Network/Communication/Capabilities.hpp>
+#include <Network/Communication/Rpc.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 
 #include <score_addon_network_export.h>
 
+#include <memory>
 #include <unordered_map>
 SCORE_SERIALIZE_DATASTREAM_DECLARE(, score::CommandData)
 
@@ -216,6 +218,10 @@ public:
   const Capabilities& remoteCapabilities() const noexcept { return m_remoteCaps; }
   void setRemoteCapabilities(Capabilities c);
 
+  //! Questions to and from the other peers, alongside command replication.
+  //! Null until a session exists.
+  RpcChannel* rpc() const noexcept { return m_rpc.get(); }
+
   void sessionChanged() W_SIGNAL(sessionChanged);
 
   const ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj) const noexcept;
@@ -267,6 +273,7 @@ private:
   GroupManager* m_groups{};
   QString m_divergence;
   Capabilities m_remoteCaps;
+  std::unique_ptr<RpcChannel> m_rpc;
 
   std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata> m_intervalsGroups;
   std::unordered_map<const Scenario::EventModel*, ObjectMetadata> m_eventGroups;
