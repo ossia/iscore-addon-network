@@ -9,6 +9,8 @@
 
 #include <core/command/CommandStackSerialization.hpp>
 #include <core/document/Document.hpp>
+
+#include <memory>
 #include <core/presenter/DocumentManager.hpp>
 #include <core/application/ApplicationSettings.hpp>
 #include <core/presenter/Presenter.hpp>
@@ -23,6 +25,7 @@
 #include <Network/Communication/NetworkSocket.hpp>
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
+#include <Network/Document/RemoteEnvironment.hpp>
 #include <Network/Document/Execution/SlavePolicy.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
@@ -164,10 +167,15 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     auto& ctx = doc->context();
     NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
     np.setRemoteCapabilities(m_masterCapabilities);
-    for(auto e : np.groupManager().groups())
-      qDebug() << e->name();
+
     np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});
     np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
+
+    // After setEditPolicy, which is what gives the plug-in a session to speak
+    // over. The score we just received belongs to the machine that sent it, and
+    // so do the files it refers to: nothing here can open them by path.
+    if(auto* rpc = np.rpc())
+      doc->setEnvironment(std::make_unique<RemoteEnvironment>(*rpc, m_masterId));
 
     // Send a message to the server with the ports that we opened :
     if(auto local_server = m_session->localClient().server())

@@ -36,6 +36,7 @@
 #include <Network/Communication/Capabilities.hpp>
 #include <score/serialization/JSONVisitor.hpp>
 #include <score/tools/Environment.hpp>
+#include <score/tools/FilePath.hpp>
 
 #include <Device/Protocol/ProtocolFactoryInterface.hpp>
 #include <Device/Protocol/ProtocolList.hpp>
@@ -574,5 +575,48 @@ TEST_CASE("The files of a score can be reached from another machine", "[session]
     REQUIRE(spin_until([&] { return got || !refused.isEmpty(); }));
     CHECK_FALSE(got);
     CHECK(refused.contains("project, library and cache"));
+  });
+}
+
+TEST_CASE("A joined document knows its files are elsewhere", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+
+    QTemporaryDir project;
+    REQUIRE(project.isValid());
+    const auto projectDir = giveProjectFolder(*master.document, project);
+
+    // Something for the host to have, so that a path resolving to nothing on
+    // the client cannot be confused with a file that simply is not there.
+    {
+      QFile f{projectDir + "/sound.wav"};
+      REQUIRE(f.open(QIODevice::WriteOnly));
+      f.write("not really audio");
+    }
+
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    // The host resolves its own files to real paths.
+    CHECK(master.document->environment().isLocal());
+    const auto hostPath
+        = score::locateFilePath("<PROJECT>:sound.wav", master.document->context());
+    CHECK(hostPath == projectDir + "/sound.wav");
+
+    // The client does not, and says so rather than handing back a path that
+    // looks plausible and opens nothing.
+    CHECK_FALSE(client->environment().isLocal());
+    CHECK(score::locateFilePath("<PROJECT>:sound.wav", client->context()).isEmpty());
+
+    // It reads them through the session instead.
+    QByteArray got;
+    QString failure;
+    client->environment().read(
+        score::Uri{score::UriScheme::Project, "sound.wav"},
+        [&](QByteArray d) { got = d; }, [&](const QString& e) { failure = e; });
+    REQUIRE(spin_until([&] { return !got.isEmpty() || !failure.isEmpty(); }));
+    CHECK(failure.isEmpty());
+    CHECK(got == "not really audio");
   });
 }
