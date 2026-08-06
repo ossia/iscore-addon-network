@@ -7,6 +7,7 @@
 #include <ossia/detail/hash_map.hpp>
 
 #include <Netpit/Netpit.hpp>
+#include <Network/Communication/Capabilities.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 
 #include <score_addon_network_export.h>
@@ -207,6 +208,14 @@ public:
 
   void divergedChanged(const QString& reason) W_SIGNAL(divergedChanged, reason);
 
+  //! What the other end of the session can construct.
+  //!
+  //! Empty until a session is joined. Kept so that the rest of score can ask
+  //! rather than guess: a client has no way to enumerate the host's audio
+  //! cards or cameras, but it can know which protocols exist there.
+  const Capabilities& remoteCapabilities() const noexcept { return m_remoteCaps; }
+  void setRemoteCapabilities(Capabilities c);
+
   void sessionChanged() W_SIGNAL(sessionChanged);
 
   const ObjectMetadata* get_metadata(const Scenario::IntervalModel& obj) const noexcept;
@@ -257,6 +266,7 @@ private:
   ExecutionPolicy* m_exec{};
   GroupManager* m_groups{};
   QString m_divergence;
+  Capabilities m_remoteCaps;
 
   std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata> m_intervalsGroups;
   std::unordered_map<const Scenario::EventModel*, ObjectMetadata> m_eventGroups;

@@ -163,6 +163,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
     auto& ctx = doc->context();
     NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
+    np.setRemoteCapabilities(m_masterCapabilities);
     for(auto e : np.groupManager().groups())
       qDebug() << e->name();
     np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});

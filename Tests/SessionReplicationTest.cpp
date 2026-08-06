@@ -220,6 +220,11 @@ TEST_CASE("Peers tell each other what they can build", "[session]")
     CHECK(g_lastMasterCapabilities->commands == local.commands);
 
     CHECK(local.lacking(*g_lastMasterCapabilities).isEmpty());
+
+    // And it is kept where the rest of score can ask, not only logged.
+    auto* plug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(plug);
+    CHECK(plug->remoteCapabilities().protocols == local.protocols);
   });
 }
 

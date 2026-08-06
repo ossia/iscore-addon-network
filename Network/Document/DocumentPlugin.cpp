@@ -225,6 +225,11 @@ EditionPolicy& NetworkDocumentPlugin::policy() const
   return *m_policy;
 }
 
+void NetworkDocumentPlugin::setRemoteCapabilities(Capabilities c)
+{
+  m_remoteCaps = std::move(c);
+}
+
 void NetworkDocumentPlugin::setDiverged(const QString& reason)
 {
   // Only the first divergence is meaningful: everything after it is a
