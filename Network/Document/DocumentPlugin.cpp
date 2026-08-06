@@ -29,6 +29,7 @@
 #include <Netpit/MessageContext.hpp>
 #include <Network/Client/Client.hpp>
 #include <Network/Document/DeviceQueries.hpp>
+#include <Network/Document/FileQueries.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Group/Group.hpp>
@@ -113,6 +114,7 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
 
   m_rpc = std::make_unique<RpcChannel>(*m_policy->session());
   bindDeviceQueries(*m_rpc, m_context);
+  bindFileQueries(*m_rpc, m_context);
 
   // Base group set-up
   auto allGroup = new Group{"all", Id<Group>{0}, &groupManager()};
@@ -148,6 +150,7 @@ void NetworkDocumentPlugin::setEditPolicy(EditionPolicy* pol)
   // session we are now part of rather than to the one we just left.
   m_rpc = std::make_unique<RpcChannel>(*m_policy->session());
   bindDeviceQueries(*m_rpc, m_context);
+  bindFileQueries(*m_rpc, m_context);
 
   m_groups->cleanup(m_policy->session()->remoteClients());
 

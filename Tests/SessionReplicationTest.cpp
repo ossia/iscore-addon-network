@@ -24,6 +24,10 @@
 #include <core/presenter/DocumentManager.hpp>
 
 #include <QElapsedTimer>
+#include <QFile>
+#include <QTemporaryDir>
+
+#include <algorithm>
 
 #include <memory>
 #include <stdexcept>
@@ -31,11 +35,13 @@
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Communication/Capabilities.hpp>
 #include <score/serialization/JSONVisitor.hpp>
+#include <score/tools/Environment.hpp>
 
 #include <Device/Protocol/ProtocolFactoryInterface.hpp>
 #include <Device/Protocol/ProtocolList.hpp>
 
 #include <Network/Communication/Rpc.hpp>
+#include <Network/Document/RemoteEnvironment.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Document/MasterPolicy.hpp>
@@ -453,5 +459,120 @@ TEST_CASE("Asking about a protocol the host does not have says so", "[session]")
     REQUIRE(spin_until([&] { return answered || !failure.isEmpty(); }));
     CHECK_FALSE(answered);
     CHECK(failure.contains("no protocol"));
+  });
+}
+
+namespace
+{
+//! Both implementations, driven through the same interface, so that what is
+//! asserted is the contract rather than either one's internals.
+void checkEnvironment(score::Environment& env, const QString& projectDir)
+{
+  const score::Uri file{score::UriScheme::Project, "notes.txt"};
+  const QByteArray body = "written through the environment";
+
+  QString failure;
+  bool written = false;
+  env.write(file, body, [&] { written = true; }, [&](const QString& e) { failure = e; });
+  REQUIRE(spin_until([&] { return written || !failure.isEmpty(); }));
+  INFO(failure.toStdString());
+  REQUIRE(written);
+
+  // It really is a file on the host, wherever the caller was.
+  CHECK(QFile::exists(projectDir + "/notes.txt"));
+
+  QByteArray read;
+  env.read(file, [&](QByteArray d) { read = d; }, [&](const QString& e) { failure = e; });
+  REQUIRE(spin_until([&] { return !read.isEmpty() || !failure.isEmpty(); }));
+  CHECK(failure.isEmpty());
+  CHECK(read == body);
+
+  std::vector<score::DirEntry> listed;
+  bool didList = false;
+  env.list(
+      score::Uri{score::UriScheme::Project, {}},
+      [&](std::vector<score::DirEntry> e) {
+    listed = std::move(e);
+    didList = true;
+      },
+      [&](const QString& e) { failure = e; });
+  REQUIRE(spin_until([&] { return didList || !failure.isEmpty(); }));
+  CHECK(failure.isEmpty());
+  CHECK(std::any_of(listed.begin(), listed.end(), [](const score::DirEntry& e) {
+    return e.name == "notes.txt" && !e.directory && e.size > 0;
+  }));
+
+}
+
+
+//! A saved-looking document, since <PROJECT>: is relative to where the document
+//! is and resolving it canonicalises: the file has to exist for its folder to
+//! have a canonical path at all.
+QString giveProjectFolder(score::Document& doc, QTemporaryDir& dir)
+{
+  const QString documentPath = dir.path() + "/host.score";
+  QFile f{documentPath};
+  SCORE_ASSERT(f.open(QIODevice::WriteOnly));
+  f.close();
+
+  doc.metadata().setFileName(documentPath);
+  return QFileInfo{documentPath}.canonicalPath();
+}
+}
+
+TEST_CASE("The files of a score can be reached on this machine", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto* doc = score::test::new_document(ctx);
+    REQUIRE(doc);
+
+    QTemporaryDir project;
+    REQUIRE(project.isValid());
+    const auto projectDir = giveProjectFolder(*doc, project);
+    REQUIRE_FALSE(projectDir.isEmpty());
+
+    score::LocalEnvironment local{doc->context()};
+    CHECK(local.isLocal());
+    CHECK_FALSE(local.resolve(score::Uri{score::UriScheme::Project, "a"}).isEmpty());
+
+    checkEnvironment(local, projectDir);
+  });
+}
+
+TEST_CASE("The files of a score can be reached from another machine", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+
+    QTemporaryDir project;
+    REQUIRE(project.isValid());
+    const auto projectDir = giveProjectFolder(*master.document, project);
+    REQUIRE_FALSE(projectDir.isEmpty());
+
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+    auto* rpc = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+    REQUIRE(rpc);
+
+    Network::RemoteEnvironment remote{*rpc, master.session->localClient().id()};
+
+    // The point of the distinction: there is no path here that leads to it, so
+    // callers cannot quietly fall back to opening one.
+    CHECK_FALSE(remote.isLocal());
+    CHECK(remote.resolve(score::Uri{score::UriScheme::Project, "a"}).isEmpty());
+
+    checkEnvironment(remote, projectDir);
+
+    // Locally an absolute path is just a path the user chose. Across a session
+    // it names a place on somebody else's machine, and the schemes are the
+    // whole of what keeps a peer inside the score's own files.
+    QString refused;
+    bool got = false;
+    remote.read(
+        score::Uri{score::UriScheme::Absolute, "/etc/passwd"},
+        [&](QByteArray) { got = true; }, [&](const QString& e) { refused = e; });
+    REQUIRE(spin_until([&] { return got || !refused.isEmpty(); }));
+    CHECK_FALSE(got);
+    CHECK(refused.contains("project, library and cache"));
   });
 }
