@@ -246,22 +246,34 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 #endif
 
   QAction* makeServer = new QAction{tr("Make Server"), this};
+#if defined(__EMSCRIPTEN__)
+  // A page cannot listen for connections: LocalClient has no server there, and
+  // QWebSocketServer does not exist. The web build can join a session, not host
+  // one, and saying so beats a menu entry that half-works.
+  makeServer->setEnabled(false);
+  makeServer->setToolTip(
+      tr("A score running in a browser can join a session but cannot host one."));
+#else
   connect(makeServer, &QAction::triggered, this, [this] {
     if(auto doc = currentDocument())
       do_makeServer(*doc);
   });
+#endif
 
   fileMenu->addAction(makeServer);
 
   QAction* connectLocal = new QAction{tr("Join Server"), this};
-  connect(connectLocal, &QAction::triggered, this, [&]() {
-    IpDialog dial{QApplication::activeWindow()};
-
-    if(dial.exec())
-    {
+  connect(connectLocal, &QAction::triggered, this, [this]() {
+    // Shown rather than exec()'d: exec() runs a nested event loop, which the
+    // browser's main thread cannot provide. There it returned immediately with
+    // a rejection, so joining a session from the web build did nothing at all.
+    auto* dial = new IpDialog{QApplication::activeWindow()};
+    dial->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dial, &QDialog::accepted, this, [this, dial] {
       // Default is 127.0.0.1 : 9090
-      setupClientConnection(QString{}, dial.ip(), dial.port(), {});
-    }
+      setupClientConnection(QString{}, dial->ip(), dial->port(), {});
+    });
+    dial->open();
   });
 
   fileMenu->addAction(connectLocal);

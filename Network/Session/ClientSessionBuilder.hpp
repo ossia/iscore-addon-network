@@ -45,6 +45,9 @@ public:
   const std::vector<score::CommandData>& commandStackData() const;
 
   void on_messageReceived(const NetworkMessage& m);
+
+  //! Load the received document, off the socket callback.
+  void buildDocument();
   W_SLOT(on_messageReceived)
 
   void connected() W_SIGNAL(connected);
@@ -60,6 +63,7 @@ private:
 
   std::vector<score::CommandData> m_commandStack;
   QByteArray m_documentData;
+  QByteArray m_sessionMessage;
 
   ClientSession* m_session{};
   Capabilities m_masterCapabilities;

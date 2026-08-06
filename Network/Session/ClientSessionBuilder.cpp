@@ -136,60 +136,75 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
         m_sessionId, nullptr);
     m_session->localClient().setName(m_clientName);
 
-    // We start building our document.
-    DataStreamWriter writer{m.data};
-    writer.m_stream >> m_documentData;
+    m_sessionMessage = m.data;
 
-    // The SessionBuilder should have a saved document and saved command list.
-    // However there is a difference with what happens when there is a crash :
-    // Here the document is sent as it is in its current state. The CommandList
-    // only serves in case somebody does undo, so that the computer who joined
-    // later can still undo, too.
-
-    score::Document* doc = m_context.docManager.loadDocument(
-        m_context, "Untitled", m_documentData, JSONObject::type(),
-        *m_context.interfaces<score::DocumentDelegateList>().begin()); // TODO id instead
-
-    if(!doc)
-    {
-      qDebug() << "Invalid document received";
-      delete m_session;
-      m_session = nullptr;
-
-      sessionFailed();
-      return;
-    }
-
-    score::loadCommandStack(m_context.components, writer, doc->commandStack(), [](auto) {
-      return true;
-    }); // No redo.
-
-    auto& ctx = doc->context();
-    NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
-    np.setRemoteCapabilities(m_masterCapabilities);
-
-    np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});
-    np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
-
-    // After setEditPolicy, which is what gives the plug-in a session to speak
-    // over. The score we just received belongs to the machine that sent it, and
-    // so do the files it refers to: nothing here can open them by path.
-    if(auto* rpc = np.rpc())
-      doc->setEnvironment(std::make_unique<RemoteEnvironment>(*rpc, m_masterId));
-
-    // Send a message to the server with the ports that we opened :
-    if(auto local_server = m_session->localClient().server())
-    {
-      m_session->master().sendMessage(m_session->makeMessage(
-          mapi.session_portinfo, local_server->m_localAddress,
-          local_server->m_localPort));
-    }
-    else
-    {
-      m_session->master().sendMessage(m_session->makeMessage(
-          mapi.session_portinfo, QString("__web_client__"), 554433));
-    }
-    sessionReady();
+    // Off the socket callback before touching documents. Loading one closes
+    // the current document if it is still untouched, and closing spins the
+    // event loop -- which in a browser can only be done from a stack the
+    // runtime can suspend, and a WebSocket message handler is not one. Queued,
+    // this runs from Qt's own event loop instead, where it can.
+    QMetaObject::invokeMethod(this, [this] { buildDocument(); }, Qt::QueuedConnection);
   }
+}
+
+void ClientSessionBuilder::buildDocument()
+{
+  auto& mapi = MessagesAPI::instance();
+
+  // The command stack follows the document in the same message, so both are
+  // read from the one stream.
+  DataStreamWriter writer{m_sessionMessage};
+  writer.m_stream >> m_documentData;
+
+  // The SessionBuilder should have a saved document and saved command list.
+  // However there is a difference with what happens when there is a crash :
+  // Here the document is sent as it is in its current state. The CommandList
+  // only serves in case somebody does undo, so that the computer who joined
+  // later can still undo, too.
+
+  score::Document* doc = m_context.docManager.loadDocument(
+      m_context, "Untitled", m_documentData, JSONObject::type(),
+      *m_context.interfaces<score::DocumentDelegateList>().begin()); // TODO id instead
+
+  if(!doc)
+  {
+    qDebug() << "Invalid document received";
+    delete m_session;
+    m_session = nullptr;
+
+    sessionFailed();
+    return;
+  }
+
+  score::loadCommandStack(m_context.components, writer, doc->commandStack(), [](auto) {
+    return true;
+  }); // No redo.
+
+  auto& ctx = doc->context();
+  NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
+  np.setRemoteCapabilities(m_masterCapabilities);
+
+  np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});
+  np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
+
+  // After setEditPolicy, which is what gives the plug-in a session to speak
+  // over. The score we just received belongs to the machine that sent it, and
+  // so do the files it refers to: nothing here can open them by path.
+  if(auto* rpc = np.rpc())
+    doc->setEnvironment(std::make_unique<RemoteEnvironment>(*rpc, m_masterId));
+
+  // Send a message to the server with the ports that we opened :
+  if(auto local_server = m_session->localClient().server())
+  {
+    m_session->master().sendMessage(m_session->makeMessage(
+        mapi.session_portinfo, local_server->m_localAddress,
+        local_server->m_localPort));
+  }
+  else
+  {
+    m_session->master().sendMessage(m_session->makeMessage(
+        mapi.session_portinfo, QString("__web_client__"), 554433));
+  }
+  sessionReady();
 }
 }
