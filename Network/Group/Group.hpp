@@ -9,6 +9,8 @@
 
 #include <Network/Client/Client.hpp>
 
+#include <score_addon_network_export.h>
+
 #include <vector>
 
 class DataStream;
@@ -26,7 +28,7 @@ namespace Network
 // Each client can be in a group (it will execute all the intervals that are
 // part of this group).
 
-class Group : public IdentifiedObject<Group>
+class SCORE_ADDON_NETWORK_EXPORT Group : public IdentifiedObject<Group>
 {
   W_OBJECT(Group)
   Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)

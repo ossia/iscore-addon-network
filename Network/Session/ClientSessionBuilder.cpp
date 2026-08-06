@@ -38,8 +38,9 @@ W_OBJECT_IMPL(Network::ClientSessionBuilder)
 namespace Network
 {
 ClientSessionBuilder::ClientSessionBuilder(
-    const score::GUIApplicationContext& ctx, QString ip, int port)
+    const score::GUIApplicationContext& ctx, QString ip, int port, PeerRole role)
     : m_context{ctx}
+    , m_role{role}
 {
   m_mastersocket = new NetworkSocket(ip, port, nullptr);
   connect(
@@ -64,6 +65,7 @@ void ClientSessionBuilder::initiateConnection()
     s << (qint32)m_context.applicationSettings.saveFormatVersion.value();
     s << (qint32)QDataStream::Qt_DefaultCompiledVersion;
     s << Capabilities::local(m_context);
+    s << int32_t(m_role);
   }
 
   m_mastersocket->sendMessage(askId);
@@ -118,6 +120,20 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
       }
     }
 
+    // The host's answer wins: it is the one that knows what the session can
+    // accommodate, and a host too old to answer runs a session of performers.
+    if(!s.atEnd())
+    {
+      int32_t confirmed{};
+      s >> confirmed;
+      m_role = (confirmed == int32_t(PeerRole::Terminal)) ? PeerRole::Terminal
+                                                          : PeerRole::Performer;
+    }
+    else
+    {
+      m_role = PeerRole::Performer;
+    }
+
     NetworkMessage join;
     join.address = mapi.session_join;
     join.clientId = m_clientId;
@@ -162,9 +178,13 @@ void ClientSessionBuilder::buildDocument()
   // only serves in case somebody does undo, so that the computer who joined
   // later can still undo, too.
 
+  const auto docRole = (m_role == PeerRole::Terminal) ? score::DocumentRole::Terminal
+                                                      : score::DocumentRole::Local;
+
   score::Document* doc = m_context.docManager.loadDocument(
       m_context, "Untitled", m_documentData, JSONObject::type(),
-      *m_context.interfaces<score::DocumentDelegateList>().begin()); // TODO id instead
+      *m_context.interfaces<score::DocumentDelegateList>().begin(),
+      docRole); // TODO id instead
 
   if(!doc)
   {
@@ -184,8 +204,20 @@ void ClientSessionBuilder::buildDocument()
   NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
   np.setRemoteCapabilities(m_masterCapabilities);
 
-  np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});
-  np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
+  if(m_role == PeerRole::Terminal)
+  {
+    // No execution policy at all: it exists to carry netpit traffic for
+    // processes running here, and none do. The document plug-in arrived with
+    // the score and cannot be declined, but everything in it that serves
+    // execution is optional and stays unused.
+    m_session->localClient().setRole(PeerRole::Terminal);
+    np.setEditPolicy(new TerminalEditionPolicy{m_session, ctx});
+  }
+  else
+  {
+    np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});
+    np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
+  }
 
   // After setEditPolicy, which is what gives the plug-in a session to speak
   // over. The score we just received belongs to the machine that sent it, and

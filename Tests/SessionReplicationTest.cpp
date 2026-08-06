@@ -40,6 +40,12 @@
 #include <score/tools/FilePath.hpp>
 
 #include <Device/Protocol/ProtocolFactoryInterface.hpp>
+#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
+#include <Explorer/Explorer/DeviceExplorerModel.hpp>
+#include <Network/Client/RemoteClient.hpp>
+#include <Network/Group/Group.hpp>
+#include <Network/Group/GroupExecution.hpp>
+#include <Network/Group/GroupManager.hpp>
 #include <Device/Protocol/ProtocolList.hpp>
 
 #include <Network/Communication/Rpc.hpp>
@@ -51,6 +57,7 @@
 #include <Network/Session/MasterSession.hpp>
 
 #include <score_test/App.hpp>
+#include <score_test/ProbeProtocol.hpp>
 #include <score_test/Document.hpp>
 
 #include <catch2/catch_all.hpp>
@@ -120,9 +127,12 @@ Network::Capabilities* g_lastMasterCapabilities{};
 //! Polls rather than connecting to the builder's signals: verdigris signals do
 //! not resolve by member-pointer across a shared-library boundary, since the
 //! metaobject's IndexOfMethod handler is not exported.
-score::Document* joinSession(const score::GUIApplicationContext& ctx, int port)
+score::Document* joinSession(
+    const score::GUIApplicationContext& ctx, int port,
+    Network::PeerRole role = Network::PeerRole::Performer)
 {
-  auto builder = std::make_unique<Network::ClientSessionBuilder>(ctx, "127.0.0.1", port);
+  auto builder
+      = std::make_unique<Network::ClientSessionBuilder>(ctx, "127.0.0.1", port, role);
 
   if(!spin_until([&] { return builder->builtSession() != nullptr; }))
     return nullptr;
@@ -787,5 +797,156 @@ TEST_CASE("The master ignores stack movements it cannot make", "[session]")
     CHECK(stack.size() == before);
     CHECK(stack.currentIndex() >= 0);
     CHECK(stack.currentIndex() <= stack.size());
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Terminals: peers that edit and watch a score running somewhere else.
+// ---------------------------------------------------------------------------
+
+TEST_CASE("A terminal joins as one, and the host knows it", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    // The role the client asked for is the one its document was built with:
+    // devices are instantiated while loading, so a role settled afterwards
+    // would have settled too late.
+    CHECK(client->role() == score::DocumentRole::Terminal);
+
+    // And the host agrees, rather than each end holding its own opinion.
+    const auto& peers = master.session->remoteClients();
+    REQUIRE(peers.size() == 1);
+    CHECK(peers.front()->role() == Network::PeerRole::Terminal);
+  });
+}
+
+TEST_CASE("An ordinary peer is still a performer", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    CHECK(client->role() == score::DocumentRole::Local);
+
+    const auto& peers = master.session->remoteClients();
+    REQUIRE(peers.size() == 1);
+    CHECK(peers.front()->role() == Network::PeerRole::Performer);
+  });
+}
+
+TEST_CASE("A terminal edits the score like any peer", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto& masterItv = rootInterval(*master.document);
+    auto& clientItv = rootInterval(*client);
+
+    // Host -> terminal.
+    const auto fromHost = QStringLiteral("from the host");
+    master.document->context().document.commandStack().redoAndPush(
+        new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
+            masterItv, fromHost});
+    REQUIRE(spin_until([&] { return clientItv.metadata().getLabel() == fromHost; }));
+
+    // Terminal -> host. This is the whole point: not running the score is not
+    // the same as not editing it.
+    const auto fromTerminal = QStringLiteral("from the terminal");
+    client->context().document.commandStack().redoAndPush(
+        new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
+            clientItv, fromTerminal});
+    REQUIRE(spin_until([&] { return masterItv.metadata().getLabel() == fromTerminal; }));
+
+    auto* plug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(plug);
+    CHECK_FALSE(plug->diverged());
+  });
+}
+
+TEST_CASE("A terminal builds none of the host's devices", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    score::test::register_probe_protocol(ctx);
+
+    auto master = hostSession(ctx);
+
+    // The host has a device. It is a protocol both ends have, so a terminal
+    // declining to build it is a decision and not an absence.
+    auto& hostDevices
+        = master.document->context().plugin<Explorer::DeviceDocumentPlugin>();
+    hostDevices.explorer().addDevice(
+        score::test::probe_device_node(QStringLiteral("stagebox")));
+
+    score::test::ProbeProtocolFactory::requests = 0;
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    CHECK(score::test::ProbeProtocolFactory::requests == 0);
+
+    // The device is still there to be edited, just not opened.
+    auto& clientDevices = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+    REQUIRE(clientDevices.rootNode().childCount() == 1);
+    CHECK(
+        clientDevices.rootNode().childAt(0).get<Device::DeviceSettings>().name
+        == QStringLiteral("stagebox"));
+    CHECK(clientDevices.list().findDevice(QStringLiteral("stagebox")) == nullptr);
+  });
+}
+
+TEST_CASE("A performer does build the host's devices", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    score::test::register_probe_protocol(ctx);
+
+    auto master = hostSession(ctx);
+    auto& hostDevices
+        = master.document->context().plugin<Explorer::DeviceDocumentPlugin>();
+    hostDevices.explorer().addDevice(
+        score::test::probe_device_node(QStringLiteral("stagebox")));
+
+    score::test::ProbeProtocolFactory::requests = 0;
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    // The precondition of the case above: joining normally does open them.
+    CHECK(score::test::ProbeProtocolFactory::requests == 1);
+  });
+}
+
+TEST_CASE("A terminal is not waited on for a shared trigger", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto& gm = master.plugin->groupManager();
+    auto* group = gm.group(gm.defaultGroup());
+    REQUIRE(group);
+
+    // The host is in the default group and executes, so it counts.
+    REQUIRE(group->clients().size() == 1);
+    CHECK(Network::executingClients(*master.session, *group) == 1);
+
+    // Put the terminal in the group, as a person could from the group panel.
+    // It is a member, but it will never have an opinion about a trigger:
+    // counting it means OnAll never becomes true and the trigger never fires
+    // for anybody.
+    REQUIRE(master.session->remoteClients().size() == 1);
+    group->addClient(master.session->remoteClients().front()->id());
+
+    REQUIRE(group->clients().size() == 2);
+    CHECK(Network::executingClients(*master.session, *group) == 1);
+
+    // An id naming nobody is a disconnection, which is a different question:
+    // it stays counted rather than being silently written off here.
+    group->addClient(Id<Network::Client>{999});
+    CHECK(Network::executingClients(*master.session, *group) == 2);
   });
 }

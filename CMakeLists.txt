@@ -49,6 +49,8 @@ set(HDRS
     Network/Group/Commands/RemoveClientFromGroup.hpp
     Network/Group/Commands/RemoveGroup.hpp
     Network/Group/Commands/AddCustomMetadata.hpp
+    Network/Client/PeerRole.hpp
+    Network/Group/GroupExecution.hpp
     Network/Group/Group.hpp
     Network/Group/NetworkActions.hpp
     Network/Group/GroupManager.hpp
@@ -119,6 +121,7 @@ set(SRCS
     Network/Group/Commands/RemoveClientFromGroup.cpp
     Network/Group/Commands/AddCustomMetadata.cpp
     Network/Group/Group.cpp
+    Network/Group/GroupExecution.cpp
     Network/Group/GroupManager.cpp
     Network/Group/GroupMetadata.cpp
     Network/Group/GroupMetadataWidget.cpp

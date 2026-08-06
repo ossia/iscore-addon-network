@@ -5,6 +5,7 @@
 #include <score/actions/ActionManager.hpp>
 #include <score/tools/Bind.hpp>
 
+#include <core/application/ApplicationSettings.hpp>
 #include <core/command/CommandStack.hpp>
 #include <core/document/Document.hpp>
 
@@ -193,6 +194,56 @@ void GUIClientEditionPolicy::stop()
   auto act = m_ctx.app.actions.action<Actions::Stop>().action();
   act->trigger();
 }
+
+TerminalEditionPolicy::TerminalEditionPolicy(
+    ClientSession* s, const score::DocumentContext& c)
+    : ClientEditionPolicy{s, c}
+{
+  if(!c.app.applicationSettings.gui)
+    return;
+
+  // The ordinary transport actions, not just the network ones: on a terminal
+  // there is nothing else Play could mean, and a person who presses it expects
+  // the score to start -- on the machine that has it.
+  auto& acts = c.app.actions;
+  connect(
+      acts.action<Actions::Play>().action(), &QAction::triggered, this,
+      &TerminalEditionPolicy::requestPlay);
+  connect(
+      acts.action<Actions::PlayGlobal>().action(), &QAction::triggered, this,
+      &TerminalEditionPolicy::requestPlay);
+  connect(
+      acts.action<Actions::NetworkPlay>().action(), &QAction::triggered, this,
+      &TerminalEditionPolicy::requestPlay);
+
+  connect(
+      acts.action<Actions::Stop>().action(), &QAction::triggered, this,
+      &TerminalEditionPolicy::requestStop);
+  connect(
+      acts.action<Actions::NetworkStop>().action(), &QAction::triggered, this,
+      &TerminalEditionPolicy::requestStop);
+}
+
+void TerminalEditionPolicy::requestPlay()
+{
+  m_session->master().sendMessage(
+      m_session->makeMessage(MessagesAPI::instance().play));
+}
+
+void TerminalEditionPolicy::requestStop()
+{
+  m_session->master().sendMessage(
+      m_session->makeMessage(MessagesAPI::instance().stop));
+}
+
+void TerminalEditionPolicy::play()
+{
+  // The host started; nothing starts here. What the transport shows comes from
+  // the host's own reports rather than from this message, which says only that
+  // it was asked -- not that it succeeded.
+}
+
+void TerminalEditionPolicy::stop() { }
 
 PlayerClientEditionPolicy::PlayerClientEditionPolicy(
     ClientSession* s, const score::DocumentContext& c)

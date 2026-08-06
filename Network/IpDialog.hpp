@@ -2,6 +2,9 @@
 #include <QDialog>
 #include <QString>
 
+#include <Network/Client/PeerRole.hpp>
+
+class QCheckBox;
 class QSpinBox;
 class QWidget;
 class QLineEdit;
@@ -16,6 +19,7 @@ public:
 
   int port() const;
   const QString& ip() const;
+  PeerRole role() const;
 
 private:
   void accepted();
@@ -23,8 +27,10 @@ private:
 
   QSpinBox* m_portBox{};
   QLineEdit* m_ipBox{};
+  QCheckBox* m_terminalBox{};
 
   int m_port{};
   QString m_ip;
+  PeerRole m_role{PeerRole::Performer};
 };
 }

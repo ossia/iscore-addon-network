@@ -131,6 +131,23 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
       }
     }
 
+    // Appended last so a peer that predates roles simply does not send one and
+    // is taken for a performer, which is what it is.
+    if(!s.atEnd())
+    {
+      int32_t requested{};
+      s >> requested;
+      if(requested == int32_t(PeerRole::Terminal))
+        m_role = PeerRole::Terminal;
+    }
+
+    {
+      // Confirmed rather than merely acknowledged: the client uses what we
+      // answer, so a host that has to refuse a role has somewhere to say so.
+      QDataStream stream(&idOffer.data, QIODevice::Append);
+      stream << int32_t(m_role);
+    }
+
     m_socket->sendMessage(idOffer);
   }
   else if(m.address == mapi.session_join)
@@ -161,6 +178,7 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
 
     m_remoteClient = new RemoteClient(m_socket, m_clientId);
     m_remoteClient->setName(m_clientName);
+    m_remoteClient->setRole(m_role);
     clientReady(this, m_remoteClient);
   }
 }

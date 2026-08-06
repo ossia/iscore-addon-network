@@ -68,8 +68,16 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(
   QCommandLineOption net_host_opt(
       "network-host", QCoreApplication::translate("net", "port"), "Name", "");
   parser.addOption(net_host_opt);
+  QCommandLineOption net_terminal_opt(
+      "network-terminal",
+      QCoreApplication::translate(
+          "net", "Join as a terminal: edit and watch the score, but run "
+                 "nothing on this machine."));
+  parser.addOption(net_terminal_opt);
 
   parser.parse(app.applicationSettings.arguments);
+  if(parser.isSet(net_terminal_opt))
+    this->m_arg_role = PeerRole::Terminal;
   this->m_arg_net_join = parser.value(net_join_opt);
   {
     bool ok = false;
@@ -130,7 +138,7 @@ bool NetworkApplicationPlugin::handleLoading()
 
     m_arg_net_host = {};
     m_arg_net_join = {};
-    setupClientConnection(name, ip, port, {});
+    joinSession(ip, port, m_arg_role);
     return true;
   }
   return false;
@@ -139,7 +147,12 @@ bool NetworkApplicationPlugin::handleLoading()
 void NetworkApplicationPlugin::setupClientConnection(
     QString name, QString ip, int port, QMap<QString, QByteArray>)
 {
-  m_sessionBuilder = std::make_unique<ClientSessionBuilder>(context, ip, port);
+  joinSession(ip, port, PeerRole::Performer);
+}
+
+void NetworkApplicationPlugin::joinSession(QString ip, int port, PeerRole role)
+{
+  m_sessionBuilder = std::make_unique<ClientSessionBuilder>(context, ip, port, role);
 
   connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady, this, [&]() {
     if(auto panel = context.findPanel<Network::PanelDelegate>())
@@ -271,7 +284,7 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
     dial->setAttribute(Qt::WA_DeleteOnClose);
     connect(dial, &QDialog::accepted, this, [this, dial] {
       // Default is 127.0.0.1 : 9090
-      setupClientConnection(QString{}, dial->ip(), dial->port(), {});
+      joinSession(dial->ip(), dial->port(), dial->role());
     });
     dial->open();
   });

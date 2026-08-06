@@ -1,4 +1,5 @@
 #pragma once
+#include <Network/Client/PeerRole.hpp>
 #include <Network/Communication/Capabilities.hpp>
 #include <score_addon_network_export.h>
 #include <score/command/Command.hpp>
@@ -31,10 +32,15 @@ class SCORE_ADDON_NETWORK_EXPORT ClientSessionBuilder final : public QObject
 {
   W_OBJECT(ClientSessionBuilder)
 public:
-  ClientSessionBuilder(const score::GUIApplicationContext&, QString ip, int port);
+  ClientSessionBuilder(
+      const score::GUIApplicationContext&, QString ip, int port,
+      PeerRole role = PeerRole::Performer);
 
   void initiateConnection();
   ClientSession* builtSession() const;
+
+  //! What the host agreed to, which is what the document was built for.
+  PeerRole role() const noexcept { return m_role; }
 
   //! What the host can construct. Differs from ours whenever the two builds do.
   const Capabilities& masterCapabilities() const noexcept
@@ -67,5 +73,6 @@ private:
 
   ClientSession* m_session{};
   Capabilities m_masterCapabilities;
+  PeerRole m_role{PeerRole::Performer};
 };
 }

@@ -2,6 +2,8 @@
 #include <score/model/Identifier.hpp>
 #include <score/tools/std/Optional.hpp>
 
+#include <Network/Client/PeerRole.hpp>
+
 #include <QObject>
 #include <QString>
 
@@ -43,5 +45,6 @@ private:
   bool m_refused{};
   bool m_joined{};
   QString m_clientName;
+  PeerRole m_role{PeerRole::Performer};
 };
 }

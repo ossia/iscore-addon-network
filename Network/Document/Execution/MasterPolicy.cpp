@@ -8,6 +8,7 @@
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/Execution/MasterPolicy.hpp>
 #include <Network/Document/MasterPolicy.hpp>
+#include <Network/Group/GroupExecution.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
 #include <Network/Session/Session.hpp>
@@ -90,7 +91,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
       const auto count_ready = ossia::count_if(
           e.values, [](const auto& p) { return bool(p.second) && *p.second; });
 
-      if(e.ready(count_ready, grp->clients().size()))
+      if(e.ready(count_ready, executingClients(s, *grp)))
       {
         // Trigger the others :
 

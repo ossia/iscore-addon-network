@@ -1,6 +1,8 @@
 #pragma once
 #include <score/plugins/application/GUIApplicationPlugin.hpp>
 
+#include <Network/Client/PeerRole.hpp>
+
 #include <memory>
 #include <verdigris>
 
@@ -25,9 +27,12 @@ public:
   void on_createdDocument(score::Document& doc) override;
   bool handleLoading() override;
 
+  //! Kept at four arguments: it is connected to ZeroconfBrowser by member
+  //! pointer, where a defaulted parameter would not count.
   void
   setupClientConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
   W_SLOT(setupClientConnection)
+  void joinSession(QString ip, int port, PeerRole role);
   void
   setupPlayerConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
   W_SLOT(setupPlayerConnection)
@@ -39,6 +44,7 @@ private:
 
   QString m_arg_net_join;
   QString m_arg_net_host;
+  PeerRole m_arg_role{PeerRole::Performer};
 
 #if defined(OSSIA_DNSSD)
   ZeroconfBrowser* m_serverBrowser{};
