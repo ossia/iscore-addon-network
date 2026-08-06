@@ -950,3 +950,29 @@ TEST_CASE("A terminal is not waited on for a shared trigger", "[session][termina
     CHECK(Network::executingClients(*master.session, *group) == 2);
   });
 }
+
+TEST_CASE("A terminal follows the host's playhead", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto& hostItv = rootInterval(*master.document);
+    auto& termItv = rootInterval(*client);
+
+    REQUIRE(termItv.duration.playPercentage() == 0.);
+
+    // What the host's executor does as the score runs. A terminal has no
+    // executor, so without the report its cursor never moves at all.
+    hostItv.duration.setPlayPercentage(0.5);
+
+    REQUIRE(spin_until([&] { return termItv.duration.playPercentage() > 0.; }));
+    CHECK(termItv.duration.playPercentage() == Catch::Approx(0.5));
+
+    hostItv.duration.setPlayPercentage(0.75);
+    REQUIRE(
+        spin_until([&] { return termItv.duration.playPercentage() > 0.6; }));
+    CHECK(termItv.duration.playPercentage() == Catch::Approx(0.75));
+  });
+}

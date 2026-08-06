@@ -45,6 +45,10 @@ struct SCORE_ADDON_NETWORK_EXPORT MessagesAPI
   const QByteArray lock;
   const QByteArray unlock;
 
+  //! Host -> peers: how far along the score is, so that a peer with no
+  //! executor can still show where it has got to.
+  const QByteArray exec_position;
+
   const QByteArray ping;
   const QByteArray pong;
   const QByteArray play;

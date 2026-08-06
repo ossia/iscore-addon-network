@@ -13,6 +13,7 @@
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Document/MasterPolicy.hpp>
 #include <Network/Document/RemoteCommand.hpp>
+#include <Network/Document/Transport.hpp>
 #include <Network/Group/NetworkActions.hpp>
 
 namespace Network
@@ -28,6 +29,9 @@ MasterEditionPolicy::MasterEditionPolicy(
 {
   auto& stack = c.document.commandStack();
   auto& mapi = MessagesAPI::instance();
+
+  // Peers that do not execute have no other way to know where the score is.
+  bindTransportBroadcast(*this, *m_session, m_ctx);
 
   /////////////////////////////////////////////////////////////////////////////
   /// From the master to the clients

@@ -51,6 +51,7 @@ set(HDRS
     Network/Group/Commands/AddCustomMetadata.hpp
     Network/Client/PeerRole.hpp
     Network/Group/GroupExecution.hpp
+    Network/Document/Transport.hpp
     Network/Group/Group.hpp
     Network/Group/NetworkActions.hpp
     Network/Group/GroupManager.hpp
@@ -106,6 +107,7 @@ set(SRCS
     Network/Document/FileQueries.cpp
     Network/Document/RemoteEnvironment.cpp
     Network/Document/RemoteCommand.cpp
+    Network/Document/Transport.cpp
     Network/Document/NTP.cpp
     Network/Document/Execution/BasicPruner.cpp
     Network/Document/Execution/DateExpression.cpp

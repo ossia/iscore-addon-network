@@ -65,7 +65,8 @@ MessagesAPI::MessagesAPI()
     , unlock{QByteArrayLiteral("/unlock")}
     ,
 
-    ping{QByteArrayLiteral("/ping")}
+    exec_position{QByteArrayLiteral("/exec/position")}
+    , ping{QByteArrayLiteral("/ping")}
     , pong{QByteArrayLiteral("/pong")}
     , play{QByteArrayLiteral("/play")}
     , stop{QByteArrayLiteral("/stop")}
