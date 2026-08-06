@@ -40,8 +40,10 @@ PlayerSessionBuilder::PlayerSessionBuilder(
   connect(
       m_mastersocket, &NetworkSocket::messageReceived, this,
       &PlayerSessionBuilder::on_messageReceived);
-  connect(
-      m_mastersocket, &NetworkSocket::connected, this, &PlayerSessionBuilder::connected);
+  connect(m_mastersocket, &NetworkSocket::connected, this, [this] {
+    initiateConnection();
+    connected();
+  });
 }
 
 void PlayerSessionBuilder::initiateConnection()

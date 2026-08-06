@@ -54,10 +54,6 @@ void PlayerPlugin::setupServer()
       connect(m_sessionBuilder.get(), &PlayerSessionBuilder::sessionFailed, this, [&]() {
         m_sessionBuilder.reset();
       });
-
-      connect(m_sessionBuilder.get(), &PlayerSessionBuilder::connected, this, [&] {
-        m_sessionBuilder->initiateConnection();
-      });
     });
   });
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <QByteArray>
 namespace Network
 {
@@ -24,7 +25,7 @@ enum class ShareMode
   Free
 };
 
-struct MessagesAPI
+struct SCORE_ADDON_NETWORK_EXPORT MessagesAPI
 {
   MessagesAPI();
   static const MessagesAPI& instance();

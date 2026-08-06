@@ -41,8 +41,12 @@ ClientSessionBuilder::ClientSessionBuilder(
   connect(
       m_mastersocket, &NetworkSocket::messageReceived, this,
       &ClientSessionBuilder::on_messageReceived);
-  connect(
-      m_mastersocket, &NetworkSocket::connected, this, &ClientSessionBuilder::connected);
+  // Asking for an id is the only thing anyone ever did on connection, so do it
+  // here rather than making every caller wire it up.
+  connect(m_mastersocket, &NetworkSocket::connected, this, [this] {
+    initiateConnection();
+    connected();
+  });
 }
 
 void ClientSessionBuilder::initiateConnection()

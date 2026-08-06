@@ -165,3 +165,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 
 setup_score_plugin(${PROJECT_NAME})
+
+if(SCORE_TESTING)
+  add_subdirectory(Tests)
+endif()

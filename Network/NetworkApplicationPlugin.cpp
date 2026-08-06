@@ -150,9 +150,6 @@ void NetworkApplicationPlugin::setupClientConnection(
   connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed, this, [&]() {
     m_sessionBuilder.reset();
   });
-  connect(m_sessionBuilder.get(), &ClientSessionBuilder::connected, this, [&]() {
-    m_sessionBuilder->initiateConnection();
-  });
 }
 
 void NetworkApplicationPlugin::setupPlayerConnection(

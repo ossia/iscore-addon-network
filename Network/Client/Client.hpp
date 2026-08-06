@@ -1,9 +1,10 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <score/model/IdentifiedObject.hpp>
 
 namespace Network
 {
-class Client : public IdentifiedObject<Client>
+class SCORE_ADDON_NETWORK_EXPORT Client : public IdentifiedObject<Client>
 {
   W_OBJECT(Client)
 public:

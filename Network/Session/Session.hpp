@@ -1,4 +1,5 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <score/model/IdentifiedObject.hpp>
 #include <score/model/Identifier.hpp>
 
@@ -19,7 +20,7 @@ namespace Network
 {
 class MessageMapper;
 class MessageValidator;
-class Session : public IdentifiedObject<Session>
+class SCORE_ADDON_NETWORK_EXPORT Session : public IdentifiedObject<Session>
 {
   W_OBJECT(Session)
 public:

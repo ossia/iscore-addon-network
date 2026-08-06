@@ -1,4 +1,5 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <score/command/Command.hpp>
 #include <score/command/CommandData.hpp>
 #include <score/model/Identifier.hpp>
@@ -25,7 +26,7 @@ class Session;
 struct NetworkMessage;
 
 //! Used by a client to join a Session.
-class ClientSessionBuilder final : public QObject
+class SCORE_ADDON_NETWORK_EXPORT ClientSessionBuilder final : public QObject
 {
   W_OBJECT(ClientSessionBuilder)
 public:
