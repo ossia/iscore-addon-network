@@ -605,10 +605,13 @@ TEST_CASE("A joined document knows its files are elsewhere", "[session]")
         = score::locateFilePath("<PROJECT>:sound.wav", master.document->context());
     CHECK(hostPath == projectDir + "/sound.wav");
 
-    // The client does not, and says so rather than handing back a path that
-    // looks plausible and opens nothing.
+    // The client cannot place it, and hands the reference back untouched --
+    // several callers write this result into the model and relativize it again
+    // on save, so an empty string would erase the reference for every machine.
     CHECK_FALSE(client->environment().isLocal());
-    CHECK(score::locateFilePath("<PROJECT>:sound.wav", client->context()).isEmpty());
+    CHECK(
+        score::locateFilePath("<PROJECT>:sound.wav", client->context())
+        == "<PROJECT>:sound.wav");
 
     // It reads them through the session instead.
     QByteArray got;

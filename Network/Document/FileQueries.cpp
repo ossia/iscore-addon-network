@@ -74,7 +74,14 @@ QString rootOf(const score::Uri& uri, const score::DocumentContext& ctx)
 {
   const auto root = score::Uri{uri.scheme, {}}.resolve(ctx);
   if(root.isEmpty())
-    throw std::runtime_error{"that location does not exist on this machine"};
+    throw std::runtime_error{
+        "this machine has no such location: the document may not have been "
+        "saved, or the library may not be set up"};
+
+  // The media cache is made on first use, so not existing yet is ordinary and
+  // is not the same as a request pointing somewhere it should not.
+  QDir{}.mkpath(root);
+
   const auto canonical = QFileInfo{root}.canonicalFilePath();
   if(canonical.isEmpty())
     throw std::runtime_error{"that location does not exist on this machine"};

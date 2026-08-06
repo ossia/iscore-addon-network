@@ -99,6 +99,7 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
       }
       qWarning() << "Refused a client:" << reason;
       m_socket->sendMessage(rejected);
+      m_refused = true;
       return;
     }
 
@@ -112,6 +113,7 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
       // TODO make a strong id with the client array!!!!!!
       int32_t id = score::random_id_generator::getRandomId();
       m_clientId = Id<Client>(id);
+      m_offered = true;
       stream << id;
       stream << Capabilities::local(score::AppContext());
     }
@@ -133,7 +135,16 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
   }
   else if(m.address == mapi.session_join)
   {
-    // TODO validation
+    // Refusing a client only means anything if it cannot then help itself to
+    // the document: nothing obliged it to ask for an id first, or to stop
+    // after being told no, and joining twice made two clients on one socket.
+    if(m_refused || !m_offered || m_joined)
+    {
+      qWarning() << "Ignoring a join from a client that was not admitted";
+      return;
+    }
+    m_joined = true;
+
     NetworkMessage doc;
     doc.address = mapi.session_document;
 
