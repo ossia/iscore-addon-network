@@ -73,31 +73,31 @@ ClientEditionPolicy::ClientEditionPolicy(
   /////////////////////////////////////////////////////////////////////////////
   // - command comes from the master
   //   -> apply it to the computer only
-  s->mapper().addHandler(mapi.command_new, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.command_new, [&](const NetworkMessage& m) {
     applyRemoteCommand(m_ctx, m.data);
   });
 
   // The master could not apply a command we sent, so it did not relay it: we
   // applied it locally and nobody else did.
-  s->mapper().addHandler(mapi.command_rejected, [&](const NetworkMessage&) {
+  s->mapper().addHandler(this, mapi.command_rejected, [&](const NetworkMessage&) {
     if(auto* plug = m_ctx.findPlugin<NetworkDocumentPlugin>())
       plug->setDiverged(
           QStringLiteral("the master could not apply one of our commands"));
   });
 
-  s->mapper().addHandler(mapi.command_undo, [&](const NetworkMessage&) {
+  s->mapper().addHandler(this, mapi.command_undo, [&](const NetworkMessage&) {
     if(!canApplyRemoteEdit(m_ctx))
       return;
     m_ctx.document.commandStack().undoQuiet();
   });
 
-  s->mapper().addHandler(mapi.command_redo, [&](const NetworkMessage&) {
+  s->mapper().addHandler(this, mapi.command_redo, [&](const NetworkMessage&) {
     if(!canApplyRemoteEdit(m_ctx))
       return;
     m_ctx.document.commandStack().redoQuiet();
   });
 
-  s->mapper().addHandler(mapi.command_index, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.command_index, [&](const NetworkMessage& m) {
     if(!canApplyRemoteEdit(m_ctx))
       return;
     QDataStream stream{m.data};
@@ -106,33 +106,33 @@ ClientEditionPolicy::ClientEditionPolicy(
     m_ctx.document.commandStack().setIndexQuiet(idx);
   });
 
-  s->mapper().addHandler(mapi.lock, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.lock, [&](const NetworkMessage& m) {
     QDataStream stream{m.data};
     QByteArray data;
     stream >> data;
     m_ctx.document.locker().on_lock(data);
   });
 
-  s->mapper().addHandler(mapi.unlock, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.unlock, [&](const NetworkMessage& m) {
     QDataStream stream{m.data};
     QByteArray data;
     stream >> data;
     m_ctx.document.locker().on_unlock(data);
   });
 
-  s->mapper().addHandler(mapi.play, [&](const NetworkMessage& m) { play(); });
-  s->mapper().addHandler(mapi.stop, [&](const NetworkMessage& m) { stop(); });
+  s->mapper().addHandler(this, mapi.play, [&](const NetworkMessage& m) { play(); });
+  s->mapper().addHandler(this, mapi.stop, [&](const NetworkMessage& m) { stop(); });
 
-  s->mapper().addHandler(mapi.ping, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.ping, [&](const NetworkMessage& m) {
     qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(
                    std::chrono::high_resolution_clock::now().time_since_epoch())
                    .count();
     m_session->sendMessage(m.clientId, m_session->makeMessage(mapi.pong, t));
   });
 
-  s->mapper().addHandler(mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
+  s->mapper().addHandler(this, mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
 
-  s->mapper().addHandler(mapi.session_portinfo, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.session_portinfo, [&](const NetworkMessage& m) {
     QString ip;
     int port;
     QDataStream stream{m.data};

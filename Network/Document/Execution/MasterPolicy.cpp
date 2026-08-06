@@ -21,7 +21,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
 {
   qDebug("MasterExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_entered,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
     qDebug("master << trigger_entered");
@@ -40,14 +40,14 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     }
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_left, [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
         qDebug("master << trigger_left");
         // TODO there should be a consensus on this point.
         qDebug() << m.address << p;
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_finished,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val) {
     qDebug("master << trigger_finished");
@@ -66,7 +66,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_expression_true,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
     qDebug("master << trigger_expr_true");
@@ -157,7 +157,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     }
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_previous_completed,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
     qDebug("master << trigger_prev_completed");
@@ -190,7 +190,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     }
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_triggered,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val) {
     qDebug("master << noncompensated.trigger_triggered");
@@ -206,7 +206,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
 
     s.broadcastToOthers(m.clientId, m);
       });
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_triggered_compensated,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, qint64 ns,
           bool val) {
@@ -224,7 +224,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.interval_speed,
       [&](const NetworkMessage& m, Path<Scenario::IntervalModel> p, double val) {
     qDebug("master << constraint_speed");
@@ -241,7 +241,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     s.broadcastToOthers(m.clientId, m);
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_in_message, [&](const NetworkMessage& m, uint64_t id, ossia::value v) {
         // Got a message that updates a process value from a remote client
         auto& messages = m_messages[id];
@@ -251,7 +251,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
             mapi.netpit_out_message, id, messages.tree().get_sequence_cref()));
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_in_audio,
       [&](const NetworkMessage& m, uint64_t id, std::vector<std::vector<float>> v) {
     // Got a message that updates a process value from a remote client
@@ -263,7 +263,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     messages.clear();
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_in_video, [&](const NetworkMessage& m, uint64_t id, QByteArray v) {
         // Got a message that updates a process value from a remote client
         auto& messages = m_videos[id];
@@ -273,7 +273,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
             m_session.makeMessage(mapi.netpit_out_video, id, m.clientId, v));
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_out_message,
       [&](const NetworkMessage& m, uint64_t process,
           std::vector<std::pair<Id<Client>, ossia::value>> vec) {
@@ -281,7 +281,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     this->on_message(process, std::move(vec));
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_out_audio,
       [&](const NetworkMessage& m, uint64_t process,
           std::vector<std::pair<Id<Client>, std::vector<std::vector<float>>>> vec) {
@@ -289,7 +289,7 @@ MasterExecutionPolicy::MasterExecutionPolicy(
     this->on_audio(process, std::move(vec));
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_out_video,
       [&](const NetworkMessage& m, uint64_t process, Id<Client> source, QByteArray vec) {
     // Apply to the local process
