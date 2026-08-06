@@ -30,6 +30,11 @@
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Communication/Capabilities.hpp>
+#include <score/serialization/JSONVisitor.hpp>
+
+#include <Device/Protocol/ProtocolFactoryInterface.hpp>
+#include <Device/Protocol/ProtocolList.hpp>
+
 #include <Network/Communication/Rpc.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
@@ -338,5 +343,115 @@ TEST_CASE("A handler that fails reports back instead of taking the peer down",
 
     REQUIRE(spin_until([&] { return !failure.isEmpty(); }));
     CHECK(failure == "the camera is unplugged");
+  });
+}
+
+TEST_CASE("A client can ask the host which protocols it has", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    // Capability exchange carries the uuids, but nothing a person can read. To
+    // offer the host's protocols in a list, the names have to come across too.
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* clientRpc
+        = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+    REQUIRE(clientRpc);
+
+    int count = -1;
+    bool named = false;
+    QString failure;
+    clientRpc->call(
+        master.session->localClient().id(), "device.protocols", {},
+        [&](const rapidjson::Value& result) {
+      REQUIRE(result.IsArray());
+      count = result.Size();
+      for(const auto& p : result.GetArray())
+      {
+        if(p.HasMember("uuid") && p.HasMember("name") && p.HasMember("category")
+           && p["name"].GetStringLength() > 0)
+          named = true;
+      }
+        },
+        [&](const QString& e) { failure = e; });
+
+    REQUIRE(spin_until([&] { return count >= 0 || !failure.isEmpty(); }));
+    CHECK(failure.isEmpty());
+    CHECK(count > 0);
+    CHECK(named);
+  });
+}
+
+TEST_CASE("A client can ask the host what is plugged into it", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* clientRpc
+        = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+
+    // Ask about every protocol the host reported. Most have nothing to
+    // enumerate -- an OSC device is not plugged in anywhere -- so what is
+    // asserted is that each is answered with a well-formed list, and that at
+    // least one of them really did find hardware, since a path that always
+    // returned nothing would pass a shape check just as well.
+    int answers = 0;
+    int found = 0;
+    QString failure;
+    QByteArrayList uuids;
+    for(auto& p : ctx.interfaces<Device::ProtocolFactoryList>())
+      uuids.push_back(score::uuids::toByteArray(p.concreteKey().impl()));
+
+    for(const auto& uuid : uuids)
+    {
+      clientRpc->call(
+          master.session->localClient().id(), "device.enumerate",
+          QByteArrayLiteral(R"({"protocol":")") + uuid + QByteArrayLiteral(R"("})"),
+          [&](const rapidjson::Value& result) {
+        REQUIRE(result.IsArray());
+        for(const auto& d : result.GetArray())
+        {
+          CHECK(d.HasMember("category"));
+          CHECK(d.HasMember("name"));
+          CHECK(d.HasMember("settings"));
+          found++;
+        }
+        answers++;
+          },
+          [&](const QString& e) { failure = e; });
+    }
+
+    REQUIRE(spin_until(
+        [&] { return answers == uuids.size() || !failure.isEmpty(); }, 20000));
+    CHECK(failure.isEmpty());
+    CHECK(answers == uuids.size());
+    CHECK(found > 0);
+  });
+}
+
+TEST_CASE("Asking about a protocol the host does not have says so", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* clientRpc
+        = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+
+    QString failure;
+    bool answered = false;
+    clientRpc->call(
+        master.session->localClient().id(), "device.enumerate",
+        QByteArrayLiteral(R"({"protocol":"11111111-2222-3333-4444-555555555555"})"),
+        [&](const rapidjson::Value&) { answered = true; },
+        [&](const QString& e) { failure = e; });
+
+    REQUIRE(spin_until([&] { return answered || !failure.isEmpty(); }));
+    CHECK_FALSE(answered);
+    CHECK(failure.contains("no protocol"));
   });
 }

@@ -23,6 +23,7 @@ set(HDRS
     Network/Communication/NetworkSocket.hpp
     Network/Document/ClientPolicy.hpp
     Network/Document/DocumentPlugin.hpp
+    Network/Document/DeviceQueries.hpp
     Network/Document/RemoteCommand.hpp
     Network/Document/MasterPolicy.hpp
     Network/Document/Timekeeper.hpp
@@ -97,6 +98,7 @@ set(SRCS
     Network/Document/DocumentPluginSerialization.cpp
     Network/Document/PlaceholderPolicy.cpp
     Network/Document/MasterPolicy.cpp
+    Network/Document/DeviceQueries.cpp
     Network/Document/RemoteCommand.cpp
     Network/Document/NTP.cpp
     Network/Document/Execution/BasicPruner.cpp
