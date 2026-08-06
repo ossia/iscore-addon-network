@@ -26,6 +26,7 @@
 #include <Network/Document/Execution/SlavePolicy.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
+#include <Network/Communication/Capabilities.hpp>
 #include <Network/Settings/NetworkSettingsModel.hpp>
 #include <sys/types.h>
 
@@ -59,6 +60,7 @@ void ClientSessionBuilder::initiateConnection()
     s << m_clientName;
     s << (qint32)m_context.applicationSettings.saveFormatVersion.value();
     s << (qint32)QDataStream::Qt_DefaultCompiledVersion;
+    s << Capabilities::local(m_context);
   }
 
   m_mastersocket->sendMessage(askId);
@@ -99,6 +101,19 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     int32_t id;
     s >> id; // The offered client id
     m_clientId = Id<Client>(id);
+
+    // What the host can make that we cannot. Not an error: it is why a process
+    // of theirs will show here as a stand-in, and it is what a client needs in
+    // order to offer the host's protocols rather than its own.
+    if(!s.atEnd())
+    {
+      s >> m_masterCapabilities;
+      if(auto missing = Capabilities::local(m_context).lacking(m_masterCapabilities);
+         !missing.isEmpty())
+      {
+        qDebug() << "The host can do things this build cannot:" << missing.summary();
+      }
+    }
 
     NetworkMessage join;
     join.address = mapi.session_join;

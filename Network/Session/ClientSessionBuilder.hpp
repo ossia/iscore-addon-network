@@ -1,4 +1,5 @@
 #pragma once
+#include <Network/Communication/Capabilities.hpp>
 #include <score_addon_network_export.h>
 #include <score/command/Command.hpp>
 #include <score/command/CommandData.hpp>
@@ -34,6 +35,12 @@ public:
 
   void initiateConnection();
   ClientSession* builtSession() const;
+
+  //! What the host can construct. Differs from ours whenever the two builds do.
+  const Capabilities& masterCapabilities() const noexcept
+  {
+    return m_masterCapabilities;
+  }
   QByteArray documentData() const;
   const std::vector<score::CommandData>& commandStackData() const;
 
@@ -55,5 +62,6 @@ private:
   QByteArray m_documentData;
 
   ClientSession* m_session{};
+  Capabilities m_masterCapabilities;
 };
 }

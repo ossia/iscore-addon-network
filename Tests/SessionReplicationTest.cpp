@@ -28,6 +28,7 @@
 #include <memory>
 
 #include <Network/Client/LocalClient.hpp>
+#include <Network/Communication/Capabilities.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Document/MasterPolicy.hpp>
@@ -97,6 +98,8 @@ Master hostSession(const score::GUIApplicationContext& ctx)
   return m;
 }
 
+Network::Capabilities* g_lastMasterCapabilities{};
+
 //! Join a session as a second document in this same process.
 //!
 //! Polls rather than connecting to the builder's signals: verdigris signals do
@@ -108,6 +111,10 @@ score::Document* joinSession(const score::GUIApplicationContext& ctx, int port)
 
   if(!spin_until([&] { return builder->builtSession() != nullptr; }))
     return nullptr;
+
+  static Network::Capabilities caps;
+  caps = builder->masterCapabilities();
+  g_lastMasterCapabilities = &caps;
 
   // The builder loads the received document as a new one, so it is the current.
   return ctx.docManager.currentDocument();
@@ -189,5 +196,52 @@ TEST_CASE("A command the client cannot read stops it rather than corrupting it",
 
     spin_until([&] { return clientItv.metadata().getLabel() != before; }, 1000);
     CHECK(clientItv.metadata().getLabel() == before);
+  });
+}
+
+TEST_CASE("Peers tell each other what they can build", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    // The host said what it can construct. Both ends are this same build here,
+    // so what it reported has to match what we see locally -- which is the
+    // property that makes a difference meaningful when the builds do differ.
+    REQUIRE(g_lastMasterCapabilities);
+    const auto local = Network::Capabilities::local(ctx);
+    CHECK_FALSE(local.protocols.isEmpty());
+    CHECK_FALSE(local.processes.isEmpty());
+    CHECK_FALSE(local.commands.isEmpty());
+
+    CHECK(g_lastMasterCapabilities->protocols == local.protocols);
+    CHECK(g_lastMasterCapabilities->processes == local.processes);
+    CHECK(g_lastMasterCapabilities->commands == local.commands);
+
+    CHECK(local.lacking(*g_lastMasterCapabilities).isEmpty());
+  });
+}
+
+TEST_CASE("A build that lacks something is told which things", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto rich = Network::Capabilities::local(ctx);
+    REQUIRE(rich.protocols.size() > 1);
+
+    // Stand in for a peer compiled without one of the protocols -- which is
+    // what Syphon on Windows or a VST in the browser actually is.
+    auto poor = rich;
+    const auto dropped = poor.protocols.takeFirst();
+
+    const auto missing = poor.lacking(rich);
+    CHECK(missing.protocols == QByteArrayList{dropped});
+    CHECK(missing.processes.isEmpty());
+    CHECK_FALSE(missing.isEmpty());
+    CHECK(missing.summary().contains("1 protocols"));
+
+    // The other direction has nothing to report: the richer build lacks nothing.
+    CHECK(rich.lacking(poor).isEmpty());
+    CHECK(rich.lacking(poor).summary().isEmpty());
   });
 }

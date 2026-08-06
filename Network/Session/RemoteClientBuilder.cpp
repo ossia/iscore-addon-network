@@ -24,6 +24,7 @@
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
+#include <Network/Communication/Capabilities.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Communication/NetworkSocket.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
@@ -112,6 +113,20 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
       int32_t id = score::random_id_generator::getRandomId();
       m_clientId = Id<Client>(id);
       stream << id;
+      stream << Capabilities::local(score::AppContext());
+    }
+
+    if(!s.atEnd())
+    {
+      Capabilities theirs;
+      s >> theirs;
+      if(auto missing = theirs.lacking(Capabilities::local(score::AppContext()));
+         !missing.isEmpty())
+      {
+        qDebug() << "Client" << m_clientName
+                 << "cannot construct everything this session uses:"
+                 << missing.summary();
+      }
     }
 
     m_socket->sendMessage(idOffer);
