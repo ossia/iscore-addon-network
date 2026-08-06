@@ -31,11 +31,28 @@ score::Uri requireUri(const rapidjson::Value& params)
   const auto uri = score::Uri::parse(QString::fromUtf8(
       params["uri"].GetString(), params["uri"].GetStringLength()));
 
-  // The Uri schemes are the access control: each names a place this score is
-  // allowed to reach. An absolute path names anything at all, so it is not a
-  // request we answer, whoever is asking.
-  if(uri.scheme == score::UriScheme::Absolute)
-    throw std::runtime_error{"only project, library and cache locations can be read"};
+  // The schemes are the access control: each names a place inside this score.
+  // Absolute names anything at all, and Relative is a path with no scheme --
+  // it resolves against the project but nothing about it says it stays there.
+  switch(uri.scheme)
+  {
+    case score::UriScheme::Project:
+    case score::UriScheme::Library:
+    case score::UriScheme::Cache:
+      break;
+    default:
+      throw std::runtime_error{
+          "only project, library and cache locations can be addressed"};
+  }
+
+  // Refused by spelling as well as by where it lands. Checking the resolved
+  // path is not enough on its own: for a write, finding out afterwards means
+  // finding out after the file was already opened for writing.
+  for(const auto& part : uri.path.split('/'))
+  {
+    if(part == "..")
+      throw std::runtime_error{"a location cannot point outside itself"};
+  }
 
   return uri;
 }
@@ -51,19 +68,42 @@ QString requireExistingPath(const score::Uri& uri, const score::DocumentContext&
   return path;
 }
 
-//! Guards against a resolved path escaping the place its scheme names, which a
-//! uri containing ".." would otherwise do.
+//! Guards against a resolved path escaping the place its scheme names -- by a
+//! symlink, since "..' is already refused before we get here.
+QString rootOf(const score::Uri& uri, const score::DocumentContext& ctx)
+{
+  const auto root = score::Uri{uri.scheme, {}}.resolve(ctx);
+  if(root.isEmpty())
+    throw std::runtime_error{"that location does not exist on this machine"};
+  const auto canonical = QFileInfo{root}.canonicalFilePath();
+  if(canonical.isEmpty())
+    throw std::runtime_error{"that location does not exist on this machine"};
+  return canonical;
+}
+
+//! For a path that does not exist yet: check the nearest ancestor that does.
+//! Canonicalising resolves symlinks, so a directory inside the project that
+//! points elsewhere is caught before anything is written through it.
+void requireAncestryContained(
+    const QString& resolved, const score::Uri& uri, const score::DocumentContext& ctx)
+{
+  const auto root = rootOf(uri, ctx);
+
+  QDir walk{QFileInfo{resolved}.absolutePath()};
+  while(!walk.exists() && !walk.isRoot() && walk.cdUp())
+    ;
+
+  const auto existing = QFileInfo{walk.absolutePath()}.canonicalFilePath();
+  if(existing.isEmpty() || !score::isUnder(existing, root))
+    throw std::runtime_error{"that is outside the location it claims to be in"};
+}
+
 void requireContained(
     const QString& resolved, const score::Uri& uri, const score::DocumentContext& ctx)
 {
-  score::Uri root{uri.scheme, {}};
-  const auto rootPath = root.resolve(ctx);
   const auto canonical = QFileInfo{resolved}.canonicalFilePath();
-  if(rootPath.isEmpty() || canonical.isEmpty()
-     || !score::isUnder(canonical, QFileInfo{rootPath}.canonicalFilePath()))
-  {
+  if(canonical.isEmpty() || !score::isUnder(canonical, rootOf(uri, ctx)))
     throw std::runtime_error{"that is outside the location it claims to be in"};
-  }
 }
 }
 
@@ -151,6 +191,11 @@ void bindFileQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
     if(path.isEmpty())
       throw std::runtime_error{"that does not point anywhere on this machine"};
 
+    // Everything is checked before anything is created or opened. Opening for
+    // writing truncates, so a check that came afterwards would be reporting on
+    // a file it had already destroyed.
+    requireAncestryContained(path, uri, ctx);
+
     QDir{}.mkpath(QFileInfo{path}.absolutePath());
     QFile f{path};
     if(!f.open(QIODevice::WriteOnly))
@@ -158,18 +203,6 @@ void bindFileQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
     if(f.write(data) != data.size())
       throw std::runtime_error{"the file could not be written in full"};
     f.close();
-
-    // Only now that it exists can containment be checked by canonical path, so
-    // a write that escaped its scheme is undone rather than left behind.
-    try
-    {
-      requireContained(path, uri, ctx);
-    }
-    catch(...)
-    {
-      QFile::remove(path);
-      throw;
-    }
 
     return QByteArrayLiteral(R"({"written":true})");
   });

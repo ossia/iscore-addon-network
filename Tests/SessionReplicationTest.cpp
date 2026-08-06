@@ -620,3 +620,83 @@ TEST_CASE("A joined document knows its files are elsewhere", "[session]")
     CHECK(got == "not really audio");
   });
 }
+
+TEST_CASE("A peer cannot reach outside the score's own files", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+
+    QTemporaryDir project;
+    REQUIRE(project.isValid());
+    const auto projectDir = giveProjectFolder(*master.document, project);
+
+    // Something outside the project, standing in for whatever the user has
+    // that a peer has no business touching.
+    QTemporaryDir elsewhere;
+    REQUIRE(elsewhere.isValid());
+    const QString victim = elsewhere.path() + "/private";
+    {
+      QFile f{victim};
+      REQUIRE(f.open(QIODevice::WriteOnly));
+      f.write("must survive");
+    }
+
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+    auto* rpc = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+    REQUIRE(rpc);
+    const auto host = master.session->localClient().id();
+
+    const auto refuse = [&](const QByteArray& method, const QByteArray& params) {
+      QString failure;
+      bool answered = false;
+      rpc->call(
+          host, method, params, [&](const rapidjson::Value&) { answered = true; },
+          [&](const QString& e) { failure = e; });
+      REQUIRE(spin_until([&] { return answered || !failure.isEmpty(); }));
+      INFO(method.toStdString() + " " + params.toStdString());
+      CHECK_FALSE(answered);
+      CHECK_FALSE(failure.isEmpty());
+    };
+
+    const auto quoted = [](const QString& s) {
+      return QByteArrayLiteral(R"({"uri":")") + s.toUtf8() + QByteArrayLiteral(R"("})");
+    };
+
+    // A path with no scheme resolves against the project, and nothing about it
+    // says it stays there.
+    const QString escape
+        = QStringLiteral("../") + QFileInfo{elsewhere.path()}.fileName() + "/private";
+    refuse("fs.read", quoted(escape));
+    refuse("fs.list", quoted(QStringLiteral("..")));
+    refuse("fs.read", quoted(victim));
+    refuse("fs.read", quoted(QStringLiteral("<PROJECT>:../../etc/passwd")));
+
+    // The write side is what actually destroys something: opening for writing
+    // truncates, so a refusal that came after the open would be too late.
+    const auto writeParams = QByteArrayLiteral(R"({"uri":")") + escape.toUtf8()
+                             + QByteArrayLiteral(R"(","data":"b3ducmQ="})");
+    refuse("fs.write", writeParams);
+    refuse(
+        "fs.write",
+        QByteArrayLiteral(R"({"uri":"<PROJECT>:../../x","data":"b3ducmQ="})"));
+
+    // Untouched, not merely restored afterwards.
+    QFile check{victim};
+    REQUIRE(check.open(QIODevice::ReadOnly));
+    CHECK(check.readAll() == "must survive");
+
+    // And the legitimate case still works.
+    QString failure;
+    bool written = false;
+    rpc->call(
+        host, "fs.write",
+        QByteArrayLiteral(R"({"uri":"<PROJECT>:sub/ok.txt","data":"b3ducmQ="})"),
+        [&](const rapidjson::Value&) { written = true; },
+        [&](const QString& e) { failure = e; });
+    REQUIRE(spin_until([&] { return written || !failure.isEmpty(); }));
+    INFO(failure.toStdString());
+    CHECK(written);
+    CHECK(QFile::exists(projectDir + "/sub/ok.txt"));
+  });
+}
