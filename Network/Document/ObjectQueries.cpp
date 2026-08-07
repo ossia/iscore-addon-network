@@ -7,6 +7,8 @@
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Process/Algorithms/ProcessPolicy.hpp>
 
+#include <ossia/detail/algorithms.hpp>
+
 #include <score/application/ApplicationContext.hpp>
 #include <score/plugins/StringFactoryKey.hpp>
 #include <score/serialization/JSONValueVisitor.hpp>
@@ -31,21 +33,33 @@ namespace
 {
 constexpr auto object_state = "object.state";
 
-QByteArray pathParams(const ObjectPath& path)
+//! Where an object is, in terms both peers agree on.
+//!
+//! Not the object's own ObjectPath: that identifies by (objectName, id), and a
+//! stand-in is named "OpaqueProcess" rather than after the process it replaces.
+//! So the path a peer without the factory builds names something the other one
+//! does not have -- and looking it up there hits a breakpoint before it ever
+//! throws, killing the host.
+//!
+//! The interval is a real object on both sides and the id is assigned by the
+//! command, so the pair is stable wherever it is read.
+QByteArray processParams(const ObjectPath& interval, int32_t process)
 {
   JSONReader r;
-  r.readFrom(path);
+  r.readFrom(interval);
 
   rapidjson::StringBuffer buf;
   JsonWriter w{buf};
   w.StartObject();
-  w.Key("path");
+  w.Key("interval");
   {
     rapidjson::Document d;
     const auto bytes = r.toByteArray();
     d.Parse(bytes.data(), bytes.size());
     d.Accept(w);
   }
+  w.Key("process");
+  w.Int(process);
   w.EndObject();
   return QByteArray{buf.GetString(), (int)buf.GetLength()};
 }
@@ -54,25 +68,31 @@ QByteArray pathParams(const ObjectPath& path)
 void bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
 {
   rpc.bind(object_state, [&ctx](const rapidjson::Value& params) -> QByteArray {
-    if(!params.IsObject() || !params.HasMember("path"))
-      throw std::runtime_error{"object.state: no path"};
+    if(!params.IsObject() || !params.HasMember("interval")
+       || !params.HasMember("process"))
+      throw std::runtime_error{"object.state: no object named"};
 
     ObjectPath path;
     {
-      JSONObject::Deserializer des{params["path"]};
+      JSONObject::Deserializer des{params["interval"]};
       des.writeTo(path);
     }
 
-    // find() throws when the path names nothing, or names something of another
-    // type -- both of which mean the peers disagree about the document, which
-    // is worth reporting as an error rather than answering with silence.
-    auto& obj = path.find<QObject>(ctx);
-    auto* proc = qobject_cast<Process::ProcessModel*>(&obj);
-    if(!proc)
-      throw std::runtime_error{"object.state: not a process"};
+    // try_find: a path that names nothing is a disagreement to report, not a
+    // programming error. find() breakpoints before it throws, which on a host
+    // with no debugger attached is a SIGTRAP and the end of the session.
+    auto* itv = path.try_find<Scenario::IntervalModel>(ctx);
+    if(!itv)
+      throw std::runtime_error{"object.state: no such interval here"};
+
+    const Id<Process::ProcessModel> id{params["process"].GetInt()};
+    auto it = ossia::find_if(
+        itv->processes, [&](const Process::ProcessModel& p) { return p.id() == id; });
+    if(it == itv->processes.end())
+      throw std::runtime_error{"object.state: no such process here"};
 
     JSONReader r;
-    r.readFrom(*proc);
+    r.readFrom(*it);
     return r.toByteArray();
   });
 }
@@ -134,10 +154,16 @@ void fillStandIns(
     // Captured weakly: the answer arrives later, and by then the object may
     // have been removed -- by an undo of the very command that made it.
     QPointer<Process::ProcessModel> target = weak;
-    const auto path = score::IDocument::path(*weak).unsafePath();
+
+    auto* itv = qobject_cast<Scenario::IntervalModel*>(weak->parent());
+    if(!itv)
+      continue;
+
+    const auto intervalPath = score::IDocument::path(*itv).unsafePath();
+    const auto processId = weak->id_val();
 
     rpc.call(
-        peer, object_state, pathParams(path),
+        peer, object_state, processParams(intervalPath, processId),
         [target, &ctx](const rapidjson::Value& result) {
       if(target)
         applyState(*target, result, ctx);

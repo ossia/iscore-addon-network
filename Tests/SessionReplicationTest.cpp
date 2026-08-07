@@ -1060,50 +1060,84 @@ TEST_CASE("A peer can be asked what an object it made contains", "[session]")
     auto* rpc = plug->rpc();
     REQUIRE(rpc);
 
-    // The base interval's Scenario, which both ends have: what matters here is
-    // that the answer is that object's serialization, addressed by path.
     auto& hostItv = rootInterval(*master.document);
     REQUIRE_FALSE(hostItv.processes.empty());
     auto& hostProc = *hostItv.processes.begin();
 
-    JSONReader pathJson;
-    pathJson.readFrom(score::IDocument::path(hostProc).unsafePath());
+    // Addressed by the interval and the process id, not by the process's own
+    // ObjectPath. That path identifies by (objectName, id), and a stand-in is
+    // named "OpaqueProcess" rather than after what it replaces -- so a peer
+    // without the factory would name something the host does not have, and the
+    // lookup there breakpoints before it throws, killing the host.
+    auto ask = [&](const ObjectPath& itvPath, int32_t procId, QByteArray& answer,
+                   bool& failed) {
+      JSONReader pathJson;
+      pathJson.readFrom(itvPath);
 
-    rapidjson::StringBuffer buf;
-    JsonWriter w{buf};
-    w.StartObject();
-    w.Key("path");
-    {
-      rapidjson::Document d;
-      const auto bytes = pathJson.toByteArray();
-      d.Parse(bytes.data(), bytes.size());
-      d.Accept(w);
-    }
-    w.EndObject();
+      rapidjson::StringBuffer buf;
+      JsonWriter w{buf};
+      w.StartObject();
+      w.Key("interval");
+      {
+        rapidjson::Document d;
+        const auto bytes = pathJson.toByteArray();
+        d.Parse(bytes.data(), bytes.size());
+        d.Accept(w);
+      }
+      w.Key("process");
+      w.Int(procId);
+      w.EndObject();
+
+      rpc->call(
+          master.session->localClient().id(), "object.state",
+          QByteArray{buf.GetString(), (int)buf.GetLength()},
+          [&](const rapidjson::Value& result) {
+        rapidjson::StringBuffer out;
+        JsonWriter ow{out};
+        result.Accept(ow);
+        answer = QByteArray{out.GetString(), (int)out.GetLength()};
+          },
+          [&](const QString&) { failed = true; });
+    };
+
+    const auto itvPath = score::IDocument::path(hostItv).unsafePath();
 
     QByteArray answer;
     bool failed = false;
-    rpc->call(
-        master.session->localClient().id(), "object.state",
-        QByteArray{buf.GetString(), (int)buf.GetLength()},
-        [&](const rapidjson::Value& result) {
-      rapidjson::StringBuffer out;
-      JsonWriter ow{out};
-      result.Accept(ow);
-      answer = QByteArray{out.GetString(), (int)out.GetLength()};
-        },
-        [&](const QString&) { failed = true; });
+    ask(itvPath, hostProc.id_val(), answer, failed);
 
     REQUIRE(spin_until([&] { return !answer.isEmpty() || failed; }));
     REQUIRE_FALSE(failed);
 
-    // It really is that process, not an empty object: the key it reports is the
-    // one the object has.
     rapidjson::Document got;
     got.Parse(answer.data(), answer.size());
     REQUIRE_FALSE(got.HasParseError());
     REQUIRE(got.IsObject());
     REQUIRE(got.HasMember("uuid"));
+
+    // A process the host does not have is an error reply, not a dead host.
+    QByteArray answer2;
+    bool failed2 = false;
+    ask(itvPath, 987654, answer2, failed2);
+
+    REQUIRE(spin_until([&] { return !answer2.isEmpty() || failed2; }));
+    CHECK(failed2);
+    CHECK(answer2.isEmpty());
+
+    // Nor is an interval it does not have. This is the one that killed hosts:
+    // ObjectPath::find breakpoints before it throws, so a peer naming anything
+    // the host lacks -- which a stand-in's path always does -- took it down by
+    // SIGTRAP rather than getting an error back.
+    auto bogus = itvPath;
+    bogus.vec().push_back(ObjectIdentifier{QStringLiteral("NoSuchThing"), 4242});
+
+    QByteArray answer3;
+    bool failed3 = false;
+    ask(bogus, hostProc.id_val(), answer3, failed3);
+
+    REQUIRE(spin_until([&] { return !answer3.isEmpty() || failed3; }));
+    CHECK(failed3);
+    CHECK(answer3.isEmpty());
   });
 }
 

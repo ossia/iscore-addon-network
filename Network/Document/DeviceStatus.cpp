@@ -21,10 +21,14 @@ namespace Network
 {
 namespace
 {
-void report(Session& session, const QString& name, bool connected)
+void report(Session& session, const Device::DeviceInterface& dev)
 {
-  session.broadcastToAllClients(
-      session.makeMessage(MessagesAPI::instance().device_status, name, connected));
+  // Kinds travel with the state, not only in the query answered at join: a
+  // device plugged in after a peer arrived would otherwise be known to be
+  // connected and not known to be a camera, so no combo box would offer it.
+  session.broadcastToAllClients(session.makeMessage(
+      MessagesAPI::instance().device_status, dev.settings().name, dev.connected(),
+      (int)dev.kinds().toInt()));
 }
 }
 
@@ -38,9 +42,7 @@ void bindDeviceStatusBroadcast(
   auto watch = [&owner, &session](Device::DeviceInterface& dev) {
     QObject::connect(
         &dev, &Device::DeviceInterface::connectionChanged, &owner,
-        [&session, name = dev.settings().name](bool connected) {
-      report(session, name, connected);
-        });
+        [&session, d = &dev](bool) { report(session, *d); });
   };
 
   plug->list().apply(watch);
@@ -50,7 +52,7 @@ void bindDeviceStatusBroadcast(
     if(!dev)
       return;
     watch(*dev);
-    report(session, dev->settings().name, dev->connected());
+    report(session, *dev);
       });
 }
 
@@ -61,7 +63,7 @@ void broadcastAllDeviceStatus(Session& session, const score::DocumentContext& ct
     return;
 
   plug->list().apply([&session](Device::DeviceInterface& dev) {
-    report(session, dev.settings().name, dev.connected());
+    report(session, dev);
   });
 }
 
@@ -80,6 +82,13 @@ void bindDeviceStatusMirror(
     bool connected{};
     s >> name >> connected;
     plug->setRemoteConnected(name, connected);
+
+    if(!s.atEnd())
+    {
+      int kinds{};
+      s >> kinds;
+      plug->setRemoteKinds(name, Device::DeviceKinds::fromInt(kinds));
+    }
   });
 }
 }
