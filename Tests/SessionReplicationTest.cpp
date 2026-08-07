@@ -1448,6 +1448,7 @@ TEST_CASE("A process a terminal adds survives being told what it is", "[session]
 TEST_CASE("The list of a peer's hardware keeps its categories", "[session]")
 {
   score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    score::test::register_probe_protocol(ctx);
     auto master = hostSession(ctx);
     auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
     REQUIRE(client);
@@ -1457,32 +1458,28 @@ TEST_CASE("The list of a peer's hardware keeps its categories", "[session]")
     REQUIRE(cat);
     REQUIRE(spin_until([&] { return !cat->protocols().empty(); }));
 
-    struct Found
+    // The probe protocol only, not every protocol on this machine: the others
+    // enumerate real hardware, which differs per machine, and the ones that
+    // discover over the network spin up threads that do not survive being
+    // started once per test case in a single process.
+    std::vector<std::pair<QString, QString>> devices;
+    cat->enumerate(
+        score::test::ProbeProtocolFactory::static_concreteKey(),
+        [&](const QString& category, const QString& name,
+            const Device::DeviceSettings&) {
+      devices.emplace_back(category, name);
+        });
+
+    REQUIRE(spin_until([&] { return devices.size() == 2; }));
+
+    // The category is a field, not a prefix on the name: the dialog groups by
+    // it, and pasting it onto the front gives one flat list instead.
+    for(const auto& [category, name] : devices)
     {
-      QString category;
-      QString name;
-    };
-    std::vector<Found> devices;
-    for(const auto& p : cat->protocols())
-      cat->enumerate(
-          p.key, [&](const QString& category, const QString& name,
-                     const Device::DeviceSettings&) {
-        devices.push_back({category, name});
-          });
-
-    // Something on this machine enumerates -- audio interfaces, at least. A
-    // check that only tolerated an empty list would pass with the answer never
-    // arriving.
-    REQUIRE(spin_until([&] { return !devices.empty(); }, 20000));
-
-    const bool anyCategorised = ossia::any_of(
-        devices, [](const Found& f) { return !f.category.isEmpty(); });
-    CHECK(anyCategorised);
-
-    // The category is a field, not a prefix. It used to be pasted onto the
-    // front of the name, which reads as one flat list and cannot be grouped.
-    for(const Found& f : devices)
-      CHECK_FALSE(f.name.contains(QStringLiteral(" / ")));
+      CHECK(category == score::test::ProbeProtocolFactory::enumeratorCategory);
+      CHECK(name.startsWith(QStringLiteral("probe-")));
+      CHECK_FALSE(name.contains(QStringLiteral(" / ")));
+    }
   });
 }
 
