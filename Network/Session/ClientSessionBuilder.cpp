@@ -50,8 +50,7 @@ ClientSessionBuilder::ClientSessionBuilder(
   connect(
       m_mastersocket, &NetworkSocket::messageReceived, this,
       &ClientSessionBuilder::on_messageReceived);
-  // Asking for an id is the only thing anyone ever did on connection, so do it
-  // here rather than making every caller wire it up.
+  // The only thing anyone ever did on connection.
   connect(m_mastersocket, &NetworkSocket::connected, this, [this] {
     initiateConnection();
     connected();
@@ -111,9 +110,8 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
     s >> id; // The offered client id
     m_clientId = Id<Client>(id);
 
-    // What the host can make that we cannot. Not an error: it is why a process
-    // of theirs will show here as a stand-in, and it is what a client needs in
-    // order to offer the host's protocols rather than its own.
+    // What the host can make that we cannot: why their processes show as
+    // stand-ins here, and which protocols to offer.
     if(!s.atEnd())
     {
       s >> m_masterCapabilities;
@@ -124,8 +122,7 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
       }
     }
 
-    // The host's answer wins: it is the one that knows what the session can
-    // accommodate, and a host too old to answer runs a session of performers.
+    // The host decides; one too old to answer runs a session of performers.
     if(!s.atEnd())
     {
       int32_t confirmed{};
@@ -158,11 +155,8 @@ void ClientSessionBuilder::on_messageReceived(const NetworkMessage& m)
 
     m_sessionMessage = m.data;
 
-    // Off the socket callback before touching documents. Loading one closes
-    // the current document if it is still untouched, and closing spins the
-    // event loop -- which in a browser can only be done from a stack the
-    // runtime can suspend, and a WebSocket message handler is not one. Queued,
-    // this runs from Qt's own event loop instead, where it can.
+    // Off the socket callback: loading spins the event loop, which a browser
+    // cannot do from a WebSocket handler.
     QMetaObject::invokeMethod(this, [this] { buildDocument(); }, Qt::QueuedConnection);
   }
 }
@@ -216,19 +210,15 @@ void ClientSessionBuilder::buildDocument()
 
   if(m_role == PeerRole::Terminal)
   {
-    // No execution policy at all: it exists to carry netpit traffic for
-    // processes running here, and none do. The document plug-in arrived with
-    // the score and cannot be declined, but everything in it that serves
-    // execution is optional and stays unused.
+    // No execution policy: it carries netpit traffic for processes running
+    // here, and none do.
     m_session->localClient().setRole(PeerRole::Terminal);
     np.setEditPolicy(new TerminalEditionPolicy{m_session, ctx});
 
-    // What may be added to this score is what the machine running it has:
-    // its protocols, and its hardware. Ours is unreachable from there.
+    // What may be added is what the machine running the score has.
     if(auto* rpc = np.rpc())
     {
-      // Parented to the plug-in: the document holds a bare pointer to it, and
-      // this builder is thrown away as soon as the session is up.
+      // Parented to the plug-in: this builder does not outlive the session.
       auto* catalog = new RemoteDeviceCatalog{*rpc, m_masterId, &np};
       ctx.plugin<Explorer::DeviceDocumentPlugin>().setCatalog(catalog);
     }
@@ -239,23 +229,18 @@ void ClientSessionBuilder::buildDocument()
     np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
   }
 
-  // What the other machine can make. Done here as well as from
-  // NetworkApplicationPlugin::on_documentChanged, because that fires while
-  // loadDocument is still running -- before setEditPolicy has given the plug-in
-  // an rpc channel to ask over, so it finds none and does nothing.
+  // Here as well as on_documentChanged, which fires before setEditPolicy has
+  // given the plug-in a channel to ask over.
   if(auto* rpc = np.rpc())
   {
     importRemoteLibrary(
         *rpc, m_context, m_masterId, m_role == PeerRole::Terminal);
 
-    // Asked rather than waited for: a status pushed when we appeared would
-    // have arrived before there was anything here to receive it.
+    // Asked, not waited for: a push would arrive before we could receive it.
     requestDeviceStatus(*rpc, ctx, m_masterId);
   }
 
-  // After setEditPolicy, which is what gives the plug-in a session to speak
-  // over. The score we just received belongs to the machine that sent it, and
-  // so do the files it refers to: nothing here can open them by path.
+  // After setEditPolicy: the files belong to the machine that sent the score.
   if(auto* rpc = np.rpc())
     doc->setEnvironment(std::make_unique<RemoteEnvironment>(*rpc, m_masterId));
 

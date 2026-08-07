@@ -38,9 +38,7 @@ Scenario::IntervalModel* rootInterval(const score::DocumentContext& ctx)
 {
   auto* sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(ctx.document);
 
-  // closing() as well as non-null: the model outlives its base scenario while
-  // a document is torn down, and anything polling it -- a timer, the timing
-  // widget -- keeps running until it is gone.
+  // closing() too: the model outlives its base scenario during teardown.
   if(!sm || sm->closing())
     return nullptr;
 
@@ -49,15 +47,10 @@ Scenario::IntervalModel* rootInterval(const score::DocumentContext& ctx)
 
 //! Sends where each interval has got to, as the executor moves it.
 //!
-//! Every interval is subscribed to: IntervalDurations::positionChanged fires on
-//! every change (playPercentageChanged is rate-limited and is for the duration
-//! widget), and executingChanged says when one starts and stops. Intervals come
-//! and go while a score is edited, so scenarios are watched for new ones.
-//!
-//! What is sent is coalesced to the rate score redraws at: the executor moves
-//! an interval once per audio buffer, far more often than anything can be
-//! looked at, and a message per tick per interval would be most of the socket.
-//! Nothing is sent, and nothing is walked, while the score sits still.
+//! positionChanged rather than playPercentageChanged, which is rate-limited for
+//! the duration widget; scenarios are watched so intervals added later are too.
+//! Coalesced to the rate score redraws at, since the executor moves an interval
+//! once per audio buffer. Idle costs nothing.
 class TransportBroadcaster final : public QObject
 {
 public:
@@ -187,9 +180,8 @@ void bindTransportMirror(
        }))
       return;
 
-    // Nothing here starts the execution timer, because nothing here executes --
-    // and that timer is what asks the presenters to redraw a running interval.
-    // Without it the positions arrive and no interval ever moves.
+    // Nothing here executes, so nothing else starts the timer that repaints
+    // a running interval.
     if(auto* root = rootInterval(ctx))
     {
       auto& timer = ctx.execTimer;

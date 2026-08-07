@@ -103,10 +103,8 @@ MasterEditionPolicy::MasterEditionPolicy(
       stop();
     });
 
-    // The ordinary transport too. Peers that do not execute have no other way
-    // to know the score started, and someone pressing Play on the host means
-    // the same thing whichever button they used -- the local playback happens
-    // through ExecutionController either way, so only the telling is added.
+    // The ordinary transport too: peers that do not execute have no other way
+    // to know the score started.
     connect(
         c.app.actions.action<Actions::Play>().action(), &QAction::triggered, this,
         [&] { m_session->broadcastToAllClients(m_session->makeMessage(mapi.play)); });
@@ -129,18 +127,15 @@ MasterEditionPolicy::MasterEditionPolicy(
       return;
     }
 
-    // Not broadcast: the master and the other clients all stay on the state
-    // before this command, so the only peer out of sync is the one that sent
-    // it -- it applied the command locally before telling us about it. Say so,
-    // so that it stops sending edits built on a model we do not share.
+    // Not broadcast: only the sender applied it, so only the sender is out of
+    // step. Told, so it stops editing against a model we do not share.
     m_session->sendMessage(
         m.clientId, m_session->makeMessage(mapi.command_rejected));
   });
 
   // Undo-redo
-  // Movements of the stack are as much a message from the wire as a command
-  // is. undoQuiet pops whether or not there is anything to pop, and
-  // setIndexQuiet walks toward whatever number it is handed.
+  // From the wire like any other message: undoQuiet pops whether or not there
+  // is anything to pop.
   s->mapper().addHandler(this, mapi.command_undo, [&](const NetworkMessage& m) {
     if(stack.canUndo())
     {

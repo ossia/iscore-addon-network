@@ -17,10 +17,8 @@ namespace Network
 {
 namespace
 {
-// Anything larger belongs on a channel of its own: a request and its answer
-// share the socket with command replication, and a hundred megabytes of audio
-// would stall every edit behind it. Refused rather than truncated, so a caller
-// cannot mistake half a file for the file.
+// Larger belongs on a channel of its own: this one carries the edits too.
+// Refused rather than truncated, so half a file cannot pass for the file.
 constexpr qint64 max_inline_bytes = 8 * 1024 * 1024;
 
 score::Uri requireUri(const rapidjson::Value& params)
@@ -32,8 +30,6 @@ score::Uri requireUri(const rapidjson::Value& params)
       params["uri"].GetString(), params["uri"].GetStringLength()));
 
   // The schemes are the access control: each names a place inside this score.
-  // Absolute names anything at all, and Relative is a path with no scheme --
-  // it resolves against the project but nothing about it says it stays there.
   switch(uri.scheme)
   {
     case score::UriScheme::Project:
@@ -45,9 +41,7 @@ score::Uri requireUri(const rapidjson::Value& params)
           "only project, library and cache locations can be addressed"};
   }
 
-  // Refused by spelling as well as by where it lands. Checking the resolved
-  // path is not enough on its own: for a write, finding out afterwards means
-  // finding out after the file was already opened for writing.
+  // By spelling as well as by where it lands: a write opens before it lands.
   for(const auto& part : uri.path.split('/'))
   {
     if(part == "..")
@@ -88,9 +82,8 @@ QString rootOf(const score::Uri& uri, const score::DocumentContext& ctx)
   return canonical;
 }
 
-//! For a path that does not exist yet: check the nearest ancestor that does.
-//! Canonicalising resolves symlinks, so a directory inside the project that
-//! points elsewhere is caught before anything is written through it.
+//! For a path that does not exist yet: canonicalise the nearest ancestor that
+//! does, so a symlink out of the project is caught before it is written to.
 void requireAncestryContained(
     const QString& resolved, const score::Uri& uri, const score::DocumentContext& ctx)
 {
@@ -198,9 +191,7 @@ void bindFileQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
     if(path.isEmpty())
       throw std::runtime_error{"that does not point anywhere on this machine"};
 
-    // Everything is checked before anything is created or opened. Opening for
-    // writing truncates, so a check that came afterwards would be reporting on
-    // a file it had already destroyed.
+    // All checks first: opening for writing truncates.
     requireAncestryContained(path, uri, ctx);
 
     QDir{}.mkpath(QFileInfo{path}.absolutePath());

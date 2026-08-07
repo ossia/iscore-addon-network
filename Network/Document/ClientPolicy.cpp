@@ -46,10 +46,8 @@ ClientEditionPolicy::ClientEditionPolicy(
       m_session->master().sendMessage(
           m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
 
-    // Our own edits need the same treatment as the ones we receive: adding a
-    // shader here builds it from a path on the other machine and gets an empty
-    // process. Asked after sending, so the master has applied the command by
-    // the time the question reaches it -- same socket, in order.
+    // Our own edits too: creation data describes the other machine. Asked
+    // after sending, so the master has applied it by then.
     if(auto* plug = m_ctx.findPlugin<NetworkDocumentPlugin>())
       if(auto* rpc = plug->rpc())
         fillStandIns(*rpc, m_ctx, m_session->master().id());
@@ -236,9 +234,8 @@ TerminalEditionPolicy::TerminalEditionPolicy(
   if(!c.app.applicationSettings.gui)
     return;
 
-  // The ordinary transport actions, not just the network ones: on a terminal
-  // there is nothing else Play could mean, and a person who presses it expects
-  // the score to start -- on the machine that has it.
+  // The ordinary transport too: on a terminal there is nothing else Play
+  // could mean.
   auto& acts = c.app.actions;
   connect(
       acts.action<Actions::Play>().action(), &QAction::triggered, this,
@@ -272,9 +269,7 @@ void TerminalEditionPolicy::requestStop()
 
 void TerminalEditionPolicy::play()
 {
-  // Nothing starts here, but the buttons have to say what the score is doing:
-  // ExecutionController declines a terminal outright, so without this they
-  // would sit in whatever state the person left them in.
+  // Nothing starts here, but the buttons still have to say what is happening.
   if(!m_ctx.app.applicationSettings.gui)
     return;
 

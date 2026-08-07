@@ -40,14 +40,9 @@ const QString& remoteCategory()
 
 namespace
 {
-//! One node of the library, and everything under it.
-//!
-//! The whole tree, not the factory list: the shape is meaningful -- categories
-//! nest, and "Plugins/Faust" is two levels rather than one name with a slash in
-//! it -- and most of what a library holds is not a factory at all. ISF shaders,
-//! Faust programs and presets are entries the LibraryInterfaces build by
-//! scanning files, and they carry the data that says which file, in customData.
-//! Sending factories reproduces neither.
+//! One node of the library, and everything under it. The tree rather than the
+//! factory list: nesting is meaningful, and most entries are scanned files
+//! rather than factories.
 void writeNode(JsonWriter& w, const Library::ProcessNode& node)
 {
   const auto name = node.prettyName.toUtf8();
@@ -86,9 +81,7 @@ void readNode(
   Library::ProcessData data;
   data.prettyName = *name;
 
-  // Computed here rather than sent: the icons are score's own resources, the
-  // same in both builds, and a QIcon does not travel. Only the top level has
-  // one, which is what addCategory does when it builds the tree locally.
+  // Computed, not sent: a QIcon does not travel, and the resources are shared.
   if(topLevel)
     data.icon = Process::getCategoryIcon(data.prettyName);
   if(const auto key = wireString(v, "key"))
@@ -104,14 +97,8 @@ void readNode(
 }
 }
 
-//! The library of this machine, panel or no panel.
-//!
-//! A host run with --no-gui has no library panel -- which is the whole point of
-//! that mode, and the shape a score box takes -- so reading the panel's model
-//! would mean the machines most likely to be hosts are the ones that cannot
-//! answer. One is built here instead when there is no panel, and kept: the
-//! model watches the library folder and rescans, and building a second one per
-//! request would fight the first over that watch.
+//! The library of this machine, panel or no panel: a --no-gui host has none.
+//! Kept rather than rebuilt per request, since the model watches the folder.
 const Library::ProcessesItemModel&
 libraryModel(const score::GUIApplicationContext& ctx)
 {
@@ -158,9 +145,7 @@ void importRemoteLibrary(
     {
       auto& root = model.rootNode();
 
-      // A mirror replaces rather than adds: this machine's processes are not
-      // the ones that will run, and offering them would be offering something
-      // that cannot happen.
+      // Replaces rather than adds: this machine's processes will not run.
       if(mirror)
       {
         root.erase(root.begin(), root.end());

@@ -35,16 +35,9 @@ namespace
 {
 constexpr auto object_state = "object.state";
 
-//! Where an object is, in terms both peers agree on.
-//!
-//! Not the object's own ObjectPath: that identifies by (objectName, id), and a
-//! stand-in is named "OpaqueProcess" rather than after the process it replaces.
-//! So the path a peer without the factory builds names something the other one
-//! does not have -- and looking it up there hits a breakpoint before it ever
-//! throws, killing the host.
-//!
-//! The interval is a real object on both sides and the id is assigned by the
-//! command, so the pair is stable wherever it is read.
+//! Where an object is, in terms both peers agree on: interval path plus
+//! process id. Not the process's own ObjectPath, which names a stand-in
+//! "OpaqueProcess" and so resolves to nothing on the other side.
 QByteArray processParams(const ObjectPath& interval, int32_t process)
 {
   JSONReader r;
@@ -75,9 +68,7 @@ void bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
     if(!intervalParam || !processParam)
       throw std::runtime_error{"object.state: no object named"};
 
-    // Checked before deserializing rather than caught after: rapidjson's type
-    // checks are assertions and vanish in release, so a path of the wrong
-    // shape would be read as one anyway -- on the machine running the score.
+    // Checked, not caught: rapidjson's type checks vanish in release.
     if(!isWireObjectPath(*intervalParam))
       throw std::runtime_error{"object.state: that is not a path"};
 
@@ -87,9 +78,7 @@ void bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
       des.writeTo(path);
     }
 
-    // try_find: a path that names nothing is a disagreement to report, not a
-    // programming error. find() breakpoints before it throws, which on a host
-    // with no debugger attached is a SIGTRAP and the end of the session.
+    // try_find: find() breakpoints before it throws, which kills the host.
     auto* itv = path.try_find<Scenario::IntervalModel>(ctx);
     if(!itv)
       throw std::runtime_error{"object.state: no such interval here"};
@@ -106,12 +95,9 @@ void bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
   });
 }
 
-//! Put the peer's version of a process in place of the one we made.
-//!
-//! A stand-in can simply be told its state. A real process cannot: it was
-//! built from creation data that described the other machine, so what is here
-//! is the wrong object rather than an empty one, and it has to be replaced by
-//! the peer's -- same id, same interval, so cables and paths still name it.
+//! Put the peer's version of a process in place of the one we made. A
+//! stand-in is told its state; a real one is replaced, keeping id and interval
+//! so cables and paths still name it.
 void applyRemoteProcessState(
     Process::ProcessModel& proc, const rapidjson::Value& state,
     const score::DocumentContext& ctx)
@@ -126,8 +112,7 @@ void applyRemoteProcessState(
   if(!itv)
     return;
 
-  // The uuid says which factory to rebuild with; anything but a string here is
-  // a peer we cannot understand, not a process we should guess at.
+  // Which factory to rebuild with.
   const auto uuid = wireString(state, score::StringConstant().uuid.c_str());
   if(!uuid)
     return;
@@ -143,11 +128,8 @@ void applyRemoteProcessState(
   if(!rebuilt)
     return;
 
-  // The id comes out of the peer's answer, and everything below names the
-  // process by the id we asked about: the slots are re-pointed at it, and
-  // cables and paths already do. An answer about a different process would
-  // insert one id and leave the rack referring to another, which is the
-  // invariant ScenarioValidityChecker asserts on the very next command.
+  // Everything below names the process by the id we asked about, so an answer
+  // about another one would leave the rack pointing at nothing.
   if(rebuilt->id() != proc.id())
   {
     delete rebuilt;
@@ -155,11 +137,8 @@ void applyRemoteProcessState(
     return;
   }
 
-  // Where it sat in the rack. Removing a process takes its layer out of every
-  // slot it was in, and adding one puts it in none -- so without this the slot
-  // the drop just made is left empty, which is not a state the document is
-  // allowed to be in: ScenarioValidityChecker asserts frontProcess on the next
-  // command, and the session diverges on the edit after the drop.
+  // Where it sat in the rack: removing takes the layer out of every slot and
+  // adding puts it in none, which leaves a slot the document may not have.
   const auto id = proc.id();
   struct Placement
   {
@@ -205,8 +184,7 @@ void fillStandIns(
     if(!weak)
       continue;
 
-    // Captured weakly: the answer arrives later, and by then the object may
-    // have been removed -- by an undo of the very command that made it.
+    // Weakly: an undo can remove the object before the answer arrives.
     QPointer<Process::ProcessModel> target = weak;
 
     auto* itv = qobject_cast<Scenario::IntervalModel*>(weak->parent());
