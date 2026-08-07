@@ -5,6 +5,7 @@
 #include <Process/RemoteState.hpp>
 
 #include <Scenario/Document/Interval/IntervalModel.hpp>
+#include <Scenario/Document/Interval/Slot.hpp>
 #include <Scenario/Process/Algorithms/ProcessPolicy.hpp>
 
 #include <ossia/detail/algorithms.hpp>
@@ -131,8 +132,39 @@ void applyState(Process::ProcessModel& proc, const rapidjson::Value& state,
   if(!rebuilt)
     return;
 
-  Scenario::RemoveProcess(*itv, proc.id());
+  // Where it sat in the rack. Removing a process takes its layer out of every
+  // slot it was in, and adding one puts it in none -- so without this the slot
+  // the drop just made is left empty, which is not a state the document is
+  // allowed to be in: ScenarioValidityChecker asserts frontProcess on the next
+  // command, and the session diverges on the edit after the drop.
+  const auto id = proc.id();
+  struct Placement
+  {
+    int slot{};
+    bool front{};
+  };
+  std::vector<Placement> placements;
+  {
+    const auto& rack = itv->smallView();
+    for(int i = 0; i < std::ssize(rack); i++)
+    {
+      if(rack[i].nodal || !ossia::contains(rack[i].processes, id))
+        continue;
+      placements.push_back({i, rack[i].frontProcess == id});
+    }
+  }
+
+  Scenario::RemoveProcess(*itv, id);
   Scenario::AddProcess(*itv, rebuilt);
+
+  for(const auto& p : placements)
+  {
+    if(p.slot >= std::ssize(itv->smallView()))
+      continue;
+    itv->addLayer(p.slot, id);
+    if(p.front)
+      itv->putLayerToFront(p.slot, id);
+  }
 }
 }
 

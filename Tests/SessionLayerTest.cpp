@@ -91,5 +91,28 @@ TEST_CASE("A process added on a terminal stays drawn", "[session]")
     // Still one process, and still somewhere to see it.
     CHECK(clientItv.processes.size() == 2);
     CHECK(displayedSlots(ctx, *client) == before + 1);
+
+    // And the slot it was put in still holds it. An empty non-nodal slot is a
+    // broken document: ScenarioValidityChecker asserts frontProcess on every
+    // command after this one, so the next edit tears the session down.
+    for(const auto& slot : clientItv.smallView())
+    {
+      if(slot.nodal)
+        continue;
+      CHECK_FALSE(slot.processes.empty());
+      CHECK(slot.frontProcess.has_value());
+    }
+
+    // The reported symptom was on the *next* command: every one of them runs
+    // ScenarioValidityChecker, which asserts frontProcess, and a command that
+    // throws part-way through diverges the session for good.
+    client->context().document.commandStack().redoAndPush(
+        new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
+            clientItv, QStringLiteral("edited after the drop")});
+    QApplication::processEvents();
+
+    auto* plug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(plug);
+    CHECK_FALSE(plug->diverged());
   });
 }
