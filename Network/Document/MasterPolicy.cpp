@@ -15,6 +15,7 @@
 #include <Network/Document/RemoteCommand.hpp>
 #include <Network/Document/Transport.hpp>
 #include <Network/Document/DeviceStatus.hpp>
+#include <Network/Document/DeviceValues.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Group/NetworkActions.hpp>
 
@@ -36,6 +37,9 @@ MasterEditionPolicy::MasterEditionPolicy(
   // nor whether the devices they can see are connected.
   bindTransportBroadcast(*this, *m_session, m_ctx);
   bindDeviceStatusBroadcast(*this, *m_session, m_ctx);
+
+  // A peer with no devices of its own edits the tree here instead.
+  bindValueSetter(*this, *m_session, m_ctx);
 
   // A peer joining mid-session would otherwise see nothing until something
   // happened to change.

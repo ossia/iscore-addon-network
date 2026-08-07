@@ -1485,3 +1485,37 @@ TEST_CASE("The list of a peer's hardware keeps its categories", "[session]")
       CHECK_FALSE(f.name.contains(QStringLiteral(" / ")));
   });
 }
+
+TEST_CASE("A value edited on a terminal is set where the device is", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    // What the host does with an edit: hand it to the device. There is no
+    // device in this test, so stand in at exactly that point -- the sink is
+    // only consulted when the device list has nothing, and the host installs
+    // none of its own, so anything arriving here came off the wire.
+    auto& hostDevices
+        = master.document->context().plugin<Explorer::DeviceDocumentPlugin>();
+    std::optional<State::Address> gotAddress;
+    ossia::value gotValue;
+    hostDevices.setValueSink([&](const State::Address& a, const ossia::value& v) {
+      gotAddress = a;
+      gotValue = v;
+    });
+
+    const auto addr = State::Address::fromString("probe:/volume").value();
+    auto& termDevices = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+    termDevices.updateProxy.updateRemoteValue(addr, ossia::value{0.75});
+
+    REQUIRE(spin_until([&] { return gotAddress.has_value(); }));
+    CHECK(*gotAddress == addr);
+    CHECK(ossia::convert<float>(gotValue) == 0.75f);
+
+    // And the terminal did not perform it itself: it holds no device for that
+    // name, which is the whole reason it has to travel.
+    CHECK(termDevices.list().findDevice(QStringLiteral("probe")) == nullptr);
+  });
+}

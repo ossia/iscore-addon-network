@@ -53,6 +53,7 @@ set(HDRS
     Network/Group/GroupExecution.hpp
     Network/Document/Transport.hpp
     Network/Document/DeviceStatus.hpp
+    Network/Document/DeviceValues.hpp
     Network/Document/ObjectQueries.hpp
     Network/Document/LibraryQueries.hpp
     Network/Document/RemoteDeviceCatalog.hpp
@@ -113,6 +114,7 @@ set(SRCS
     Network/Document/RemoteCommand.cpp
     Network/Document/Transport.cpp
     Network/Document/DeviceStatus.cpp
+    Network/Document/DeviceValues.cpp
     Network/Document/ObjectQueries.cpp
     Network/Document/LibraryQueries.cpp
     Network/Document/RemoteDeviceCatalog.cpp

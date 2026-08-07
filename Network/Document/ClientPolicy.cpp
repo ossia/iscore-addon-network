@@ -20,6 +20,7 @@
 #include <Network/Document/ObjectQueries.hpp>
 #include <Network/Document/Transport.hpp>
 #include <Network/Document/DeviceStatus.hpp>
+#include <Network/Document/DeviceValues.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Group/NetworkActions.hpp>
 namespace Network
@@ -228,6 +229,9 @@ TerminalEditionPolicy::TerminalEditionPolicy(
   // where it is and which of them are connected.
   bindTransportMirror(*this, *m_session, m_ctx);
   bindDeviceStatusMirror(*this, *m_session, m_ctx);
+
+  // No devices here, so editing the tree has to be performed where they are.
+  bindValueForwarding(*m_session, m_ctx);
 
   if(!c.app.applicationSettings.gui)
     return;
