@@ -69,6 +69,14 @@ bool applyRemoteCommand(
   score::CommandData cmd;
   try
   {
+    // These bytes are a peer's, so a failed delimiter check must not break
+    // into the debugger on its way to the catch below.
+    struct Untrusted
+    {
+      bool previous = std::exchange(score::readingUntrustedData(), true);
+      ~Untrusted() { score::readingUntrustedData() = previous; }
+    } untrusted;
+
     DataStreamWriter writer{data};
     writer.writeTo(cmd);
   }

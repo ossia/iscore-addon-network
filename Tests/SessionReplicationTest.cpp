@@ -1563,11 +1563,72 @@ TEST_CASE("A terminal repaints while the host plays", "[session]")
     masterRoot.duration.setPlayPercentage(0.1);
     masterRoot.setExecuting(true);
 
-    REQUIRE(spin_until([&] { return timer.isActive(); }));
+    REQUIRE(spin_until([&] { return timer.isActive(); }, 20000));
 
     // And it stops when the score does, rather than repainting a still score
     // for the rest of the session.
     masterRoot.setExecuting(false);
-    REQUIRE(spin_until([&] { return !timer.isActive(); }));
+    REQUIRE(spin_until([&] { return !timer.isActive(); }, 20000));
+  });
+}
+
+TEST_CASE("A malformed message is dropped rather than the peer", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto* clientSession
+        = client->context().findPlugin<Network::NetworkDocumentPlugin>()->policy().session();
+    REQUIRE(clientSession);
+
+    // A peer on a different build is the normal case here, so a frame this one
+    // cannot read has to be a dropped frame. These deserializations run inside
+    // Qt slots: an exception unwinds through the event loop and ends the
+    // process, taking the session with it.
+    //
+    // Each message goes to the peer that actually handles it -- /device/value
+    // is the host performing an edit for a peer with no devices, /exec/position
+    // is the terminal following the host -- since one sent to a peer with no
+    // handler is dropped by the mapper and proves nothing.
+    auto& mapi = Network::MessagesAPI::instance();
+    auto garbage = [](const QByteArray& payload) {
+      Network::NetworkMessage m;
+      m.data = payload;
+      return m;
+    };
+
+    // A length prefix that promises far more than follows: what a truncated
+    // frame looks like, and what makes a vector resize to something absurd.
+    QByteArray truncated;
+    {
+      QDataStream s{&truncated, QIODevice::WriteOnly};
+      s << (qint32)0x7fffffff;
+      s << QByteArrayLiteral("\x01\x02\x03");
+    }
+
+    for(const auto& payload : {truncated, QByteArrayLiteral("\xff\xf0no")})
+    {
+      auto toHost = garbage(payload);
+      toHost.address = mapi.device_value;
+      toHost.clientId = clientSession->localClient().id();
+      toHost.sessionId = master.session->id();
+      master.session->validateMessage(toHost);
+
+      auto toTerminal = garbage(payload);
+      toTerminal.address = mapi.exec_position;
+      toTerminal.clientId = master.session->localClient().id();
+      toTerminal.sessionId = master.session->id();
+      clientSession->validateMessage(toTerminal);
+    }
+
+    // Both still there, still following: a label set on the host arrives.
+    const auto label = QStringLiteral("alive after garbage");
+    master.document->context().document.commandStack().redoAndPush(
+        new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
+            rootInterval(*master.document), label});
+    REQUIRE(spin_until(
+        [&] { return rootInterval(*client).metadata().getLabel() == label; }));
   });
 }

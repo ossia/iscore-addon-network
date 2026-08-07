@@ -9,6 +9,7 @@
 #include <QObject>
 
 #include <Network/Communication/MessageMapper.hpp>
+#include <Network/Communication/WireRead.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Session/Session.hpp>
 #include <Network/Session/ClientSession.hpp>
@@ -41,10 +42,11 @@ void bindValueSetter(
       return;
 
     State::Message msg;
-    {
-      DataStreamWriter writer{m.data};
-      writer.writeTo(msg);
-    }
+    if(!readingWireData("/device/value", [&] {
+         DataStreamWriter writer{m.data};
+         writer.writeTo(msg);
+       }))
+      return;
 
     // The same call the device explorer makes here: a peer's edit is an edit,
     // and everything downstream of it -- the protocol, the OSC packet -- is

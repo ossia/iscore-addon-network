@@ -15,6 +15,7 @@
 #include <core/document/DocumentModel.hpp>
 
 #include <Network/Communication/MessageMapper.hpp>
+#include <Network/Communication/WireRead.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Session/Session.hpp>
 
@@ -132,29 +133,32 @@ void bindTransportMirror(
 {
   session.mapper().addHandler(&owner, MessagesAPI::instance().exec_position,
                               [&ctx](const NetworkMessage& m) {
-    QDataStream s{m.data};
-    qint32 count{};
-    QByteArray payload;
-    s >> count >> payload;
+    if(!readingWireData("/exec/position", [&] {
+         QDataStream s{m.data};
+         qint32 count{};
+         QByteArray payload;
+         s >> count >> payload;
 
-    QDataStream p{payload};
-    for(qint32 i = 0; i < count; i++)
-    {
-      QByteArray pathBytes;
-      double pos{};
-      bool executing{};
-      p >> pathBytes >> pos >> executing;
+         QDataStream p{payload};
+         for(qint32 i = 0; i < count && !p.atEnd(); i++)
+         {
+           QByteArray pathBytes;
+           double pos{};
+           bool executing{};
+           p >> pathBytes >> pos >> executing;
 
-      const auto path = score::unmarshall<ObjectPath>(pathBytes);
+           const auto path = score::unmarshall<ObjectPath>(pathBytes);
 
-      // try_find: an interval inside a process this build cannot make has no
-      // counterpart here, and find() breakpoints before it throws.
-      if(auto* itv = path.try_find<Scenario::IntervalModel>(ctx))
-      {
-        itv->duration.setPlayPercentage(pos);
-        itv->setExecuting(executing);
-      }
-    }
+           // try_find: an interval inside a process this build cannot make has
+           // no counterpart here, and find() breakpoints before it throws.
+           if(auto* itv = path.try_find<Scenario::IntervalModel>(ctx))
+           {
+             itv->duration.setPlayPercentage(pos);
+             itv->setExecuting(executing);
+           }
+         }
+       }))
+      return;
 
     // Nothing here starts the execution timer, because nothing here executes --
     // and that timer is what asks the presenters to redraw a running interval.
