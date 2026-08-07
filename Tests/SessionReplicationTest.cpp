@@ -1766,3 +1766,50 @@ TEST_CASE("An interval deleted before its position is sent is dropped", "[sessio
         [&] { return rootInterval(*client).metadata().getLabel() == label; }));
   });
 }
+
+TEST_CASE("A terminal learns device state from the host itself", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    score::test::register_connected_probe_protocol(ctx);
+
+    auto master = hostSession(ctx);
+    auto& hostDevices
+        = master.document->context().plugin<Explorer::DeviceDocumentPlugin>();
+    // createDeviceFromNode is what instantiates: addDevice on the explorer only
+    // puts the node in the tree.
+    hostDevices.explorer().addDevice(hostDevices.createDeviceFromNode(
+        score::test::connected_probe_device_node(QStringLiteral("hw"))));
+
+    auto* device = score::test::ConnectedProbeProtocolFactory::last;
+    REQUIRE(device);
+    REQUIRE(device->connected());
+
+    // Joining after the device exists: what the host already has has to be
+    // reported too, not only what changes later.
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+    auto& termDevices = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+
+    // Nothing was instantiated here -- that is the whole difficulty. Everything
+    // below therefore came off the wire, which is what makes this a test of the
+    // host's reporting rather than of the terminal's bookkeeping.
+    REQUIRE(termDevices.list().findDevice(QStringLiteral("hw")) == nullptr);
+
+    REQUIRE(spin_until([&] {
+      return termDevices.remoteConnected(QStringLiteral("hw")) == std::optional{true};
+    }));
+
+    const auto midi = termDevices.remoteDevicesOfKind(Device::DeviceKind::MidiIn);
+    REQUIRE(midi.size() == 1);
+    CHECK(midi.front() == QStringLiteral("hw"));
+    CHECK(termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureOut).size() == 1);
+    CHECK(termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureIn).empty());
+
+    // And a change afterwards is reported: a terminal that only learned the
+    // state it joined with would show a device as connected for ever.
+    device->setConnected(false);
+    REQUIRE(spin_until([&] {
+      return termDevices.remoteConnected(QStringLiteral("hw")) == std::optional{false};
+    }));
+  });
+}
