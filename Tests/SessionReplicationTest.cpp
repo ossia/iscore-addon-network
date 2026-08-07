@@ -1544,3 +1544,30 @@ TEST_CASE("A player is not refused by the handshake", "[session]")
     CHECK(builder.documentData().size() > 0);
   });
 }
+
+TEST_CASE("A terminal repaints while the host plays", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    // Mirroring the positions is not enough on its own: an interval's progress
+    // is drawn by ScenarioPresenter::on_intervalExecutionTimer, which runs off
+    // the document's execution timer -- and that is started only by playing
+    // here, which a terminal never does. The values arrived and nothing moved.
+    auto& timer = client->context().execTimer;
+    CHECK_FALSE(timer.isActive());
+
+    auto& masterRoot = rootInterval(*master.document);
+    masterRoot.duration.setPlayPercentage(0.1);
+    masterRoot.setExecuting(true);
+
+    REQUIRE(spin_until([&] { return timer.isActive(); }));
+
+    // And it stops when the score does, rather than repainting a still score
+    // for the rest of the session.
+    masterRoot.setExecuting(false);
+    REQUIRE(spin_until([&] { return !timer.isActive(); }));
+  });
+}

@@ -155,6 +155,23 @@ void bindTransportMirror(
         itv->setExecuting(executing);
       }
     }
+
+    // Nothing here starts the execution timer, because nothing here executes --
+    // and that timer is what asks the presenters to redraw a running interval.
+    // Without it the positions arrive and no interval ever moves.
+    if(auto* root = rootInterval(ctx))
+    {
+      auto& timer = ctx.execTimer;
+      if(root->executing())
+      {
+        if(!timer.isActive())
+          timer.start();
+      }
+      else if(timer.isActive())
+      {
+        timer.stop();
+      }
+    }
   });
 }
 }
