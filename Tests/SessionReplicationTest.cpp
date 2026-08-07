@@ -1150,3 +1150,58 @@ TEST_CASE("A stand-in given its state stops being a placeholder", "[session]")
     delete opaque;
   });
 }
+
+TEST_CASE("A peer can be asked what processes it has", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* rpc = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+    REQUIRE(rpc);
+
+    QByteArray answer;
+    bool failed = false;
+    rpc->call(
+        master.session->localClient().id(), "library.processes",
+        QByteArrayLiteral("{}"),
+        [&](const rapidjson::Value& result) {
+      rapidjson::StringBuffer out;
+      JsonWriter ow{out};
+      result.Accept(ow);
+      answer = QByteArray{out.GetString(), (int)out.GetLength()};
+        },
+        [&](const QString&) { failed = true; });
+
+    REQUIRE(spin_until([&] { return !answer.isEmpty() || failed; }));
+    REQUIRE_FALSE(failed);
+
+    rapidjson::Document got;
+    got.Parse(answer.data(), answer.size());
+    REQUIRE_FALSE(got.HasParseError());
+    REQUIRE(got.IsArray());
+
+    // Names, not just uuids: Capabilities already carries the uuids, and a
+    // uuid is not something anyone can pick from a library.
+    REQUIRE(got.Size() > 0);
+    bool named = false;
+    for(const auto& e : got.GetArray())
+    {
+      REQUIRE(e.IsObject());
+      REQUIRE(e.HasMember("key"));
+      REQUIRE(e.HasMember("name"));
+      if(e["name"].GetStringLength() > 0)
+        named = true;
+    }
+    CHECK(named);
+
+    // The Scenario process is in every build, so it must be in the answer.
+    bool foundScenario = false;
+    for(const auto& e : got.GetArray())
+      if(std::string_view{e["key"].GetString(), e["key"].GetStringLength()}
+         == "de035912-5b03-49a8-bc4d-b2cba68e21d9")
+        foundScenario = true;
+    CHECK(foundScenario);
+  });
+}

@@ -26,6 +26,7 @@
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/RemoteEnvironment.hpp>
+#include <Network/Document/LibraryQueries.hpp>
 #include <Network/Document/Execution/SlavePolicy.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
@@ -224,6 +225,12 @@ void ClientSessionBuilder::buildDocument()
     np.setEditPolicy(new GUIClientEditionPolicy{m_session, ctx});
     np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
   }
+
+  // The host's processes, so they can be added to the score from here even
+  // though nothing here can make one. Needs the rpc channel, so after
+  // setEditPolicy.
+  if(auto* rpc = np.rpc())
+    importRemoteLibrary(*rpc, m_context, m_masterId);
 
   // After setEditPolicy, which is what gives the plug-in a session to speak
   // over. The score we just received belongs to the machine that sent it, and

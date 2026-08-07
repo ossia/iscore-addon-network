@@ -53,6 +53,7 @@ set(HDRS
     Network/Group/GroupExecution.hpp
     Network/Document/Transport.hpp
     Network/Document/ObjectQueries.hpp
+    Network/Document/LibraryQueries.hpp
     Network/Group/Group.hpp
     Network/Group/NetworkActions.hpp
     Network/Group/GroupManager.hpp
@@ -110,6 +111,7 @@ set(SRCS
     Network/Document/RemoteCommand.cpp
     Network/Document/Transport.cpp
     Network/Document/ObjectQueries.cpp
+    Network/Document/LibraryQueries.cpp
     Network/Document/NTP.cpp
     Network/Document/Execution/BasicPruner.cpp
     Network/Document/Execution/DateExpression.cpp
@@ -174,6 +176,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     score_lib_process
                                     score_plugin_engine
                                     score_plugin_avnd
+                                    score_plugin_library
                                     ${QT_PREFIX}::Core
                                     ${QT_PREFIX}::Widgets
                                     ${QT_PREFIX}::Network
