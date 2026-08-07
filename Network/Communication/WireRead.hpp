@@ -8,13 +8,8 @@
 
 namespace Network
 {
-//! Deserialize wire data, refusing the message rather than the peer.
-//!
-//! Reading a QDataStream throws on a truncated or garbled frame -- a length
-//! prefix straight off the wire is used to resize a vector -- and these
-//! handlers run inside Qt slots, so an exception unwinds through the event
-//! loop and ends the process. A peer running a different build is the normal
-//! case here, so a message that cannot be read has to be a dropped message.
+//! Deserialize wire data, refusing the message rather than the peer: a
+//! QDataStream throws on a truncated frame, and these run inside Qt slots.
 template <typename F>
 bool readingWireData(const char* what, F&& f) noexcept
 {

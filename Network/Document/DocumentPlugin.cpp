@@ -285,10 +285,8 @@ void NetworkDocumentPlugin::setDiverged(const QString& reason)
 
   m_divergence = reason;
 
-  // Stop sending as well as stop applying. Our edits are now expressed against
-  // a document nobody else has, and the paths in them name different objects
-  // on the other side: one command we could not apply would otherwise become
-  // open-ended corruption of everybody else's copy.
+  // Stop sending as well as applying: our paths now name different objects
+  // on the other side.
   if(m_policy)
     m_policy->setSendCommands(false);
 

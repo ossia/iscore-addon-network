@@ -38,12 +38,8 @@ bindDeviceStatusMirror(QObject& owner, Session&, const score::DocumentContext&);
 SCORE_ADDON_NETWORK_EXPORT void
 broadcastAllDeviceStatus(Session&, const score::DocumentContext&);
 
-//! Offer device.statuses, so a peer can ask rather than hope.
-//!
-//! Pushing at join races the joiner: it registers its handlers only once the
-//! document has arrived and its policy is set, so a broadcast sent the moment
-//! it appeared was thrown away, and every device read as disconnected until
-//! one happened to change.
+//! Offer device.statuses, so a peer can ask rather than hope: a push at join
+//! races the joiner, which registers handlers only once the document is in.
 SCORE_ADDON_NETWORK_EXPORT void
 bindDeviceStatusQuery(RpcChannel& rpc, const score::DocumentContext& ctx);
 

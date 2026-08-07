@@ -87,10 +87,8 @@ void RemoteDeviceCatalog::enumerate(
       if(!name || !settingsValue)
         continue;
 
-      // The settings are as the protocol wrote them, which nothing here can
-      // parse -- and does not need to. They are held as they are and handed
-      // back in the command that creates the device, where the machine that
-      // has the protocol reads them.
+      // As the protocol wrote them: held verbatim and handed back in the
+      // command, where the machine that has the protocol reads them.
       Device::DeviceSettings settings;
       {
         JSONObject::Deserializer des{*settingsValue};

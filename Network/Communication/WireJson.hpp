@@ -48,11 +48,8 @@ wireInt(const rapidjson::Value& v, const char* key) noexcept
   return std::nullopt;
 }
 
-//! Whether this is the shape an ObjectPath deserializes from.
-//!
-//! Handing anything else to JSONObject::Deserializer reads an array that is
-//! not one, then a string that is not one, inside the handler that answers a
-//! peer -- so it is checked before, not caught after.
+//! Whether this is the shape an ObjectPath deserializes from. Checked before
+//! rather than caught after: there is no exception, only a wild read.
 inline bool isWireObjectPath(const rapidjson::Value& v) noexcept
 {
   if(!v.IsArray())

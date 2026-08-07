@@ -82,11 +82,9 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
     QDataStream s{m.data};
     s >> m_clientName;
 
-    // Peers exchange commands as raw QDataStream payloads and mirror each
-    // other's document, so both ends have to agree on how those are encoded
-    // and on what the model means. Neither is negotiable after the fact: a
-    // mismatch does not fail loudly, it reads the wrong bytes into the right
-    // fields. Refuse the join instead.
+    // Both ends must agree on the encoding and on what the model means: a
+    // mismatch reads the wrong bytes into the right fields rather than
+    // failing. Refuse the join.
     if(auto reason = incompatibility(s); !reason.isEmpty())
     {
       NetworkMessage rejected;

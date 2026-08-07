@@ -34,11 +34,8 @@ SCORE_ADDON_NETWORK_EXPORT void
 bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx);
 
 //! Ask `peer` for the state of every stand-in created since the last call.
-//!
-//! Called after applying a replicated command, which is the only thing that
-//! creates them. Drains the list whether or not the requests succeed: a
-//! stand-in nobody can describe stays a stand-in rather than being asked for
-//! again on every subsequent edit.
+//! Drains the list either way, so one nobody can describe is not asked about
+//! again on every edit.
 //! Replace a process with the peer's version of it.
 //!
 //! Exposed so that what it refuses can be tested: the id comes out of the

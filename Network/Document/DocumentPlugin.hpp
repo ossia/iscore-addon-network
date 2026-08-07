@@ -210,11 +210,7 @@ public:
 
   void divergedChanged(const QString& reason) W_SIGNAL(divergedChanged, reason);
 
-  //! What the other end of the session can construct.
-  //!
-  //! Empty until a session is joined. Kept so that the rest of score can ask
-  //! rather than guess: a client has no way to enumerate the host's audio
-  //! cards or cameras, but it can know which protocols exist there.
+  //! What the other end of the session can construct. Empty until joined.
   const Capabilities& remoteCapabilities() const noexcept { return m_remoteCaps; }
   void setRemoteCapabilities(Capabilities c);
 

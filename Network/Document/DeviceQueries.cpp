@@ -66,12 +66,8 @@ void bindDeviceQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
     return QByteArray{buf.GetString(), (int)buf.GetLength()};
   });
 
-  // What is actually plugged into this machine right now, for one protocol.
-  //
-  // The settings come back as the protocol itself writes them, which a peer
-  // without that protocol cannot parse -- and does not need to. It holds them
-  // as they are and hands them back in the command that creates the device, so
-  // the machine that does have the protocol is the one that reads them.
+  // What is plugged into this machine, for one protocol. The settings travel
+  // as the protocol wrote them: only this machine has to read them.
   rpc.bind("device.enumerate", [&ctx](const rapidjson::Value& params) -> QByteArray {
     const auto& factory = requireProtocol(ctx, params);
 
