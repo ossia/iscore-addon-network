@@ -1,6 +1,15 @@
 #include "ObjectQueries.hpp"
 
 #include <Process/OpaqueProcess.hpp>
+#include <Process/ProcessList.hpp>
+#include <Process/RemoteState.hpp>
+
+#include <Scenario/Document/Interval/IntervalModel.hpp>
+#include <Scenario/Process/Algorithms/ProcessPolicy.hpp>
+
+#include <score/application/ApplicationContext.hpp>
+#include <score/plugins/StringFactoryKey.hpp>
+#include <score/serialization/JSONValueVisitor.hpp>
 #include <Process/Process.hpp>
 
 #include <score/document/DocumentContext.hpp>
@@ -68,10 +77,49 @@ void bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
   });
 }
 
+namespace
+{
+//! Put the peer's version of a process in place of the one we made.
+//!
+//! A stand-in can simply be told its state. A real process cannot: it was
+//! built from creation data that described the other machine, so what is here
+//! is the wrong object rather than an empty one, and it has to be replaced by
+//! the peer's -- same id, same interval, so cables and paths still name it.
+void applyState(Process::ProcessModel& proc, const rapidjson::Value& state,
+                const score::DocumentContext& ctx)
+{
+  if(auto* opaque = qobject_cast<Process::OpaqueProcessModel*>(&proc))
+  {
+    opaque->setState(state);
+    return;
+  }
+
+  auto* itv = qobject_cast<Scenario::IntervalModel*>(proc.parent());
+  if(!itv || !state.IsObject() || !state.HasMember(score::StringConstant().uuid))
+    return;
+
+  const JsonValue obj{state};
+  const auto key = obj[score::StringConstant().uuid]
+                       .to<UuidKey<Process::ProcessModel>>();
+
+  auto& facs = ctx.app.interfaces<Process::ProcessFactoryList>();
+  auto* fac = facs.get(key);
+
+  JSONObject::Deserializer des{state};
+  auto* rebuilt = fac ? fac->load(des.toVariant(), ctx, itv)
+                      : facs.loadMissing(key, des.toVariant(), ctx, itv);
+  if(!rebuilt)
+    return;
+
+  Scenario::RemoveProcess(*itv, proc.id());
+  Scenario::AddProcess(*itv, rebuilt);
+}
+}
+
 void fillStandIns(
     RpcChannel& rpc, const score::DocumentContext& ctx, const Id<Client>& peer)
 {
-  auto& pending = Process::OpaqueProcessModel::awaitingState();
+  auto& pending = Process::awaitingRemoteState();
   if(pending.empty())
     return;
 
@@ -85,14 +133,14 @@ void fillStandIns(
 
     // Captured weakly: the answer arrives later, and by then the object may
     // have been removed -- by an undo of the very command that made it.
-    QPointer<Process::OpaqueProcessModel> target = weak;
+    QPointer<Process::ProcessModel> target = weak;
     const auto path = score::IDocument::path(*weak).unsafePath();
 
     rpc.call(
         peer, object_state, pathParams(path),
-        [target](const rapidjson::Value& result) {
+        [target, &ctx](const rapidjson::Value& result) {
       if(target)
-        target->setState(result);
+        applyState(*target, result, ctx);
         },
         [](const QString& err) {
       qDebug() << "Could not fetch the state of a process this build cannot "

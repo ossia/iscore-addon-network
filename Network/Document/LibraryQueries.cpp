@@ -1,6 +1,7 @@
 #include "LibraryQueries.hpp"
 
 #include <Process/ProcessFactory.hpp>
+#include <Process/ProcessMetadata.hpp>
 #include <Process/ProcessList.hpp>
 
 #include <Library/Panel/LibraryPanelDelegate.hpp>
@@ -74,7 +75,8 @@ void writeNode(JsonWriter& w, const Library::ProcessNode& node)
   w.EndObject();
 }
 
-void readNode(const rapidjson::Value& v, Library::ProcessNode& parent)
+void readNode(
+    const rapidjson::Value& v, Library::ProcessNode& parent, bool topLevel)
 {
   if(!v.IsObject() || !v.HasMember("name"))
     return;
@@ -82,6 +84,12 @@ void readNode(const rapidjson::Value& v, Library::ProcessNode& parent)
   Library::ProcessData data;
   data.prettyName
       = QString::fromUtf8(v["name"].GetString(), v["name"].GetStringLength());
+
+  // Computed here rather than sent: the icons are score's own resources, the
+  // same in both builds, and a QIcon does not travel. Only the top level has
+  // one, which is what addCategory does when it builds the tree locally.
+  if(topLevel)
+    data.icon = Process::getCategoryIcon(data.prettyName);
   if(v.HasMember("key"))
     data.key = UuidKey<Process::ProcessModel>::fromString(
         QString::fromUtf8(v["key"].GetString(), v["key"].GetStringLength()));
@@ -93,7 +101,7 @@ void readNode(const rapidjson::Value& v, Library::ProcessNode& parent)
 
   if(v.HasMember("children") && v["children"].IsArray())
     for(const auto& child : v["children"].GetArray())
-      readNode(child, node);
+      readNode(child, node, false);
 }
 }
 
@@ -157,7 +165,7 @@ void importRemoteLibrary(
       {
         root.erase(root.begin(), root.end());
         for(const auto& child : result.GetArray())
-          readNode(child, root);
+          readNode(child, root, true);
       }
       else
       {
@@ -182,7 +190,7 @@ void importRemoteLibrary(
                     child["key"].GetString(), child["key"].GetStringLength()));
             if(key != UuidKey<Process::ProcessModel>{} && local.get(key))
               continue;
-            readNode(child, category);
+            readNode(child, category, false);
           }
       }
     }

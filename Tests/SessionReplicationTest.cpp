@@ -12,6 +12,7 @@
 #include <Process/Process.hpp>
 #include <Process/ProcessList.hpp>
 #include <Process/OpaqueProcess.hpp>
+#include <Process/RemoteState.hpp>
 #include <score/model/EntitySerialization.hpp>
 #include <score/plugins/SerializableHelpers.hpp>
 #include <score/document/DocumentInterface.hpp>
