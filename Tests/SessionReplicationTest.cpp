@@ -1341,3 +1341,47 @@ TEST_CASE("A texture process can be added with a terminal attached",
     CHECK_FALSE(plug->diverged());
   });
 }
+
+TEST_CASE("A terminal is told what its devices can be plugged into",
+          "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto& termDevices = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+
+    // The inspector's texture and MIDI combo boxes used to ask each device
+    // object what C++ type it was. A terminal has no device objects, so the
+    // answer was always "none" and the boxes were empty. What it has instead
+    // is what the machine running the score reported.
+    master.plugin->policy().session()->broadcastToAllClients(
+        master.plugin->policy().session()->makeMessage(
+            Network::MessagesAPI::instance().device_status,
+            QStringLiteral("cam"), true));
+
+    REQUIRE(spin_until([&] {
+      return termDevices.remoteConnected(QStringLiteral("cam")) == true;
+    }));
+
+    // Kinds arrive through the query rather than the per-device broadcast, so
+    // set one directly and check the lookup a combo box performs.
+    termDevices.setRemoteKinds(
+        QStringLiteral("cam"), Device::DeviceKind::TextureIn);
+    termDevices.setRemoteKinds(
+        QStringLiteral("knob"), Device::DeviceKind::MidiIn);
+
+    const auto textures
+        = termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureIn);
+    REQUIRE(textures.size() == 1);
+    CHECK(textures.front() == QStringLiteral("cam"));
+
+    const auto midi = termDevices.remoteDevicesOfKind(Device::DeviceKind::MidiIn);
+    REQUIRE(midi.size() == 1);
+    CHECK(midi.front() == QStringLiteral("knob"));
+
+    // And a kind nothing reported is empty rather than everything.
+    CHECK(termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureOut).empty());
+  });
+}

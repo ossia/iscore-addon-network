@@ -102,6 +102,12 @@ void bindDeviceStatusQuery(RpcChannel& rpc, const score::DocumentContext& ctx)
         w.String(name.constData(), name.size());
         w.Key("connected");
         w.Bool(dev.connected());
+
+        // What it can be plugged into. A peer with no device objects cannot
+        // work this out for itself -- the answer used to be a cast to a
+        // plug-in's own C++ type -- so it is told.
+        w.Key("kinds");
+        w.Int((int)dev.kinds().toInt());
         w.EndObject();
       });
     }
@@ -129,9 +135,13 @@ void requestDeviceStatus(
       if(!e.IsObject() || !e.HasMember("name") || !e.HasMember("connected"))
         continue;
 
-      plug->setRemoteConnected(
-          QString::fromUtf8(e["name"].GetString(), e["name"].GetStringLength()),
-          e["connected"].GetBool());
+      const auto name
+          = QString::fromUtf8(e["name"].GetString(), e["name"].GetStringLength());
+      plug->setRemoteConnected(name, e["connected"].GetBool());
+
+      if(e.HasMember("kinds"))
+        plug->setRemoteKinds(
+            name, Device::DeviceKinds::fromInt(e["kinds"].GetInt()));
     }
       },
       [](const QString& err) {
