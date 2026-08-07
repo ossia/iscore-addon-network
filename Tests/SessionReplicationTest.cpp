@@ -8,6 +8,10 @@
 // by hand rather than by having a second build.
 
 #include <Scenario/Commands/Metadata/ChangeElementLabel.hpp>
+#include <Scenario/Commands/Scenario/Creations/CreateTimeSync_Event_State.hpp>
+#include <Scenario/Commands/Scenario/Creations/CreateInterval_State_Event_TimeSync.hpp>
+#include <Scenario/Process/ScenarioModel.hpp>
+#include <score/command/Dispatchers/CommandDispatcher.hpp>
 #include <Scenario/Commands/Interval/AddOnlyProcessToInterval.hpp>
 #include <Process/Process.hpp>
 #include <Process/ProcessList.hpp>
@@ -1417,5 +1421,71 @@ TEST_CASE("A terminal is told what its devices can be plugged into",
 
     // And a kind nothing reported is empty rather than everything.
     CHECK(termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureOut).empty());
+  });
+}
+
+TEST_CASE("A terminal follows the position of every interval", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto& masterRoot = rootInterval(*master.document);
+    auto& clientRoot = rootInterval(*client);
+
+    // A second interval, inside the score rather than around it: this is what
+    // shows which part is running, and it is what only the root used to have.
+    REQUIRE(masterRoot.processes.begin() != masterRoot.processes.end());
+    auto& scenario
+        = safe_cast<Scenario::ProcessModel&>(*masterRoot.processes.begin());
+
+    CommandDispatcher<> disp{master.document->context().commandStack};
+    auto* mkState = new Scenario::Command::CreateTimeSync_Event_State{
+        scenario, TimeVal::fromMsecs(500.), 0.5};
+    disp.submit(mkState);
+    auto* mkInterval = new Scenario::Command::CreateInterval_State_Event_TimeSync{
+        scenario, mkState->createdState(), TimeVal::fromMsecs(1500.), 0.5, false};
+    disp.submit(mkInterval);
+
+    const auto nestedId = mkInterval->createdInterval();
+    auto& masterNested = scenario.intervals.at(nestedId);
+
+    Scenario::IntervalModel* clientNestedPtr{};
+    REQUIRE(spin_until([&] {
+      for(auto& proc : clientRoot.processes)
+      {
+        auto* sc = qobject_cast<Scenario::ProcessModel*>(&proc);
+        if(!sc)
+          continue;
+        if(auto it = sc->intervals.find(nestedId); it != sc->intervals.end())
+        {
+          clientNestedPtr = &*it;
+          return true;
+        }
+      }
+      return false;
+    }));
+    REQUIRE(clientNestedPtr);
+    auto& clientNested = *clientNestedPtr;
+
+    // What the executor does on the machine running the score. Set directly:
+    // a terminal has no executor, so this is the only thing the mirror can be
+    // driven by, and the test would pass against a stopped score otherwise.
+    masterRoot.duration.setPlayPercentage(0.25);
+    masterRoot.setExecuting(true);
+    masterNested.duration.setPlayPercentage(0.5);
+    masterNested.setExecuting(true);
+
+    REQUIRE(spin_until([&] {
+      return clientNested.duration.playPercentage() == 0.5 && clientNested.executing();
+    }));
+    CHECK(clientRoot.duration.playPercentage() == 0.25);
+    CHECK(clientRoot.executing());
+
+    // And stopping is reported too: an interval left executing on a terminal
+    // stays lit for the rest of the session.
+    masterNested.setExecuting(false);
+    REQUIRE(spin_until([&] { return !clientNested.executing(); }));
   });
 }

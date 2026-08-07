@@ -6,6 +6,9 @@
 
 #include <score/document/DocumentContext.hpp>
 #include <score/document/DocumentInterface.hpp>
+#include <score/model/path/ObjectPath.hpp>
+#include <score/serialization/DataStreamVisitor.hpp>
+#include <score/serialization/VisitorCommon.hpp>
 #include <score/tools/Bind.hpp>
 
 #include <core/document/Document.hpp>
@@ -33,6 +36,31 @@ Scenario::IntervalModel* rootInterval(const score::DocumentContext& ctx)
 
   return &sm->baseScenario().interval();
 }
+
+struct IntervalState
+{
+  double position{};
+  bool executing{};
+  bool operator==(const IntervalState&) const noexcept = default;
+};
+
+//! Every interval of the score, root included.
+//!
+//! findChildren rather than walking scenarios and their processes: an interval
+//! can be nested under anything that holds processes, and a build without the
+//! factory for one of them has a stand-in there instead -- which owns no
+//! intervals, so it drops out of the list by itself.
+std::vector<Scenario::IntervalModel*> allIntervals(const score::DocumentContext& ctx)
+{
+  auto* root = rootInterval(ctx);
+  if(!root)
+    return {};
+
+  std::vector<Scenario::IntervalModel*> res{root};
+  for(auto* itv : root->findChildren<Scenario::IntervalModel*>())
+    res.push_back(itv);
+  return res;
+}
 }
 
 void bindTransportBroadcast(
@@ -48,22 +76,52 @@ void bindTransportBroadcast(
   timer->setInterval(1000 / 20);
 
   QObject::connect(timer, &QTimer::timeout, &owner, [&session, &ctx,
-                                                      last = -1.]() mutable {
-    auto* itv = rootInterval(ctx);
-    if(!itv)
+                                                     last = ossia::hash_map<
+                                                         Scenario::IntervalModel*,
+                                                         IntervalState>{}]() mutable {
+    const auto intervals = allIntervals(ctx);
+    if(intervals.empty())
+    {
+      last.clear();
+      return;
+    }
+
+    QByteArray payload;
+    QDataStream s{&payload, QIODevice::WriteOnly};
+    qint32 count = 0;
+
+    for(auto* itv : intervals)
+    {
+      const IntervalState now{itv->duration.playPercentage(), itv->executing()};
+
+      // Only what moved: a score sitting at zero should not fill the socket
+      // with the same numbers twenty times a second, once per interval.
+      auto [it, inserted] = last.try_emplace(itv, IntervalState{});
+      if(!inserted && it->second == now)
+        continue;
+      it->second = now;
+
+      s << score::marshall<DataStream>(score::IDocument::path(*itv).unsafePath())
+        << now.position << now.executing;
+      count++;
+    }
+
+    if(count == 0)
       return;
 
-    const double pos = itv->duration.playPercentage();
-
-    // Only when it moves: a stopped score should not fill the socket with the
-    // same number twenty times a second. Per connection, not per process --
-    // one score's position says nothing about another's.
-    if(pos == last)
-      return;
-    last = pos;
+    // Intervals that went away take their entry with them, or the map grows
+    // for as long as the session lasts.
+    if(last.size() > intervals.size())
+    {
+      ossia::hash_map<Scenario::IntervalModel*, IntervalState> alive;
+      for(auto* itv : intervals)
+        if(auto it = last.find(itv); it != last.end())
+          alive.insert(*it);
+      last = std::move(alive);
+    }
 
     session.broadcastToAllClients(
-        session.makeMessage(MessagesAPI::instance().exec_position, pos));
+        session.makeMessage(MessagesAPI::instance().exec_position, count, payload));
   });
 
   timer->start();
@@ -74,14 +132,29 @@ void bindTransportMirror(
 {
   session.mapper().addHandler(&owner, MessagesAPI::instance().exec_position,
                               [&ctx](const NetworkMessage& m) {
-    auto* itv = rootInterval(ctx);
-    if(!itv)
-      return;
-
     QDataStream s{m.data};
-    double pos{};
-    s >> pos;
-    itv->duration.setPlayPercentage(pos);
+    qint32 count{};
+    QByteArray payload;
+    s >> count >> payload;
+
+    QDataStream p{payload};
+    for(qint32 i = 0; i < count; i++)
+    {
+      QByteArray pathBytes;
+      double pos{};
+      bool executing{};
+      p >> pathBytes >> pos >> executing;
+
+      const auto path = score::unmarshall<ObjectPath>(pathBytes);
+
+      // try_find: an interval inside a process this build cannot make has no
+      // counterpart here, and find() breakpoints before it throws.
+      if(auto* itv = path.try_find<Scenario::IntervalModel>(ctx))
+      {
+        itv->duration.setPlayPercentage(pos);
+        itv->setExecuting(executing);
+      }
+    }
   });
 }
 }

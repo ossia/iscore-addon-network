@@ -19,9 +19,11 @@ class Session;
  * one number: IntervalDurations::setPlayPercentage is a plain model setter and
  * the executor is merely one of its callers.
  *
- * Only the root interval. Nested intervals get their positions from their own
- * executor components, which a terminal does not have -- so the global cursor
- * moves and the ones inside do not.
+ * Every interval, not only the root: the ones inside are what shows which part
+ * of the score is running, and each gets its position from its own executor
+ * component, which a terminal has none of. Sent by path, so an interval the
+ * terminal does not have -- one inside a process it cannot build -- is skipped
+ * rather than mistaken for another.
  */
 SCORE_ADDON_NETWORK_EXPORT void
 bindTransportBroadcast(QObject& owner, Session& session, const score::DocumentContext&);
