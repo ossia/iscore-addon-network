@@ -36,6 +36,7 @@
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
 #include <Network/Session/ClientSessionBuilder.hpp>
 #include <Network/Session/MasterSession.hpp>
+#include <Network/Document/LibraryQueries.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -103,6 +104,24 @@ void NetworkApplicationPlugin::on_createdDocument(score::Document& doc)
     m_arg_net_join = {};
     return;
   }
+}
+
+void NetworkApplicationPlugin::on_documentChanged(
+    score::Document* olddoc, score::Document* newdoc)
+{
+  if(!newdoc || newdoc->role() != score::DocumentRole::Terminal)
+    return;
+
+  auto* plug = newdoc->context().findPlugin<NetworkDocumentPlugin>();
+  if(!plug)
+    return;
+
+  auto* rpc = plug->rpc();
+  auto* session = plug->policy().session();
+  if(!rpc || !session)
+    return;
+
+  importRemoteLibrary(*rpc, context, session->master().id(), true);
 }
 
 bool NetworkApplicationPlugin::handleLoading()

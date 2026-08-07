@@ -27,6 +27,11 @@ public:
   void on_createdDocument(score::Document& doc) override;
   bool handleLoading() override;
 
+  //! The library panel resets itself to this build's processes whenever a
+  //! document that runs here becomes visible. A terminal's does not run here,
+  //! so its view of what exists has to be put back each time it returns.
+  void on_documentChanged(score::Document* olddoc, score::Document* newdoc) override;
+
   //! Kept at four arguments: it is connected to ZeroconfBrowser by member
   //! pointer, where a defaulted parameter would not count.
   void
