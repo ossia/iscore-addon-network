@@ -17,6 +17,7 @@
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/ClientPolicy.hpp>
 #include <Network/Document/RemoteCommand.hpp>
+#include <Network/Document/ObjectQueries.hpp>
 #include <Network/Document/Transport.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Group/NetworkActions.hpp>
@@ -82,6 +83,12 @@ ClientEditionPolicy::ClientEditionPolicy(
   //   -> apply it to the computer only
   s->mapper().addHandler(this, mapi.command_new, [&](const NetworkMessage& m) {
     applyRemoteCommand(m_ctx, m.data);
+
+    // A command can name a process this build cannot make; what it stands for
+    // is only known where it was made, so ask.
+    if(auto* plug = m_ctx.findPlugin<NetworkDocumentPlugin>())
+      if(auto* rpc = plug->rpc())
+        fillStandIns(*rpc, m_ctx, m_session->master().id());
   });
 
   // The master could not apply a command we sent, so it did not relay it: we

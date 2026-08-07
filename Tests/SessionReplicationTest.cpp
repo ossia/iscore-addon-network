@@ -12,6 +12,9 @@
 #include <Process/Process.hpp>
 #include <Process/ProcessList.hpp>
 #include <Process/OpaqueProcess.hpp>
+#include <score/model/EntitySerialization.hpp>
+#include <score/plugins/SerializableHelpers.hpp>
+#include <score/document/DocumentInterface.hpp>
 #include <ossia/detail/algorithms.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
@@ -1027,12 +1030,12 @@ TEST_CASE("Adding a process the peer cannot make does not stop it", "[session]")
     });
     REQUIRE(it != clientItv.processes.end());
 
-    // And it knows it is a placeholder rather than an empty process: writing it
-    // out as if it were empty would tell a machine that has the plug-in that
-    // there is nothing there.
+    // A stand-in starts with no state -- the command carried what a factory
+    // would be given, not what the process would write -- so it asks the peer
+    // that made it, and stops being a placeholder once the answer arrives.
     auto* opaque = dynamic_cast<const Process::OpaqueProcessModel*>(&*it);
     REQUIRE(opaque);
-    CHECK(opaque->incomplete());
+    REQUIRE(spin_until([&] { return !opaque->incomplete(); }));
 
     // Editing still works afterwards, which is the part that was lost.
     const auto label = QStringLiteral("still listening");
@@ -1040,5 +1043,110 @@ TEST_CASE("Adding a process the peer cannot make does not stop it", "[session]")
         new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
             masterItv, label});
     REQUIRE(spin_until([&] { return clientItv.metadata().getLabel() == label; }));
+  });
+}
+
+TEST_CASE("A peer can be asked what an object it made contains", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* plug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(plug);
+    auto* rpc = plug->rpc();
+    REQUIRE(rpc);
+
+    // The base interval's Scenario, which both ends have: what matters here is
+    // that the answer is that object's serialization, addressed by path.
+    auto& hostItv = rootInterval(*master.document);
+    REQUIRE_FALSE(hostItv.processes.empty());
+    auto& hostProc = *hostItv.processes.begin();
+
+    JSONReader pathJson;
+    pathJson.readFrom(score::IDocument::path(hostProc).unsafePath());
+
+    rapidjson::StringBuffer buf;
+    JsonWriter w{buf};
+    w.StartObject();
+    w.Key("path");
+    {
+      rapidjson::Document d;
+      const auto bytes = pathJson.toByteArray();
+      d.Parse(bytes.data(), bytes.size());
+      d.Accept(w);
+    }
+    w.EndObject();
+
+    QByteArray answer;
+    bool failed = false;
+    rpc->call(
+        master.session->localClient().id(), "object.state",
+        QByteArray{buf.GetString(), (int)buf.GetLength()},
+        [&](const rapidjson::Value& result) {
+      rapidjson::StringBuffer out;
+      JsonWriter ow{out};
+      result.Accept(ow);
+      answer = QByteArray{out.GetString(), (int)out.GetLength()};
+        },
+        [&](const QString&) { failed = true; });
+
+    REQUIRE(spin_until([&] { return !answer.isEmpty() || failed; }));
+    REQUIRE_FALSE(failed);
+
+    // It really is that process, not an empty object: the key it reports is the
+    // one the object has.
+    rapidjson::Document got;
+    got.Parse(answer.data(), answer.size());
+    REQUIRE_FALSE(got.HasParseError());
+    REQUIRE(got.IsObject());
+    REQUIRE(got.HasMember("uuid"));
+  });
+}
+
+TEST_CASE("A stand-in given its state stops being a placeholder", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto* doc = score::test::new_document(ctx);
+    REQUIRE(doc);
+
+    auto& itv = rootInterval(*doc);
+    const auto absent = UuidKey<Process::ProcessModel>::fromString(
+        QStringLiteral("77777777-8888-9999-aaaa-bbbbbbbbbbbb"));
+
+    auto& facs = ctx.interfaces<Process::ProcessFactoryList>();
+    auto* stand = facs.makeMissing(
+        absent, TimeVal::fromMsecs(1000), Id<Process::ProcessModel>{9}, &itv);
+    REQUIRE(stand);
+
+    auto* opaque = dynamic_cast<Process::OpaqueProcessModel*>(stand);
+    REQUIRE(opaque);
+    REQUIRE(opaque->incomplete());
+    REQUIRE(opaque->inlets().empty());
+
+    // What the peer that could make it would have answered: its serialization,
+    // ports and all.
+    const QByteArray state
+        = QStringLiteral(R"({"uuid":"%1","Inlets":[],"Outlets":[],)"
+                         R"("PluginOwnMember":42})")
+              .arg(QStringLiteral("77777777-8888-9999-aaaa-bbbbbbbbbbbb"))
+              .toUtf8();
+    rapidjson::Document d;
+    d.Parse(state.data(), state.size());
+    REQUIRE_FALSE(d.HasParseError());
+
+    opaque->setState(d);
+
+    CHECK_FALSE(opaque->incomplete());
+
+    // And what it now writes out carries the plug-in's member, so a machine
+    // that has the plug-in gets it back rather than an empty process.
+    JSONReader r;
+    r.readFrom(static_cast<Process::ProcessModel&>(*opaque));
+    const auto written = r.toByteArray();
+    CHECK(written.contains("PluginOwnMember"));
+
+    delete opaque;
   });
 }
