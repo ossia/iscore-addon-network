@@ -1632,3 +1632,52 @@ TEST_CASE("A malformed message is dropped rather than the peer", "[session]")
         [&] { return rootInterval(*client).metadata().getLabel() == label; }));
   });
 }
+
+TEST_CASE("A request of the wrong shape is refused rather than read", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto* rpc = client->context().findPlugin<Network::NetworkDocumentPlugin>()->rpc();
+    REQUIRE(rpc);
+    const auto host = master.session->localClient().id();
+
+    // rapidjson checks types with assertions, which release builds compile
+    // out: GetString() on a number reads the union as a pointer and a length.
+    // object.state runs on the machine playing the show, so a peer sending the
+    // wrong shape must get an error back, not take the host down with it.
+    const QByteArrayList badRequests{
+        QByteArrayLiteral(R"({"interval": 42, "process": 0})"),
+        QByteArrayLiteral(R"({"interval": "not a path", "process": 0})"),
+        QByteArrayLiteral(R"({"interval": [{"ObjectName": 7, "ObjectId": 0}], "process": 0})"),
+        QByteArrayLiteral(R"({"interval": [{"ObjectId": 0}], "process": 0})"),
+        QByteArrayLiteral(R"({"interval": [], "process": "not a number"})"),
+        QByteArrayLiteral(R"({"interval": []})"),
+        QByteArrayLiteral(R"([])"),
+    };
+
+    int answered = 0;
+    int succeeded = 0;
+    for(const auto& body : badRequests)
+      rpc->call(
+          host, "object.state", body,
+          [&](const rapidjson::Value&) { ++answered; ++succeeded; },
+          [&](const QString&) { ++answered; });
+
+    REQUIRE(spin_until([&] { return answered == badRequests.size(); }));
+
+    // Every one refused: none of these names an object, so a success would
+    // mean the handler read something it invented.
+    CHECK(succeeded == 0);
+
+    // And the host is still serving.
+    const auto label = QStringLiteral("alive after bad requests");
+    master.document->context().document.commandStack().redoAndPush(
+        new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
+            rootInterval(*master.document), label});
+    REQUIRE(spin_until(
+        [&] { return rootInterval(*client).metadata().getLabel() == label; }));
+  });
+}

@@ -18,6 +18,7 @@ set(HDRS
     Network/Communication/Rpc.hpp
     Network/Communication/MessageMapper.hpp
     Network/Communication/WireRead.hpp
+    Network/Communication/WireJson.hpp
     Network/Communication/MessageValidator.hpp
     Network/Communication/NetworkMessage.hpp
     Network/Communication/NetworkServer.hpp

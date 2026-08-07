@@ -10,6 +10,7 @@
 #include <Device/Protocol/ProtocolList.hpp>
 
 #include <Network/Communication/Rpc.hpp>
+#include <Network/Communication/WireJson.hpp>
 
 namespace Network
 {
@@ -31,17 +32,15 @@ RemoteDeviceCatalog::RemoteDeviceCatalog(
     std::vector<Protocol> found;
     for(const auto& e : result.GetArray())
     {
-      if(!e.IsObject() || !e.HasMember("uuid") || !e.HasMember("name"))
+      const auto uuid = wireString(e, "uuid");
+      const auto name = wireString(e, "name");
+      if(!uuid || !name)
         continue;
 
       Protocol p;
-      p.key = UuidKey<Device::ProtocolFactory>::fromString(QString::fromUtf8(
-          e["uuid"].GetString(), e["uuid"].GetStringLength()));
-      p.name = QString::fromUtf8(e["name"].GetString(), e["name"].GetStringLength());
-      p.category = e.HasMember("category")
-                       ? QString::fromUtf8(
-                             e["category"].GetString(), e["category"].GetStringLength())
-                       : QString{};
+      p.key = UuidKey<Device::ProtocolFactory>::fromString(*uuid);
+      p.name = *name;
+      p.category = wireString(e, "category").value_or(QString{});
       p.constructible = local.get(p.key) != nullptr;
       found.push_back(std::move(p));
     }
@@ -83,7 +82,9 @@ void RemoteDeviceCatalog::enumerate(
 
     for(const auto& e : result.GetArray())
     {
-      if(!e.IsObject() || !e.HasMember("name") || !e.HasMember("settings"))
+      const auto name = wireString(e, "name");
+      const auto* settingsValue = wireMember(e, "settings");
+      if(!name || !settingsValue)
         continue;
 
       // The settings are as the protocol wrote them, which nothing here can
@@ -92,19 +93,11 @@ void RemoteDeviceCatalog::enumerate(
       // has the protocol reads them.
       Device::DeviceSettings settings;
       {
-        JSONObject::Deserializer des{e["settings"]};
+        JSONObject::Deserializer des{*settingsValue};
         des.writeTo(settings);
       }
 
-      const auto name = QString::fromUtf8(
-          e["name"].GetString(), e["name"].GetStringLength());
-      const auto category
-          = e.HasMember("category")
-                ? QString::fromUtf8(
-                      e["category"].GetString(), e["category"].GetStringLength())
-                : QString{};
-
-      onDevice(category, name, settings);
+      onDevice(wireString(e, "category").value_or(QString{}), *name, settings);
     }
       },
       [](const QString& err) {

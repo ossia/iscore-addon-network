@@ -25,6 +25,7 @@
 #include <QPointer>
 
 #include <Network/Communication/Rpc.hpp>
+#include <Network/Communication/WireJson.hpp>
 
 #include <stdexcept>
 
@@ -69,13 +70,20 @@ QByteArray processParams(const ObjectPath& interval, int32_t process)
 void bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
 {
   rpc.bind(object_state, [&ctx](const rapidjson::Value& params) -> QByteArray {
-    if(!params.IsObject() || !params.HasMember("interval")
-       || !params.HasMember("process"))
+    const auto* intervalParam = wireMember(params, "interval");
+    const auto processParam = wireInt(params, "process");
+    if(!intervalParam || !processParam)
       throw std::runtime_error{"object.state: no object named"};
+
+    // Checked before deserializing rather than caught after: rapidjson's type
+    // checks are assertions and vanish in release, so a path of the wrong
+    // shape would be read as one anyway -- on the machine running the score.
+    if(!isWireObjectPath(*intervalParam))
+      throw std::runtime_error{"object.state: that is not a path"};
 
     ObjectPath path;
     {
-      JSONObject::Deserializer des{params["interval"]};
+      JSONObject::Deserializer des{*intervalParam};
       des.writeTo(path);
     }
 
@@ -86,7 +94,7 @@ void bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
     if(!itv)
       throw std::runtime_error{"object.state: no such interval here"};
 
-    const Id<Process::ProcessModel> id{params["process"].GetInt()};
+    const Id<Process::ProcessModel> id{(int32_t)*processParam};
     auto it = ossia::find_if(
         itv->processes, [&](const Process::ProcessModel& p) { return p.id() == id; });
     if(it == itv->processes.end())
@@ -116,12 +124,16 @@ void applyState(Process::ProcessModel& proc, const rapidjson::Value& state,
   }
 
   auto* itv = qobject_cast<Scenario::IntervalModel*>(proc.parent());
-  if(!itv || !state.IsObject() || !state.HasMember(score::StringConstant().uuid))
+  if(!itv)
     return;
 
-  const JsonValue obj{state};
-  const auto key = obj[score::StringConstant().uuid]
-                       .to<UuidKey<Process::ProcessModel>>();
+  // The uuid says which factory to rebuild with; anything but a string here is
+  // a peer we cannot understand, not a process we should guess at.
+  const auto uuid = wireString(state, score::StringConstant().uuid.c_str());
+  if(!uuid)
+    return;
+
+  const auto key = UuidKey<Process::ProcessModel>::fromString(*uuid);
 
   auto& facs = ctx.app.interfaces<Process::ProcessFactoryList>();
   auto* fac = facs.get(key);

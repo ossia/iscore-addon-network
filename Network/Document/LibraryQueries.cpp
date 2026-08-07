@@ -16,6 +16,7 @@
 #include <score/serialization/JSONVisitor.hpp>
 
 #include <Network/Communication/Rpc.hpp>
+#include <Network/Communication/WireJson.hpp>
 
 #include <ossia/detail/algorithms.hpp>
 
@@ -78,29 +79,27 @@ void writeNode(JsonWriter& w, const Library::ProcessNode& node)
 void readNode(
     const rapidjson::Value& v, Library::ProcessNode& parent, bool topLevel)
 {
-  if(!v.IsObject() || !v.HasMember("name"))
+  const auto name = wireString(v, "name");
+  if(!name)
     return;
 
   Library::ProcessData data;
-  data.prettyName
-      = QString::fromUtf8(v["name"].GetString(), v["name"].GetStringLength());
+  data.prettyName = *name;
 
   // Computed here rather than sent: the icons are score's own resources, the
   // same in both builds, and a QIcon does not travel. Only the top level has
   // one, which is what addCategory does when it builds the tree locally.
   if(topLevel)
     data.icon = Process::getCategoryIcon(data.prettyName);
-  if(v.HasMember("key"))
-    data.key = UuidKey<Process::ProcessModel>::fromString(
-        QString::fromUtf8(v["key"].GetString(), v["key"].GetStringLength()));
-  if(v.HasMember("data"))
-    data.customData
-        = QString::fromUtf8(v["data"].GetString(), v["data"].GetStringLength());
+  if(const auto key = wireString(v, "key"))
+    data.key = UuidKey<Process::ProcessModel>::fromString(*key);
+  if(const auto custom = wireString(v, "data"))
+    data.customData = *custom;
 
   auto& node = Library::addToLibrary(parent, std::move(data));
 
-  if(v.HasMember("children") && v["children"].IsArray())
-    for(const auto& child : v["children"].GetArray())
+  if(const auto* children = wireMember(v, "children"); children && children->IsArray())
+    for(const auto& child : children->GetArray())
       readNode(child, node, false);
 }
 }
@@ -184,11 +183,9 @@ void importRemoteLibrary(
                         Library::ProcessData{{{}, remoteCategory(), {}}, QIcon{}});
 
         for(const auto& child : result.GetArray())
-          if(child.IsObject() && child.HasMember("key"))
+          if(const auto childKey = wireString(child, "key"))
           {
-            const auto key = UuidKey<Process::ProcessModel>::fromString(
-                QString::fromUtf8(
-                    child["key"].GetString(), child["key"].GetStringLength()));
+            const auto key = UuidKey<Process::ProcessModel>::fromString(*childKey);
             if(key != UuidKey<Process::ProcessModel>{} && local.get(key))
               continue;
             readNode(child, category, false);

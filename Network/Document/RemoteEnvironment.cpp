@@ -5,6 +5,7 @@
 #include <QObject>
 
 #include <Network/Communication/Rpc.hpp>
+#include <Network/Communication/WireJson.hpp>
 
 namespace Network
 {
@@ -70,16 +71,16 @@ void RemoteEnvironment::list(
     {
       for(const auto& e : result.GetArray())
       {
-        if(!e.IsObject() || !e.HasMember("uri") || !e.HasMember("name"))
+        const auto uri = wireString(e, "uri");
+        const auto name = wireString(e, "name");
+        if(!uri || !name)
           continue;
 
         score::DirEntry entry;
-        entry.uri = score::Uri::parse(QString::fromUtf8(
-            e["uri"].GetString(), e["uri"].GetStringLength()));
-        entry.name = QString::fromUtf8(
-            e["name"].GetString(), e["name"].GetStringLength());
-        entry.directory = e.HasMember("directory") && e["directory"].GetBool();
-        entry.size = e.HasMember("size") ? e["size"].GetInt64() : 0;
+        entry.uri = score::Uri::parse(*uri);
+        entry.name = *name;
+        entry.directory = wireBool(e, "directory").value_or(false);
+        entry.size = wireInt(e, "size").value_or(0);
         entries.push_back(std::move(entry));
       }
     }

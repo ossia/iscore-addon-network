@@ -12,6 +12,7 @@
 
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Communication/Rpc.hpp>
+#include <Network/Communication/WireJson.hpp>
 
 #include <score/serialization/JSONVisitor.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
@@ -141,16 +142,15 @@ void requestDeviceStatus(
 
     for(const auto& e : result.GetArray())
     {
-      if(!e.IsObject() || !e.HasMember("name") || !e.HasMember("connected"))
+      const auto name = wireString(e, "name");
+      const auto connected = wireBool(e, "connected");
+      if(!name || !connected)
         continue;
 
-      const auto name
-          = QString::fromUtf8(e["name"].GetString(), e["name"].GetStringLength());
-      plug->setRemoteConnected(name, e["connected"].GetBool());
+      plug->setRemoteConnected(*name, *connected);
 
-      if(e.HasMember("kinds"))
-        plug->setRemoteKinds(
-            name, Device::DeviceKinds::fromInt(e["kinds"].GetInt()));
+      if(const auto kinds = wireInt(e, "kinds"))
+        plug->setRemoteKinds(*name, Device::DeviceKinds::fromInt((int)*kinds));
     }
       },
       [](const QString& err) {
