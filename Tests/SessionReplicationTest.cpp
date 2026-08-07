@@ -1152,7 +1152,7 @@ TEST_CASE("A stand-in given its state stops being a placeholder", "[session]")
   });
 }
 
-TEST_CASE("A peer can be asked what processes it has", "[session]")
+TEST_CASE("A peer can be asked for its library", "[session]")
 {
   score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
     auto master = hostSession(ctx);
@@ -1182,28 +1182,38 @@ TEST_CASE("A peer can be asked what processes it has", "[session]")
     got.Parse(answer.data(), answer.size());
     REQUIRE_FALSE(got.HasParseError());
     REQUIRE(got.IsArray());
-
-    // Names, not just uuids: Capabilities already carries the uuids, and a
-    // uuid is not something anyone can pick from a library.
     REQUIRE(got.Size() > 0);
-    bool named = false;
+
+    // A tree, not a list. Categories nest -- "Plugins/Faust" is two levels, not
+    // one name with a slash in it -- and most of a library is not a factory at
+    // all: shaders, Faust programs and presets are entries built by scanning
+    // files. Sending the factory list reproduces neither.
+    bool nested = false;
     for(const auto& e : got.GetArray())
     {
       REQUIRE(e.IsObject());
-      REQUIRE(e.HasMember("key"));
       REQUIRE(e.HasMember("name"));
-      if(e["name"].GetStringLength() > 0)
-        named = true;
+      if(e.HasMember("children") && e["children"].IsArray()
+         && e["children"].Size() > 0)
+        nested = true;
     }
-    CHECK(named);
+    CHECK(nested);
 
-    // The Scenario process is in every build, so it must be in the answer.
-    bool foundScenario = false;
+    // No name may contain a separator: one that does is a category that was
+    // flattened instead of split.
+    std::function<void(const rapidjson::Value&)> checkNames
+        = [&](const rapidjson::Value& v) {
+      const auto name
+          = QString::fromUtf8(v["name"].GetString(), v["name"].GetStringLength());
+      INFO("library entry: " << name.toStdString());
+      CHECK_FALSE(name.contains('/'));
+
+      if(v.HasMember("children"))
+        for(const auto& c : v["children"].GetArray())
+          checkNames(c);
+    };
     for(const auto& e : got.GetArray())
-      if(std::string_view{e["key"].GetString(), e["key"].GetStringLength()}
-         == "de035912-5b03-49a8-bc4d-b2cba68e21d9")
-        foundScenario = true;
-    CHECK(foundScenario);
+      checkNames(e);
   });
 }
 

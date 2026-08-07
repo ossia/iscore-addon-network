@@ -4,6 +4,7 @@
 #include <Process/ProcessList.hpp>
 
 #include <Library/Panel/LibraryPanelDelegate.hpp>
+#include <Process/ProcessMimeSerialization.hpp>
 #include <Library/ProcessWidget.hpp>
 #include <Library/ProcessesItemModel.hpp>
 
@@ -17,6 +18,7 @@
 
 #include <ossia/detail/algorithms.hpp>
 
+#include <stdexcept>
 #include <vector>
 
 namespace Network
@@ -34,29 +36,95 @@ const QString& remoteCategory()
 }
 }
 
+namespace
+{
+//! One node of the library, and everything under it.
+//!
+//! The whole tree, not the factory list: the shape is meaningful -- categories
+//! nest, and "Plugins/Faust" is two levels rather than one name with a slash in
+//! it -- and most of what a library holds is not a factory at all. ISF shaders,
+//! Faust programs and presets are entries the LibraryInterfaces build by
+//! scanning files, and they carry the data that says which file, in customData.
+//! Sending factories reproduces neither.
+void writeNode(JsonWriter& w, const Library::ProcessNode& node)
+{
+  const auto name = node.prettyName.toUtf8();
+  const auto key = score::uuids::toByteArray(node.key.impl());
+  const auto custom = node.customData.toUtf8();
+
+  w.StartObject();
+  w.Key("name");
+  w.String(name.constData(), name.size());
+  w.Key("key");
+  w.String(key.constData(), key.size());
+  if(!custom.isEmpty())
+  {
+    w.Key("data");
+    w.String(custom.constData(), custom.size());
+  }
+
+  if(node.childCount() > 0)
+  {
+    w.Key("children");
+    w.StartArray();
+    for(const auto& child : node)
+      writeNode(w, child);
+    w.EndArray();
+  }
+  w.EndObject();
+}
+
+void readNode(const rapidjson::Value& v, Library::ProcessNode& parent)
+{
+  if(!v.IsObject() || !v.HasMember("name"))
+    return;
+
+  Library::ProcessData data;
+  data.prettyName
+      = QString::fromUtf8(v["name"].GetString(), v["name"].GetStringLength());
+  if(v.HasMember("key"))
+    data.key = UuidKey<Process::ProcessModel>::fromString(
+        QString::fromUtf8(v["key"].GetString(), v["key"].GetStringLength()));
+  if(v.HasMember("data"))
+    data.customData
+        = QString::fromUtf8(v["data"].GetString(), v["data"].GetStringLength());
+
+  auto& node = Library::addToLibrary(parent, std::move(data));
+
+  if(v.HasMember("children") && v["children"].IsArray())
+    for(const auto& child : v["children"].GetArray())
+      readNode(child, node);
+}
+}
+
+//! The library of this machine, panel or no panel.
+//!
+//! A host run with --no-gui has no library panel -- which is the whole point of
+//! that mode, and the shape a score box takes -- so reading the panel's model
+//! would mean the machines most likely to be hosts are the ones that cannot
+//! answer. One is built here instead when there is no panel, and kept: the
+//! model watches the library folder and rescans, and building a second one per
+//! request would fight the first over that watch.
+const Library::ProcessesItemModel&
+libraryModel(const score::GUIApplicationContext& ctx)
+{
+  if(auto* panel = ctx.findPanel<Library::ProcessPanel>())
+    return panel->processWidget().processModel();
+
+  static Library::ProcessesItemModel headless{ctx, nullptr};
+  return headless;
+}
+
 void bindLibraryQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
 {
   rpc.bind(library_processes, [&ctx](const rapidjson::Value&) -> QByteArray {
+    const auto& root = libraryModel(ctx.app).rootNode();
+
     rapidjson::StringBuffer buf;
     JsonWriter w{buf};
     w.StartArray();
-
-    for(auto& fac : ctx.app.interfaces<Process::ProcessFactoryList>())
-    {
-      const auto key = score::uuids::toByteArray(fac.concreteKey().impl());
-      const auto name = fac.prettyName().toUtf8();
-      const auto category = fac.category().toUtf8();
-
-      w.StartObject();
-      w.Key("key");
-      w.String(key.constData(), key.size());
-      w.Key("name");
-      w.String(name.constData(), name.size());
-      w.Key("category");
-      w.String(category.constData(), category.size());
-      w.EndObject();
-    }
-
+    for(const auto& child : root)
+      writeNode(w, child);
     w.EndArray();
     return QByteArray{buf.GetString(), (int)buf.GetLength()};
   });
@@ -73,51 +141,10 @@ void importRemoteLibrary(
   rpc.call(
       peer, library_processes, QByteArrayLiteral("{}"),
       [&ctx, panel, mirror](const rapidjson::Value& result) {
-    if(!result.IsArray())
+    if(!result.IsArray() || result.Empty())
       return;
 
-    auto& local = ctx.interfaces<Process::ProcessFactoryList>();
     auto& model = panel->processWidget().processModel();
-
-    // Read out first: the model is reset around the change, and a view must not
-    // be walking the tree while it is rebuilt.
-    struct Entry
-    {
-      Library::ProcessData data;
-      QString category;
-    };
-    std::vector<Entry> entries;
-
-    for(const auto& e : result.GetArray())
-    {
-      if(!e.IsObject() || !e.HasMember("key") || !e.HasMember("name"))
-        continue;
-
-      const auto key = UuidKey<Process::ProcessModel>::fromString(QString::fromUtf8(
-          e["key"].GetString(), e["key"].GetStringLength()));
-
-      // A performer runs the score itself, so its own processes are as real as
-      // the peer's and only the extras are worth adding. A terminal runs
-      // nothing, so what it has locally is beside the point.
-      if(!mirror && local.get(key))
-        continue;
-
-      QString category = mirror ? QObject::tr("Other") : remoteCategory();
-      if(mirror && e.HasMember("category") && e["category"].GetStringLength() > 0)
-        category = QString::fromUtf8(
-            e["category"].GetString(), e["category"].GetStringLength());
-
-      entries.push_back(Entry{
-          Library::ProcessData{
-              {key,
-               QString::fromUtf8(e["name"].GetString(), e["name"].GetStringLength()),
-               {}},
-              QIcon{}},
-          std::move(category)});
-    }
-
-    if(entries.empty())
-      return;
 
     model.beginResetModel();
     {
@@ -127,29 +154,42 @@ void importRemoteLibrary(
       // the ones that will run, and offering them would be offering something
       // that cannot happen.
       if(mirror)
-        root.erase(root.begin(), root.end());
-
-      for(auto& entry : entries)
       {
-        auto it = ossia::find_if(root, [&](const Library::ProcessData& n) {
-          return n.prettyName == entry.category;
+        root.erase(root.begin(), root.end());
+        for(const auto& child : result.GetArray())
+          readNode(child, root);
+      }
+      else
+      {
+        // A performer runs the score itself, so its own library is as real as
+        // the peer's; only what it cannot make is worth adding.
+        auto& local = ctx.interfaces<Process::ProcessFactoryList>();
+        auto it = ossia::find_if(root, [](const Library::ProcessData& n) {
+          return n.prettyName == remoteCategory();
         });
-
         auto& category
             = (it != root.end())
                   ? *it
                   : Library::addToLibrary(
                         root,
-                        Library::ProcessData{{{}, entry.category, {}}, QIcon{}});
+                        Library::ProcessData{{{}, remoteCategory(), {}}, QIcon{}});
 
-        Library::addToLibrary(category, std::move(entry.data));
+        for(const auto& child : result.GetArray())
+          if(child.IsObject() && child.HasMember("key"))
+          {
+            const auto key = UuidKey<Process::ProcessModel>::fromString(
+                QString::fromUtf8(
+                    child["key"].GetString(), child["key"].GetStringLength()));
+            if(key != UuidKey<Process::ProcessModel>{} && local.get(key))
+              continue;
+            readNode(child, category);
+          }
       }
     }
     model.endResetModel();
 
-    qDebug() << (mirror ? "Library mirrored from the other machine:"
-                        : "Added from the other machine:")
-             << entries.size() << "processes.";
+    qDebug() << (mirror ? "Library mirrored from the other machine."
+                        : "Added the other machine's extras to the library.");
       },
       [](const QString& err) {
     qDebug() << "Could not read the other machine's library:" << err;
