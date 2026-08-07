@@ -8,6 +8,11 @@
 // by hand rather than by having a second build.
 
 #include <Scenario/Commands/Metadata/ChangeElementLabel.hpp>
+#include <Scenario/Commands/Interval/AddOnlyProcessToInterval.hpp>
+#include <Process/Process.hpp>
+#include <Process/ProcessList.hpp>
+#include <Process/OpaqueProcess.hpp>
+#include <ossia/detail/algorithms.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
 #include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
@@ -974,5 +979,66 @@ TEST_CASE("A terminal follows the host's playhead", "[session][terminal]")
     REQUIRE(
         spin_until([&] { return termItv.duration.playPercentage() > 0.6; }));
     CHECK(termItv.duration.playPercentage() == Catch::Approx(0.75));
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Commands that name factories the receiving peer does not have.
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Adding a process the peer cannot make does not stop it", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    auto* plug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(plug);
+    REQUIRE_FALSE(plug->diverged());
+
+    auto& masterItv = rootInterval(*master.document);
+    auto& clientItv = rootInterval(*client);
+
+    // A process key no build registers, as a peer with a plug-in we lack would
+    // send. Before, redo asserted on the missing factory: that threw out of the
+    // socket callback and the client marked itself diverged, which also stops
+    // it sending -- "it never executes commands again".
+    const auto absent = UuidKey<Process::ProcessModel>::fromString(
+        QStringLiteral("77777777-8888-9999-aaaa-bbbbbbbbbbbb"));
+
+    auto* cmd = new Scenario::Command::AddOnlyProcessToInterval{
+        masterItv, absent, QString{}, QPointF{}};
+    master.document->context().document.commandStack().redoAndPush(cmd);
+
+    // The base interval already holds its Scenario, so the new process is one
+    // more than what was there -- counting to one would have been satisfied
+    // before the command ever arrived.
+    const auto before = clientItv.processes.size();
+    REQUIRE(before >= 1);
+
+    // The host made a stand-in of its own -- it has no such factory either --
+    // and the client followed instead of stopping.
+    REQUIRE(spin_until([&] { return clientItv.processes.size() == before + 1; }));
+    CHECK_FALSE(plug->diverged());
+
+    auto it = ossia::find_if(clientItv.processes, [&](const Process::ProcessModel& p) {
+      return p.concreteKey() == absent;
+    });
+    REQUIRE(it != clientItv.processes.end());
+
+    // And it knows it is a placeholder rather than an empty process: writing it
+    // out as if it were empty would tell a machine that has the plug-in that
+    // there is nothing there.
+    auto* opaque = dynamic_cast<const Process::OpaqueProcessModel*>(&*it);
+    REQUIRE(opaque);
+    CHECK(opaque->incomplete());
+
+    // Editing still works afterwards, which is the part that was lost.
+    const auto label = QStringLiteral("still listening");
+    master.document->context().document.commandStack().redoAndPush(
+        new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
+            masterItv, label});
+    REQUIRE(spin_until([&] { return clientItv.metadata().getLabel() == label; }));
   });
 }
