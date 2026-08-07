@@ -106,16 +106,15 @@ void bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
   });
 }
 
-namespace
-{
 //! Put the peer's version of a process in place of the one we made.
 //!
 //! A stand-in can simply be told its state. A real process cannot: it was
 //! built from creation data that described the other machine, so what is here
 //! is the wrong object rather than an empty one, and it has to be replaced by
 //! the peer's -- same id, same interval, so cables and paths still name it.
-void applyState(Process::ProcessModel& proc, const rapidjson::Value& state,
-                const score::DocumentContext& ctx)
+void applyRemoteProcessState(
+    Process::ProcessModel& proc, const rapidjson::Value& state,
+    const score::DocumentContext& ctx)
 {
   if(auto* opaque = qobject_cast<Process::OpaqueProcessModel*>(&proc))
   {
@@ -143,6 +142,18 @@ void applyState(Process::ProcessModel& proc, const rapidjson::Value& state,
                       : facs.loadMissing(key, des.toVariant(), ctx, itv);
   if(!rebuilt)
     return;
+
+  // The id comes out of the peer's answer, and everything below names the
+  // process by the id we asked about: the slots are re-pointed at it, and
+  // cables and paths already do. An answer about a different process would
+  // insert one id and leave the rack referring to another, which is the
+  // invariant ScenarioValidityChecker asserts on the very next command.
+  if(rebuilt->id() != proc.id())
+  {
+    delete rebuilt;
+    qDebug() << "A peer answered about a process we did not ask about";
+    return;
+  }
 
   // Where it sat in the rack. Removing a process takes its layer out of every
   // slot it was in, and adding one puts it in none -- so without this the slot
@@ -178,7 +189,6 @@ void applyState(Process::ProcessModel& proc, const rapidjson::Value& state,
       itv->putLayerToFront(p.slot, id);
   }
 }
-}
 
 void fillStandIns(
     RpcChannel& rpc, const score::DocumentContext& ctx, const Id<Client>& peer)
@@ -210,7 +220,7 @@ void fillStandIns(
         peer, object_state, processParams(intervalPath, processId),
         [target, &ctx](const rapidjson::Value& result) {
       if(target)
-        applyState(*target, result, ctx);
+        applyRemoteProcessState(*target, result, ctx);
         },
         [](const QString& err) {
       qDebug() << "Could not fetch the state of a process this build cannot "

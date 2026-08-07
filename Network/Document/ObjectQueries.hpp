@@ -8,6 +8,11 @@ namespace score
 struct DocumentContext;
 }
 
+namespace Process
+{
+class ProcessModel;
+}
+
 namespace Network
 {
 class Client;
@@ -34,6 +39,14 @@ bindObjectQueries(RpcChannel& rpc, const score::DocumentContext& ctx);
 //! creates them. Drains the list whether or not the requests succeed: a
 //! stand-in nobody can describe stays a stand-in rather than being asked for
 //! again on every subsequent edit.
+//! Replace a process with the peer's version of it.
+//!
+//! Exposed so that what it refuses can be tested: the id comes out of the
+//! answer, and the rack is re-pointed using the id we asked about.
+SCORE_ADDON_NETWORK_EXPORT void applyRemoteProcessState(
+    Process::ProcessModel& proc, const rapidjson::Value& state,
+    const score::DocumentContext& ctx);
+
 SCORE_ADDON_NETWORK_EXPORT void fillStandIns(
     RpcChannel& rpc, const score::DocumentContext& ctx, const Id<Client>& peer);
 }

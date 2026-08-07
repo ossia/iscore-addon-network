@@ -65,6 +65,7 @@
 #include <Network/Communication/Rpc.hpp>
 #include <Network/Document/RemoteEnvironment.hpp>
 #include <Network/Document/DocumentPlugin.hpp>
+#include <Network/Document/ObjectQueries.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Document/MasterPolicy.hpp>
 #include <Network/Session/ClientSessionBuilder.hpp>
@@ -1679,5 +1680,51 @@ TEST_CASE("A request of the wrong shape is refused rather than read", "[session]
             rootInterval(*master.document), label});
     REQUIRE(spin_until(
         [&] { return rootInterval(*client).metadata().getLabel() == label; }));
+  });
+}
+
+TEST_CASE("An answer about another process is refused", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    const UuidKey<Process::ProcessModel> automation{
+        score::uuids::string_generator::compute(
+            "d2a67bd8-5d3f-404e-b6e9-e350cf2a833f")};
+    REQUIRE(ctx.interfaces<Process::ProcessFactoryList>().get(automation));
+
+    auto& clientItv = rootInterval(*client);
+    client->context().document.commandStack().redoAndPush(
+        new Scenario::Command::AddOnlyProcessToInterval{
+            clientItv, automation, QString{}, QPointF{}});
+    REQUIRE(spin_until([&] { return clientItv.processes.size() == 2; }));
+    spin_until([] { return false; }, 1000);
+
+    auto& proc = *ossia::find_if(clientItv.processes, [](const auto& p) {
+      return p.concreteKey()
+             == UuidKey<Process::ProcessModel>{score::uuids::string_generator::compute(
+                 "d2a67bd8-5d3f-404e-b6e9-e350cf2a833f")};
+    });
+    const auto expectedId = proc.id();
+    const auto before = clientItv.processes.size();
+
+    // Everything downstream names the process by the id we asked about -- the
+    // rack slots are re-pointed at it, cables and paths already refer to it.
+    // Taking the id out of the answer instead would insert one process and
+    // leave the rack pointing at another.
+    JSONReader r;
+    r.readFrom(proc);
+    auto foreign = readJson(r.toByteArray());
+    foreign["id"] = 31337;
+
+    Network::applyRemoteProcessState(proc, foreign, client->context());
+    QApplication::processEvents();
+
+    CHECK(clientItv.processes.size() == before);
+    REQUIRE(clientItv.processes.find(expectedId) != clientItv.processes.end());
+    CHECK(clientItv.processes.find(Id<Process::ProcessModel>{31337})
+          == clientItv.processes.end());
   });
 }
