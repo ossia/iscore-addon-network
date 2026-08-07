@@ -20,6 +20,7 @@
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Communication/Capabilities.hpp>
+#include <Network/Client/PeerRole.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Communication/NetworkSocket.hpp>
 #include <Network/Document/ClientPolicy.hpp>
@@ -56,6 +57,10 @@ void PlayerSessionBuilder::initiateConnection()
   {
     QDataStream s{&askId.data, QIODevice::WriteOnly};
     s << m_context.settings<Network::Settings::Model>().getClientName();
+    s << (qint32)m_context.applicationSettings.saveFormatVersion.value();
+    s << (qint32)QDataStream::Qt_DefaultCompiledVersion;
+    s << Capabilities::local(m_context);
+    s << int32_t(PeerRole::Performer);
   }
 
   m_mastersocket->sendMessage(askId);

@@ -68,6 +68,8 @@
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Document/MasterPolicy.hpp>
 #include <Network/Session/ClientSessionBuilder.hpp>
+#include <Network/Session/PlayerSessionBuilder.hpp>
+#include <Network/Session/ClientSession.hpp>
 #include <Network/Session/MasterSession.hpp>
 
 #include <score_test/App.hpp>
@@ -1514,5 +1516,31 @@ TEST_CASE("A value edited on a terminal is set where the device is", "[session]"
     // And the terminal did not perform it itself: it holds no device for that
     // name, which is the whole reason it has to travel.
     CHECK(termDevices.list().findDevice(QStringLiteral("probe")) == nullptr);
+  });
+}
+
+TEST_CASE("A player is not refused by the handshake", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    REQUIRE(master.port > 0);
+
+    // score-player speaks the same handshake as the editor. Sending only a
+    // name is what a build too old to describe its formats does, and the host
+    // refuses those -- so a player that stayed silent about its capabilities
+    // was refused by its own version.
+    Network::PlayerSessionBuilder builder{ctx, "127.0.0.1", master.port};
+
+    bool refused{};
+    QObject::connect(
+        &builder, &Network::PlayerSessionBuilder::sessionFailed, &builder,
+        [&] { refused = true; });
+
+    // The document arrives only once the master has accepted the peer, and it
+    // is stored before the player needs a loader for it -- so this is the
+    // handshake succeeding, without standing up a whole player application.
+    REQUIRE(spin_until([&] { return !builder.documentData().isEmpty() || refused; }));
+    CHECK_FALSE(refused);
+    CHECK(builder.documentData().size() > 0);
   });
 }

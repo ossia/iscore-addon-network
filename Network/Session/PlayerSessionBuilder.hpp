@@ -10,6 +10,8 @@
 #include <QPair>
 #include <QString>
 
+#include <score_addon_network_export.h>
+
 #include <functional>
 #include <verdigris>
 
@@ -28,7 +30,7 @@ class NetworkSocket;
 class Session;
 struct NetworkMessage;
 
-class PlayerSessionBuilder final : public QObject
+class SCORE_ADDON_NETWORK_EXPORT PlayerSessionBuilder final : public QObject
 {
   W_OBJECT(PlayerSessionBuilder)
 public:
