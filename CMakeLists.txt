@@ -54,6 +54,7 @@ set(HDRS
     Network/Document/Transport.hpp
     Network/Document/ObjectQueries.hpp
     Network/Document/LibraryQueries.hpp
+    Network/Document/RemoteDeviceCatalog.hpp
     Network/Group/Group.hpp
     Network/Group/NetworkActions.hpp
     Network/Group/GroupManager.hpp
@@ -112,6 +113,7 @@ set(SRCS
     Network/Document/Transport.cpp
     Network/Document/ObjectQueries.cpp
     Network/Document/LibraryQueries.cpp
+    Network/Document/RemoteDeviceCatalog.cpp
     Network/Document/NTP.cpp
     Network/Document/Execution/BasicPruner.cpp
     Network/Document/Execution/DateExpression.cpp

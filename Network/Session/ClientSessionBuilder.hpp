@@ -1,5 +1,7 @@
 #pragma once
 #include <Network/Client/PeerRole.hpp>
+
+#include <memory>
 #include <Network/Communication/Capabilities.hpp>
 #include <score_addon_network_export.h>
 #include <score/command/Command.hpp>
@@ -25,6 +27,7 @@ class Client;
 class ClientSession;
 class NetworkSocket;
 class Session;
+class RemoteDeviceCatalog;
 struct NetworkMessage;
 
 //! Used by a client to join a Session.
@@ -74,5 +77,6 @@ private:
   ClientSession* m_session{};
   Capabilities m_masterCapabilities;
   PeerRole m_role{PeerRole::Performer};
+
 };
 }

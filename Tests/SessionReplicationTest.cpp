@@ -51,6 +51,7 @@
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Explorer/Explorer/DeviceExplorerModel.hpp>
 #include <Network/Client/RemoteClient.hpp>
+#include <Device/Protocol/DeviceCatalog.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupExecution.hpp>
 #include <Network/Group/GroupManager.hpp>
@@ -1203,5 +1204,52 @@ TEST_CASE("A peer can be asked what processes it has", "[session]")
          == "de035912-5b03-49a8-bc4d-b2cba68e21d9")
         foundScenario = true;
     CHECK(foundScenario);
+  });
+}
+
+TEST_CASE("A terminal is offered the other machine's devices", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    // The dialogs ask the document what may be added; for a terminal that must
+    // be the other machine's protocols, not this one's.
+    auto& devices = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+    auto* catalog = devices.catalog();
+    REQUIRE(catalog);
+
+    REQUIRE(spin_until([&] { return !catalog->protocols().empty(); }));
+
+    const auto protocols = catalog->protocols();
+    bool named = false;
+    for(const auto& p : protocols)
+      if(!p.name.isEmpty())
+        named = true;
+    CHECK(named);
+
+    // Each says whether this build could make one. That is what decides
+    // whether a settings form can be shown at all: the widget is C++ in a
+    // plug-in, and there is none for a protocol we do not have.
+    bool anyConstructible = false;
+    for(const auto& p : protocols)
+      if(p.constructible)
+        anyConstructible = true;
+    CHECK(anyConstructible);
+  });
+}
+
+TEST_CASE("An ordinary document is offered this machine's devices", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    // The precondition of the case above: a peer that runs the score itself
+    // keeps the ordinary dialogs, which read the local factory list directly.
+    auto& devices = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+    CHECK(devices.catalog() == nullptr);
   });
 }

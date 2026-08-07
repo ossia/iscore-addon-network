@@ -27,6 +27,8 @@
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/RemoteEnvironment.hpp>
 #include <Network/Document/LibraryQueries.hpp>
+#include <Network/Document/RemoteDeviceCatalog.hpp>
+#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Network/Document/Execution/SlavePolicy.hpp>
 #include <Network/Group/Group.hpp>
 #include <Network/Group/GroupManager.hpp>
@@ -219,6 +221,16 @@ void ClientSessionBuilder::buildDocument()
     // execution is optional and stays unused.
     m_session->localClient().setRole(PeerRole::Terminal);
     np.setEditPolicy(new TerminalEditionPolicy{m_session, ctx});
+
+    // What may be added to this score is what the machine running it has:
+    // its protocols, and its hardware. Ours is unreachable from there.
+    if(auto* rpc = np.rpc())
+    {
+      // Parented to the plug-in: the document holds a bare pointer to it, and
+      // this builder is thrown away as soon as the session is up.
+      auto* catalog = new RemoteDeviceCatalog{*rpc, m_masterId, &np};
+      ctx.plugin<Explorer::DeviceDocumentPlugin>().setCatalog(catalog);
+    }
   }
   else
   {
