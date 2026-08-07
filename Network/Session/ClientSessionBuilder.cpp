@@ -204,6 +204,12 @@ void ClientSessionBuilder::buildDocument()
   NetworkDocumentPlugin& np = ctx.plugin<NetworkDocumentPlugin>();
   np.setRemoteCapabilities(m_masterCapabilities);
 
+  qDebug().noquote() << "Joined the session as"
+                     << (m_role == PeerRole::Terminal
+                             ? "a terminal: the score runs on the host, nothing "
+                               "is opened or played here"
+                             : "a performer: the score runs here too");
+
   if(m_role == PeerRole::Terminal)
   {
     // No execution policy at all: it exists to carry netpit traffic for

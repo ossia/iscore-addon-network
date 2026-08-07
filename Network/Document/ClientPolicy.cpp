@@ -1,4 +1,9 @@
 #include <Scenario/Application/ScenarioActions.hpp>
+#include <Scenario/Application/ScenarioApplicationPlugin.hpp>
+#include <Scenario/Application/Menus/TransportActions.hpp>
+#include <Scenario/Document/BaseScenario/BaseScenario.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
+#include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
 
 #include <Engine/ApplicationPlugin.hpp>
 
@@ -242,12 +247,29 @@ void TerminalEditionPolicy::requestStop()
 
 void TerminalEditionPolicy::play()
 {
-  // The host started; nothing starts here. What the transport shows comes from
-  // the host's own reports rather than from this message, which says only that
-  // it was asked -- not that it succeeded.
+  // Nothing starts here, but the buttons have to say what the score is doing:
+  // ExecutionController declines a terminal outright, so without this they
+  // would sit in whatever state the person left them in.
+  if(!m_ctx.app.applicationSettings.gui)
+    return;
+
+  auto& plug = m_ctx.app.guiApplicationPlugin<Scenario::ScenarioApplicationPlugin>();
+  plug.transportActions().onPlayGlobal();
 }
 
-void TerminalEditionPolicy::stop() { }
+void TerminalEditionPolicy::stop()
+{
+  if(!m_ctx.app.applicationSettings.gui)
+    return;
+
+  auto& plug = m_ctx.app.guiApplicationPlugin<Scenario::ScenarioApplicationPlugin>();
+  plug.transportActions().onStop();
+
+  // Back to the start, as a stopped score is.
+  if(auto* sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(
+         m_ctx.document))
+    sm->baseInterval().duration.setPlayPercentage(0.);
+}
 
 PlayerClientEditionPolicy::PlayerClientEditionPolicy(
     ClientSession* s, const score::DocumentContext& c)

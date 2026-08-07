@@ -179,6 +179,12 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
     m_remoteClient = new RemoteClient(m_socket, m_clientId);
     m_remoteClient->setName(m_clientName);
     m_remoteClient->setRole(m_role);
+
+    qDebug().noquote() << "Client" << m_clientName << "joined as"
+                       << (m_role == PeerRole::Terminal
+                               ? "a terminal (it will not run the score)"
+                               : "a performer (it will run the score too)");
+
     clientReady(this, m_remoteClient);
   }
 }
