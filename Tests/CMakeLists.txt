@@ -7,3 +7,13 @@ score_add_test(test_network_session_replication
   PLUGINS score_addon_network score_plugin_scenario score_lib_process)
 target_include_directories(test_network_session_replication PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
+# What a session looks like once there are layers. Needs the GUI application
+# fixture, which cannot share a binary with the headless one.
+score_add_test(test_network_session_layers
+  SOURCES SessionLayerTest.cpp
+  GUI
+  PLUGINS score_addon_network score_plugin_scenario score_lib_process
+          score_plugin_automation score_plugin_curve)
+target_include_directories(test_network_session_layers PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/..")

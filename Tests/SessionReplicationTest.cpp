@@ -76,89 +76,9 @@
 
 #include <catch2/catch_all.hpp>
 
-namespace
-{
-template <typename Pred>
-bool spin_until(Pred pred, int timeoutMs = 5000)
-{
-  QElapsedTimer t;
-  t.start();
-  while(!pred())
-  {
-    if(t.elapsed() > timeoutMs)
-      return false;
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 20);
-  }
-  return true;
-}
+#include "SessionFixture.hpp"
 
-Scenario::IntervalModel& rootInterval(score::Document& doc)
-{
-  auto& model = doc.model().modelDelegate();
-  return safe_cast<Scenario::ScenarioDocumentModel&>(model).baseScenario().interval();
-}
-
-struct Master
-{
-  score::Document* document{};
-  Network::MasterSession* session{};
-  Network::NetworkDocumentPlugin* plugin{};
-  int port{};
-};
-
-//! Set up a document as the host of a session, on a port the OS picks.
-Master hostSession(const score::GUIApplicationContext& ctx)
-{
-  Master m;
-  m.document = score::test::new_document(ctx);
-  SCORE_ASSERT(m.document);
-
-  auto& doc = m.document->context();
-  auto* local = new Network::LocalClient(0, Id<Network::Client>(0));
-  local->setName("Master");
-
-  m.session = new Network::MasterSession(
-      doc, local, Id<Network::Session>{score::random_id_generator::getRandomId()});
-  m.plugin = new Network::NetworkDocumentPlugin{
-      doc, new Network::MasterEditionPolicy{m.session, doc}, m.document};
-  m.document->model().addPluginModel(m.plugin);
-  m.port = local->localPort();
-
-  // Joining loads the received document, and loading closes the current one if
-  // it is still virgin -- which a document created a moment ago is. In a real
-  // session the two are different processes and never meet; here they share a
-  // DocumentManager, so give the host something to have done.
-  m.document->context().document.commandStack().redoAndPush(
-      new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
-          rootInterval(*m.document), QStringLiteral("host")});
-  return m;
-}
-
-Network::Capabilities* g_lastMasterCapabilities{};
-
-//! Join a session as a second document in this same process.
-//!
-//! Polls rather than connecting to the builder's signals: verdigris signals do
-//! not resolve by member-pointer across a shared-library boundary, since the
-//! metaobject's IndexOfMethod handler is not exported.
-score::Document* joinSession(
-    const score::GUIApplicationContext& ctx, int port,
-    Network::PeerRole role = Network::PeerRole::Performer)
-{
-  auto builder
-      = std::make_unique<Network::ClientSessionBuilder>(ctx, "127.0.0.1", port, role);
-
-  if(!spin_until([&] { return builder->builtSession() != nullptr; }))
-    return nullptr;
-
-  static Network::Capabilities caps;
-  caps = builder->masterCapabilities();
-  g_lastMasterCapabilities = &caps;
-
-  // The builder loads the received document as a new one, so it is the current.
-  return ctx.docManager.currentDocument();
-}
-}
+using namespace SessionTest;
 
 TEST_CASE("A client joins a session and receives the document", "[session]")
 {
@@ -1490,3 +1410,37 @@ TEST_CASE("A terminal follows the position of every interval", "[session]")
   });
 }
 
+
+TEST_CASE("A process a terminal adds survives being told what it is", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    const UuidKey<Process::ProcessModel> automation{
+        score::uuids::string_generator::compute(
+            "d2a67bd8-5d3f-404e-b6e9-e350cf2a833f")};
+    REQUIRE(ctx.interfaces<Process::ProcessFactoryList>().get(automation));
+
+    auto& clientItv = rootInterval(*client);
+    const auto before = clientItv.processes.size();
+
+    // Adding it here sends the command and then asks the master what the
+    // process really is -- the terminal cannot trust creation data that
+    // described another machine. The answer comes back and is applied.
+    client->context().document.commandStack().redoAndPush(
+        new Scenario::Command::AddOnlyProcessToInterval{
+            clientItv, automation, QString{}, QPointF{}});
+
+    REQUIRE(spin_until([&] { return clientItv.processes.size() == before + 1; }));
+
+    // Let the object.state round trip land.
+    REQUIRE(spin_until([&] { return false; }, 1500) == false);
+
+    // Still exactly one, and still an automation: being told its state must not
+    // leave the score without the process that was just added.
+    CHECK(clientItv.processes.size() == before + 1);
+    CHECK(rootInterval(*master.document).processes.size() == before + 1);
+  });
+}
