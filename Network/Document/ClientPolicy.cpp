@@ -44,6 +44,14 @@ ClientEditionPolicy::ClientEditionPolicy(
        || (!this->sendControls() && cmd->key().toString() != "SetControlValue"sv))
       m_session->master().sendMessage(
           m_session->makeMessage(mapi.command_new, score::CommandData{*cmd}));
+
+    // Our own edits need the same treatment as the ones we receive: adding a
+    // shader here builds it from a path on the other machine and gets an empty
+    // process. Asked after sending, so the master has applied the command by
+    // the time the question reaches it -- same socket, in order.
+    if(auto* plug = m_ctx.findPlugin<NetworkDocumentPlugin>())
+      if(auto* rpc = plug->rpc())
+        fillStandIns(*rpc, m_ctx, m_session->master().id());
   });
 
   // Undo-redo

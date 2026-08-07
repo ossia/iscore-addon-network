@@ -33,6 +33,7 @@
 #include <Network/Document/FileQueries.hpp>
 #include <Network/Document/ObjectQueries.hpp>
 #include <Network/Document/LibraryQueries.hpp>
+#include <Network/Document/DeviceStatus.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Group/Group.hpp>
@@ -122,6 +123,7 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   bindFileQueries(*m_rpc, m_context);
   bindObjectQueries(*m_rpc, m_context);
   bindLibraryQueries(*m_rpc, m_context);
+  bindDeviceStatusQuery(*m_rpc, m_context);
 
   // A question put to a peer that then leaves would otherwise wait out its
   // timeout with nothing to wait for.
@@ -169,6 +171,7 @@ void NetworkDocumentPlugin::setEditPolicy(EditionPolicy* pol)
   bindFileQueries(*m_rpc, m_context);
   bindObjectQueries(*m_rpc, m_context);
   bindLibraryQueries(*m_rpc, m_context);
+  bindDeviceStatusQuery(*m_rpc, m_context);
 
   // A question put to a peer that then leaves would otherwise wait out its
   // timeout with nothing to wait for.

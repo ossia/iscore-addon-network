@@ -119,6 +119,7 @@ libraryModel(const score::GUIApplicationContext& ctx)
   if(auto* panel = ctx.findPanel<Library::ProcessPanel>())
     return panel->processWidget().processModel();
 
+
   static Library::ProcessesItemModel headless{ctx, nullptr};
   return headless;
 }

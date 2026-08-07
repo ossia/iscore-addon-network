@@ -27,6 +27,7 @@
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/RemoteEnvironment.hpp>
 #include <Network/Document/LibraryQueries.hpp>
+#include <Network/Document/DeviceStatus.hpp>
 #include <Network/Document/RemoteDeviceCatalog.hpp>
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Network/Document/Execution/SlavePolicy.hpp>
@@ -243,8 +244,14 @@ void ClientSessionBuilder::buildDocument()
   // loadDocument is still running -- before setEditPolicy has given the plug-in
   // an rpc channel to ask over, so it finds none and does nothing.
   if(auto* rpc = np.rpc())
+  {
     importRemoteLibrary(
         *rpc, m_context, m_masterId, m_role == PeerRole::Terminal);
+
+    // Asked rather than waited for: a status pushed when we appeared would
+    // have arrived before there was anything here to receive it.
+    requestDeviceStatus(*rpc, ctx, m_masterId);
+  }
 
   // After setEditPolicy, which is what gives the plug-in a session to speak
   // over. The score we just received belongs to the machine that sent it, and

@@ -11,6 +11,9 @@
 #include <QObject>
 
 #include <Network/Communication/MessageMapper.hpp>
+#include <Network/Communication/Rpc.hpp>
+
+#include <score/serialization/JSONVisitor.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Session/Session.hpp>
 
@@ -78,5 +81,61 @@ void bindDeviceStatusMirror(
     s >> name >> connected;
     plug->setRemoteConnected(name, connected);
   });
+}
+}
+
+namespace Network
+{
+void bindDeviceStatusQuery(RpcChannel& rpc, const score::DocumentContext& ctx)
+{
+  rpc.bind("device.statuses", [&ctx](const rapidjson::Value&) -> QByteArray {
+    rapidjson::StringBuffer buf;
+    JsonWriter w{buf};
+    w.StartArray();
+
+    if(auto* plug = ctx.findPlugin<Explorer::DeviceDocumentPlugin>())
+    {
+      plug->list().apply([&w](Device::DeviceInterface& dev) {
+        const auto name = dev.settings().name.toUtf8();
+        w.StartObject();
+        w.Key("name");
+        w.String(name.constData(), name.size());
+        w.Key("connected");
+        w.Bool(dev.connected());
+        w.EndObject();
+      });
+    }
+
+    w.EndArray();
+    return QByteArray{buf.GetString(), (int)buf.GetLength()};
+  });
+}
+
+void requestDeviceStatus(
+    RpcChannel& rpc, const score::DocumentContext& ctx, const Id<Client>& peer)
+{
+  rpc.call(
+      peer, "device.statuses", QByteArrayLiteral("{}"),
+      [&ctx](const rapidjson::Value& result) {
+    if(!result.IsArray())
+      return;
+
+    auto* plug = ctx.findPlugin<Explorer::DeviceDocumentPlugin>();
+    if(!plug)
+      return;
+
+    for(const auto& e : result.GetArray())
+    {
+      if(!e.IsObject() || !e.HasMember("name") || !e.HasMember("connected"))
+        continue;
+
+      plug->setRemoteConnected(
+          QString::fromUtf8(e["name"].GetString(), e["name"].GetStringLength()),
+          e["connected"].GetBool());
+    }
+      },
+      [](const QString& err) {
+    qDebug() << "Could not read the other machine's device states:" << err;
+      });
 }
 }

@@ -98,6 +98,21 @@ MasterEditionPolicy::MasterEditionPolicy(
       m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop));
       stop();
     });
+
+    // The ordinary transport too. Peers that do not execute have no other way
+    // to know the score started, and someone pressing Play on the host means
+    // the same thing whichever button they used -- the local playback happens
+    // through ExecutionController either way, so only the telling is added.
+    connect(
+        c.app.actions.action<Actions::Play>().action(), &QAction::triggered, this,
+        [&] { m_session->broadcastToAllClients(m_session->makeMessage(mapi.play)); });
+    connect(
+        c.app.actions.action<Actions::PlayGlobal>().action(), &QAction::triggered,
+        this,
+        [&] { m_session->broadcastToAllClients(m_session->makeMessage(mapi.play)); });
+    connect(
+        c.app.actions.action<Actions::Stop>().action(), &QAction::triggered, this,
+        [&] { m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop)); });
   }
 
   /////////////////////////////////////////////////////////////////////////////

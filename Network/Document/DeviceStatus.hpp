@@ -1,4 +1,6 @@
 #pragma once
+#include <score/model/Identifier.hpp>
+
 #include <score_addon_network_export.h>
 
 class QObject;
@@ -9,6 +11,8 @@ struct DocumentContext;
 
 namespace Network
 {
+class Client;
+class RpcChannel;
 class Session;
 
 /**
@@ -33,4 +37,17 @@ bindDeviceStatusMirror(QObject& owner, Session&, const score::DocumentContext&);
 //! Send the state of every device now, for a peer that has just joined.
 SCORE_ADDON_NETWORK_EXPORT void
 broadcastAllDeviceStatus(Session&, const score::DocumentContext&);
+
+//! Offer device.statuses, so a peer can ask rather than hope.
+//!
+//! Pushing at join races the joiner: it registers its handlers only once the
+//! document has arrived and its policy is set, so a broadcast sent the moment
+//! it appeared was thrown away, and every device read as disconnected until
+//! one happened to change.
+SCORE_ADDON_NETWORK_EXPORT void
+bindDeviceStatusQuery(RpcChannel& rpc, const score::DocumentContext& ctx);
+
+//! Ask `peer` for the state of all its devices.
+SCORE_ADDON_NETWORK_EXPORT void requestDeviceStatus(
+    RpcChannel& rpc, const score::DocumentContext& ctx, const Id<Client>& peer);
 }
