@@ -1728,3 +1728,41 @@ TEST_CASE("An answer about another process is refused", "[session]")
           == clientItv.processes.end());
   });
 }
+
+TEST_CASE("An interval deleted before its position is sent is dropped", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto& masterRoot = rootInterval(*master.document);
+    auto& scenario = safe_cast<Scenario::ProcessModel&>(*masterRoot.processes.begin());
+
+    CommandDispatcher<> disp{master.document->context().commandStack};
+    auto* mkState = new Scenario::Command::CreateTimeSync_Event_State{
+        scenario, TimeVal::fromMsecs(500.), 0.5};
+    disp.submit(mkState);
+    auto* mkInterval = new Scenario::Command::CreateInterval_State_Event_TimeSync{
+        scenario, mkState->createdState(), TimeVal::fromMsecs(1500.), 0.5, false};
+    disp.submit(mkInterval);
+
+    auto& nested = scenario.intervals.at(mkInterval->createdInterval());
+
+    // Moved, then removed before what was collected about it is sent. Positions
+    // are gathered as the executor moves them and sent together a moment later,
+    // so an interval can be gone by then -- an undo is enough.
+    nested.duration.setPlayPercentage(0.5);
+    master.document->context().document.commandStack().undo();
+    master.document->context().document.commandStack().undo();
+    QApplication::processEvents();
+
+    // Still serving, and still following: a label set afterwards arrives.
+    const auto label = QStringLiteral("alive after a removed interval");
+    master.document->context().document.commandStack().redoAndPush(
+        new Scenario::Command::ChangeElementLabel<Scenario::IntervalModel>{
+            masterRoot, label});
+    REQUIRE(spin_until(
+        [&] { return rootInterval(*client).metadata().getLabel() == label; }));
+  });
+}
