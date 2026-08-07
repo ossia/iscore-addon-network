@@ -1489,3 +1489,4 @@ TEST_CASE("A terminal follows the position of every interval", "[session]")
     REQUIRE(spin_until([&] { return !clientNested.executing(); }));
   });
 }
+

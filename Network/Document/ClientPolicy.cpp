@@ -213,8 +213,11 @@ void GUIClientEditionPolicy::play()
 
 void GUIClientEditionPolicy::stop()
 {
-  auto act = m_ctx.app.actions.action<Actions::Stop>().action();
-  act->trigger();
+  // not the Stop action: it is registered by the GUI only
+  score::GUIAppContext()
+      .guiApplicationPlugin<Engine::ApplicationPlugin>()
+      .execution()
+      .request_stop();
 }
 
 TerminalEditionPolicy::TerminalEditionPolicy(

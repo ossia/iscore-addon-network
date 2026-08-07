@@ -233,8 +233,9 @@ void MasterEditionPolicy::stop()
   auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
-    auto stop_action = m_ctx.app.actions.action<Actions::Stop>().action();
-    stop_action->trigger();
+    // not the Stop action: it is registered by the GUI only
+    auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
+    plug.execution().request_stop();
   }
 }
 }
