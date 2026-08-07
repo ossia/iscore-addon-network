@@ -19,6 +19,7 @@
 #include <Network/Document/RemoteCommand.hpp>
 #include <Network/Document/ObjectQueries.hpp>
 #include <Network/Document/Transport.hpp>
+#include <Network/Document/DeviceStatus.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Group/NetworkActions.hpp>
 namespace Network
@@ -212,8 +213,10 @@ TerminalEditionPolicy::TerminalEditionPolicy(
     ClientSession* s, const score::DocumentContext& c)
     : ClientEditionPolicy{s, c}
 {
-  // Nothing here moves the playhead, so the host says where it is.
+  // Nothing here moves the playhead or holds the devices, so the host says
+  // where it is and which of them are connected.
   bindTransportMirror(*this, *m_session, m_ctx);
+  bindDeviceStatusMirror(*this, *m_session, m_ctx);
 
   if(!c.app.applicationSettings.gui)
     return;

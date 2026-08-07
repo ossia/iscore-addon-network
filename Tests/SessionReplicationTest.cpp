@@ -1253,3 +1253,46 @@ TEST_CASE("An ordinary document is offered this machine's devices", "[session]")
     CHECK(devices.catalog() == nullptr);
   });
 }
+
+TEST_CASE("A terminal is told which devices are connected", "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    score::test::register_probe_protocol(ctx);
+
+    auto master = hostSession(ctx);
+    auto& hostDevices
+        = master.document->context().plugin<Explorer::DeviceDocumentPlugin>();
+    hostDevices.explorer().addDevice(
+        score::test::probe_device_node(QStringLiteral("stagebox")));
+
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto& termDevices = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+
+    // Nothing is behind the node here, so asking a DeviceInterface would say
+    // "disconnected" -- which is not unknown, it is wrong. Until the host says
+    // otherwise there is no answer at all.
+    CHECK_FALSE(termDevices.remoteConnected(QStringLiteral("stagebox")).has_value());
+
+    // What the host reports is what the terminal shows.
+    hostDevices.setRemoteConnected(QStringLiteral("ignored"), true);
+    master.plugin->policy().session()->broadcastToAllClients(
+        master.plugin->policy().session()->makeMessage(
+            Network::MessagesAPI::instance().device_status,
+            QStringLiteral("stagebox"), true));
+
+    REQUIRE(spin_until([&] {
+      return termDevices.remoteConnected(QStringLiteral("stagebox")) == true;
+    }));
+
+    master.plugin->policy().session()->broadcastToAllClients(
+        master.plugin->policy().session()->makeMessage(
+            Network::MessagesAPI::instance().device_status,
+            QStringLiteral("stagebox"), false));
+
+    REQUIRE(spin_until([&] {
+      return termDevices.remoteConnected(QStringLiteral("stagebox")) == false;
+    }));
+  });
+}

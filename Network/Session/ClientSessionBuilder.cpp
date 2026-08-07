@@ -238,12 +238,13 @@ void ClientSessionBuilder::buildDocument()
     np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
   }
 
-  // What the other machine can make. A performer wants the extras alongside
-  // its own; a terminal mirrors outright and is refreshed by
-  // NetworkApplicationPlugin every time its document becomes visible again.
-  if(m_role != PeerRole::Terminal)
-    if(auto* rpc = np.rpc())
-      importRemoteLibrary(*rpc, m_context, m_masterId, false);
+  // What the other machine can make. Done here as well as from
+  // NetworkApplicationPlugin::on_documentChanged, because that fires while
+  // loadDocument is still running -- before setEditPolicy has given the plug-in
+  // an rpc channel to ask over, so it finds none and does nothing.
+  if(auto* rpc = np.rpc())
+    importRemoteLibrary(
+        *rpc, m_context, m_masterId, m_role == PeerRole::Terminal);
 
   // After setEditPolicy, which is what gives the plug-in a session to speak
   // over. The score we just received belongs to the machine that sent it, and

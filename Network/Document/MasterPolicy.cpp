@@ -14,6 +14,8 @@
 #include <Network/Document/MasterPolicy.hpp>
 #include <Network/Document/RemoteCommand.hpp>
 #include <Network/Document/Transport.hpp>
+#include <Network/Document/DeviceStatus.hpp>
+#include <Network/Client/RemoteClient.hpp>
 #include <Network/Group/NetworkActions.hpp>
 
 namespace Network
@@ -30,8 +32,15 @@ MasterEditionPolicy::MasterEditionPolicy(
   auto& stack = c.document.commandStack();
   auto& mapi = MessagesAPI::instance();
 
-  // Peers that do not execute have no other way to know where the score is.
+  // Peers that do not execute have no other way to know where the score is,
+  // nor whether the devices they can see are connected.
   bindTransportBroadcast(*this, *m_session, m_ctx);
+  bindDeviceStatusBroadcast(*this, *m_session, m_ctx);
+
+  // A peer joining mid-session would otherwise see nothing until something
+  // happened to change.
+  con(*s, &Session::clientAdded, this,
+      [this](RemoteClient*) { broadcastAllDeviceStatus(*m_session, m_ctx); });
 
   /////////////////////////////////////////////////////////////////////////////
   /// From the master to the clients
