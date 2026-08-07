@@ -1444,3 +1444,44 @@ TEST_CASE("A process a terminal adds survives being told what it is", "[session]
     CHECK(rootInterval(*master.document).processes.size() == before + 1);
   });
 }
+
+TEST_CASE("The list of a peer's hardware keeps its categories", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto& plug = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+    auto* cat = plug.catalog();
+    REQUIRE(cat);
+    REQUIRE(spin_until([&] { return !cat->protocols().empty(); }));
+
+    struct Found
+    {
+      QString category;
+      QString name;
+    };
+    std::vector<Found> devices;
+    for(const auto& p : cat->protocols())
+      cat->enumerate(
+          p.key, [&](const QString& category, const QString& name,
+                     const Device::DeviceSettings&) {
+        devices.push_back({category, name});
+          });
+
+    // Something on this machine enumerates -- audio interfaces, at least. A
+    // check that only tolerated an empty list would pass with the answer never
+    // arriving.
+    REQUIRE(spin_until([&] { return !devices.empty(); }, 20000));
+
+    const bool anyCategorised = ossia::any_of(
+        devices, [](const Found& f) { return !f.category.isEmpty(); });
+    CHECK(anyCategorised);
+
+    // The category is a field, not a prefix. It used to be pasted onto the
+    // front of the name, which reads as one flat list and cannot be grouped.
+    for(const Found& f : devices)
+      CHECK_FALSE(f.name.contains(QStringLiteral(" / ")));
+  });
+}

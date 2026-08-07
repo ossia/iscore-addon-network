@@ -96,15 +96,15 @@ void RemoteDeviceCatalog::enumerate(
         des.writeTo(settings);
       }
 
-      QString label = QString::fromUtf8(
+      const auto name = QString::fromUtf8(
           e["name"].GetString(), e["name"].GetStringLength());
-      if(e.HasMember("category") && e["category"].GetStringLength() > 0)
-        label = QStringLiteral("%1 / %2")
-                    .arg(QString::fromUtf8(
-                        e["category"].GetString(), e["category"].GetStringLength()))
-                    .arg(label);
+      const auto category
+          = e.HasMember("category")
+                ? QString::fromUtf8(
+                      e["category"].GetString(), e["category"].GetStringLength())
+                : QString{};
 
-      onDevice(label, settings);
+      onDevice(category, name, settings);
     }
       },
       [](const QString& err) {
