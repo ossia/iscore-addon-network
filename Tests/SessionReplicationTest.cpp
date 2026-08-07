@@ -1307,3 +1307,37 @@ TEST_CASE("A terminal is told which devices are connected", "[session][terminal]
     }));
   });
 }
+
+TEST_CASE("A texture process can be added with a terminal attached",
+          "[session][terminal]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    // Jit::TexgenModel, the "C++ texture generator": a scripted process whose
+    // only port is a texture. Reported as crashing when added on the host with
+    // a terminal attached.
+    const auto key = UuidKey<Process::ProcessModel>::fromString(
+        QStringLiteral("b9a20181-2925-4ade-925e-a2fd05fcbf9b"));
+
+    auto& facs = ctx.interfaces<Process::ProcessFactoryList>();
+    if(!facs.get(key))
+      return; // not in this build
+
+    auto& masterItv = rootInterval(*master.document);
+    auto& clientItv = rootInterval(*client);
+    const auto before = clientItv.processes.size();
+
+    master.document->context().document.commandStack().redoAndPush(
+        new Scenario::Command::AddOnlyProcessToInterval{
+            masterItv, key, QString{}, QPointF{}});
+
+    REQUIRE(spin_until([&] { return clientItv.processes.size() == before + 1; }));
+
+    auto* plug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(plug);
+    CHECK_FALSE(plug->diverged());
+  });
+}
