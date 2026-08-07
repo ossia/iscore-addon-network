@@ -63,7 +63,8 @@ void bindLibraryQueries(RpcChannel& rpc, const score::DocumentContext& ctx)
 }
 
 void importRemoteLibrary(
-    RpcChannel& rpc, const score::GUIApplicationContext& ctx, const Id<Client>& peer)
+    RpcChannel& rpc, const score::GUIApplicationContext& ctx, const Id<Client>& peer,
+    bool mirror)
 {
   auto* panel = ctx.findPanel<Library::ProcessPanel>();
   if(!panel)
@@ -71,16 +72,22 @@ void importRemoteLibrary(
 
   rpc.call(
       peer, library_processes, QByteArrayLiteral("{}"),
-      [&ctx, panel](const rapidjson::Value& result) {
+      [&ctx, panel, mirror](const rapidjson::Value& result) {
     if(!result.IsArray())
       return;
 
     auto& local = ctx.interfaces<Process::ProcessFactoryList>();
     auto& model = panel->processWidget().processModel();
 
-    // Collected first: the model is reset around the insertion, and a view must
-    // not be walking the tree while it grows.
-    std::vector<Library::ProcessData> fresh;
+    // Read out first: the model is reset around the change, and a view must not
+    // be walking the tree while it is rebuilt.
+    struct Entry
+    {
+      Library::ProcessData data;
+      QString category;
+    };
+    std::vector<Entry> entries;
+
     for(const auto& e : result.GetArray())
     {
       if(!e.IsObject() || !e.HasMember("key") || !e.HasMember("name"))
@@ -89,41 +96,60 @@ void importRemoteLibrary(
       const auto key = UuidKey<Process::ProcessModel>::fromString(QString::fromUtf8(
           e["key"].GetString(), e["key"].GetStringLength()));
 
-      // Only what is missing here: anything both ends have is already listed,
-      // and listing it twice would offer the same thing under two names.
-      if(local.get(key))
+      // A performer runs the score itself, so its own processes are as real as
+      // the peer's and only the extras are worth adding. A terminal runs
+      // nothing, so what it has locally is beside the point.
+      if(!mirror && local.get(key))
         continue;
 
-      fresh.push_back(Library::ProcessData{
-          {key,
-           QString::fromUtf8(e["name"].GetString(), e["name"].GetStringLength()),
-           {}},
-          QIcon{}});
+      QString category = mirror ? QObject::tr("Other") : remoteCategory();
+      if(mirror && e.HasMember("category") && e["category"].GetStringLength() > 0)
+        category = QString::fromUtf8(
+            e["category"].GetString(), e["category"].GetStringLength());
+
+      entries.push_back(Entry{
+          Library::ProcessData{
+              {key,
+               QString::fromUtf8(e["name"].GetString(), e["name"].GetStringLength()),
+               {}},
+              QIcon{}},
+          std::move(category)});
     }
 
-    if(fresh.empty())
+    if(entries.empty())
       return;
 
     model.beginResetModel();
     {
       auto& root = model.rootNode();
-      auto it = ossia::find_if(root, [](const Library::ProcessData& n) {
-        return n.prettyName == remoteCategory();
-      });
 
-      auto& category
-          = (it != root.end())
-                ? *it
-                : Library::addToLibrary(
-                      root, Library::ProcessData{{{}, remoteCategory(), {}}, QIcon{}});
+      // A mirror replaces rather than adds: this machine's processes are not
+      // the ones that will run, and offering them would be offering something
+      // that cannot happen.
+      if(mirror)
+        root.erase(root.begin(), root.end());
 
-      for(auto& p : fresh)
-        Library::addToLibrary(category, std::move(p));
+      for(auto& entry : entries)
+      {
+        auto it = ossia::find_if(root, [&](const Library::ProcessData& n) {
+          return n.prettyName == entry.category;
+        });
+
+        auto& category
+            = (it != root.end())
+                  ? *it
+                  : Library::addToLibrary(
+                        root,
+                        Library::ProcessData{{{}, entry.category, {}}, QIcon{}});
+
+        Library::addToLibrary(category, std::move(entry.data));
+      }
     }
     model.endResetModel();
 
-    qDebug() << "Added" << fresh.size()
-             << "processes from the other machine to the library.";
+    qDebug() << (mirror ? "Library mirrored from the other machine:"
+                        : "Added from the other machine:")
+             << entries.size() << "processes.";
       },
       [](const QString& err) {
     qDebug() << "Could not read the other machine's library:" << err;

@@ -226,11 +226,12 @@ void ClientSessionBuilder::buildDocument()
     np.setExecPolicy(new SlaveExecutionPolicy(*m_session, np, doc->context()));
   }
 
-  // The host's processes, so they can be added to the score from here even
-  // though nothing here can make one. Needs the rpc channel, so after
-  // setEditPolicy.
+  // What the other machine can make. A terminal mirrors it outright -- nothing
+  // here will run, so this machine's own processes are beside the point.
+  // Needs the rpc channel, so after setEditPolicy.
   if(auto* rpc = np.rpc())
-    importRemoteLibrary(*rpc, m_context, m_masterId);
+    importRemoteLibrary(
+        *rpc, m_context, m_masterId, m_role == PeerRole::Terminal);
 
   // After setEditPolicy, which is what gives the plug-in a session to speak
   // over. The score we just received belongs to the machine that sent it, and

@@ -29,8 +29,14 @@ class RpcChannel;
 SCORE_ADDON_NETWORK_EXPORT void
 bindLibraryQueries(RpcChannel& rpc, const score::DocumentContext& ctx);
 
-//! Ask `peer` for its processes and put the ones this build lacks into the
-//! library, so they can be dragged into the score like any other.
+//! Ask `peer` for its processes and show them in the library.
+//!
+//! `mirror` decides what the library then means. A terminal edits a score that
+//! runs on the other machine, so what it can usefully offer is what *that*
+//! machine has and nothing else: the tree is replaced, categories and all.
+//! A performer runs the score too, so its own processes are just as real and
+//! the peer's extras are added alongside them.
 SCORE_ADDON_NETWORK_EXPORT void importRemoteLibrary(
-    RpcChannel& rpc, const score::GUIApplicationContext& ctx, const Id<Client>& peer);
+    RpcChannel& rpc, const score::GUIApplicationContext& ctx, const Id<Client>& peer,
+    bool mirror);
 }
