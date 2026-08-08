@@ -57,6 +57,19 @@ public:
   //! Does not include self
   void broadcastToAllClients(const NetworkMessage& m);
 
+  //! To the peers that asked to watch, and nobody else.
+  //!
+  //! What the host observes -- where the playhead is, what its devices report,
+  //! what it printed -- is only of use to a peer that does not run the score
+  //! itself. A performer binds none of these, so sending them costs it the
+  //! bandwidth and a "not handled" line per message, and costs the host the
+  //! serialisation per client.
+  void broadcastToTerminals(const NetworkMessage& m);
+
+  //! Whether anybody is watching: the observation machinery can be skipped
+  //! entirely when nothing would be sent.
+  bool hasTerminals() const noexcept;
+
   //! Includes self
   void broadcastToAll(const NetworkMessage& m);
   void broadcastToOthers(const Id<Client>& sender, const NetworkMessage& m);

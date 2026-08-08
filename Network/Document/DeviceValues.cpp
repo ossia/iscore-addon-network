@@ -7,7 +7,11 @@
 #include <score/document/DocumentContext.hpp>
 
 #include <QObject>
+#include <QDataStream>
 #include <QTimer>
+
+#include <stdexcept>
+#include <vector>
 
 #include <core/application/ApplicationSettings.hpp>
 #include <ossia/detail/hash_map.hpp>
@@ -56,15 +60,33 @@ public:
 private:
   void flush()
   {
+    // Nobody is watching: the whole point of this machinery is a peer that
+    // does not run the score, and a session may have none.
+    if(!m_session.hasTerminals())
+    {
+      m_pending.clear();
+      return;
+    }
+
     auto pending = std::move(m_pending);
     m_pending.clear();
 
+    // One message for the batch, as the transport does. Coalescing bounds how
+    // often each address is sent; it does nothing about how many messages that
+    // is, and a device tree with a few hundred moving parameters was sending a
+    // few hundred frames per flush, per watching peer.
+    QByteArray payload;
+    QDataStream s{&payload, QIODevice::WriteOnly};
+    qint32 count = 0;
+
     for(auto& [addr, v] : pending)
     {
-      m_session.broadcastToAllClients(m_session.makeMessage(
-          MessagesAPI::instance().device_value_changed,
-          State::Message{{addr, {}}, v}));
+      s << score::marshall<DataStream>(State::Message{{addr, {}}, v});
+      count++;
     }
+
+    m_session.broadcastToTerminals(m_session.makeMessage(
+        MessagesAPI::instance().device_value_changed, count, payload));
   }
 
   Session& m_session;
@@ -124,16 +146,36 @@ void bindValueDisplay(
     if(!plug)
       return;
 
-    State::Message msg;
+    std::vector<State::Message> batch;
     if(!readingWireData("/device/value/changed", [&] {
-         DataStreamWriter writer{m.data};
-         writer.writeTo(msg);
+         QDataStream s{m.data};
+         qint32 count{};
+         QByteArray payload;
+         s >> count >> payload;
+         if(s.status() != QDataStream::Ok || count < 0)
+           throw std::runtime_error{"malformed value batch"};
+
+         QDataStream ps{payload};
+         batch.reserve(std::min(count, qint32(4096)));
+         for(qint32 i = 0; i < count; i++)
+         {
+           QByteArray one;
+           ps >> one;
+           if(ps.status() != QDataStream::Ok)
+             throw std::runtime_error{"short value batch"};
+
+           State::Message msg;
+           DataStreamWriter writer{one};
+           writer.writeTo(msg);
+           batch.push_back(std::move(msg));
+         }
        }))
       return;
 
     // Shown, not performed: this machine has no device to perform it on, and
     // asking for it would send it back where it came from.
-    plug->updateProxy.updateLocalValue(msg.address, msg.value);
+    for(const auto& msg : batch)
+      plug->updateProxy.updateLocalValue(msg.address, msg.value);
       });
 }
 }

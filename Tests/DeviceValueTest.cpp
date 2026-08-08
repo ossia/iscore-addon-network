@@ -34,6 +34,25 @@ namespace
 {
 constexpr auto absent_uuid = "c0ffee00-1111-2222-3333-444455556666";
 
+//! A device with `count` addresses, on both machines.
+void addWideDevice(score::Document& doc, int count)
+{
+  Device::DeviceSettings s;
+  s.protocol = UuidKey<Device::ProtocolFactory>::fromString(QString{absent_uuid});
+  s.name = "Wide";
+
+  Device::Node node{s, nullptr};
+  for(int i = 0; i < count; i++)
+  {
+    Device::AddressSettings a;
+    a.name = QString{"p%1"}.arg(i);
+    a.value = ossia::value{0};
+    node.emplace_back(a, &node);
+  }
+
+  doc.context().plugin<Explorer::DeviceDocumentPlugin>().updateProxy.addDevice(node);
+}
+
 //! A device in the tree with one address, on both machines. No protocol: what
 //! is under test is the reporting, not the hardware.
 void addMouse(score::Document& doc)
@@ -132,5 +151,53 @@ TEST_CASE("Showing a reported value does not send it back", "[session][devices]"
 
     // Shown, and not echoed.
     CHECK(sentBack == 0);
+  });
+}
+
+TEST_CASE("Many moving values are one message, not many", "[session][devices]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    constexpr int params = 100;
+    addWideDevice(*master.document, params);
+    addWideDevice(*client, params);
+    settle();
+
+    // Count what arrives on the wire, not what is displayed: coalescing already
+    // bounds how often each address is sent, and says nothing about how many
+    // messages that is. A device reporting at its own pace -- a control surface,
+    // a tracker -- moves every parameter it has, every tick.
+    // NOTE: what is *not* asserted here is the number of messages, which is
+    // the actual point of batching. The socket and session types are not
+    // exported from the plug-in, so a test cannot count frames; asserting
+    // arrival would pass just as well against one message per address, since a
+    // per-address encoding decodes as a batch of one. What this does pin is the
+    // batch encoding itself -- a hundred addresses in one payload, decoded back
+    // in order -- which is the part that is new and can silently rot.
+
+    auto& masterPlug
+        = master.document->context().plugin<Explorer::DeviceDocumentPlugin>();
+    for(int i = 0; i < params; i++)
+      masterPlug.on_valueUpdated(
+          State::Address::fromString(QString{"Wide:/p%1"}.arg(i)).value(),
+          ossia::value{i});
+
+    REQUIRE(spin_until([&] {
+      auto v = valueOf(*client, "Wide:/p99");
+      return v && *v == ossia::value{99};
+    }));
+
+    // Every one of them, not just the last: a batch that dropped or reordered
+    // its tail would still satisfy a check on p99 alone.
+    for(int i = 0; i < params; i++)
+    {
+      INFO("address p" << i);
+      auto v = valueOf(*client, QString{"Wide:/p%1"}.arg(i));
+      REQUIRE(v);
+      CHECK(*v == ossia::value{i});
+    }
   });
 }

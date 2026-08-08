@@ -67,6 +67,14 @@ public:
 private:
   void flush()
   {
+    // Nobody is watching: the whole point of this machinery is a peer that
+    // does not run the score, and a session may have none.
+    if(!m_session.hasTerminals())
+    {
+      m_dirty.clear();
+      return;
+    }
+
     auto* plug = m_ctx.findPlugin<Explorer::DeviceDocumentPlugin>();
     if(!plug)
       return;
@@ -79,7 +87,7 @@ private:
 
       JSONReader r;
       r.readFrom(*node);
-      m_session.broadcastToAllClients(m_session.makeMessage(
+      m_session.broadcastToTerminals(m_session.makeMessage(
           MessagesAPI::instance().device_tree, name, r.toByteArray()));
     }
     m_dirty.clear();

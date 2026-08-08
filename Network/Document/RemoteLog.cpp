@@ -88,6 +88,14 @@ public:
 private:
   void flush()
   {
+    // Nobody is watching: the whole point of this machinery is a peer that
+    // does not run the score, and a session may have none.
+    if(!m_session.hasTerminals())
+    {
+      m_pending.clear();
+      return;
+    }
+
     if(m_pending.isEmpty())
       return;
 
@@ -97,7 +105,7 @@ private:
     // Sending can log -- a broken socket says so -- and that line must not come
     // back round as another batch to send.
     m_sending = true;
-    m_session.broadcastToAllClients(
+    m_session.broadcastToTerminals(
         m_session.makeMessage(MessagesAPI::instance().log_lines, lines));
     m_sending = false;
   }

@@ -27,7 +27,7 @@ void report(Session& session, const Device::DeviceInterface& dev)
   // Kinds travel with the state, not only in the query answered at join: a
   // device plugged in after a peer arrived would otherwise be known to be
   // connected and not known to be a camera, so no combo box would offer it.
-  session.broadcastToAllClients(session.makeMessage(
+  session.broadcastToTerminals(session.makeMessage(
       MessagesAPI::instance().device_status, dev.settings().name, dev.connected(),
       (int)dev.kinds().toInt()));
 }

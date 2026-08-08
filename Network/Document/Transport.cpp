@@ -116,6 +116,14 @@ private:
 
   void flush()
   {
+    // Nobody is watching: the whole point of this machinery is a peer that
+    // does not run the score, and a session may have none.
+    if(!m_session.hasTerminals())
+    {
+      m_dirty.clear();
+      return;
+    }
+
     if(m_dirty.empty())
       return;
 
@@ -131,7 +139,7 @@ private:
     }
     m_dirty.clear();
 
-    m_session.broadcastToAllClients(
+    m_session.broadcastToTerminals(
         m_session.makeMessage(MessagesAPI::instance().exec_position, count, payload));
   }
 

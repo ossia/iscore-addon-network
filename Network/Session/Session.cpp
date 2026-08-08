@@ -117,6 +117,21 @@ void Session::broadcastToAllClients(const NetworkMessage& m)
     client->sendMessage(m);
 }
 
+void Session::broadcastToTerminals(const NetworkMessage& m)
+{
+  for(RemoteClient* client : remoteClients())
+    if(client->role() == PeerRole::Terminal)
+      client->sendMessage(m);
+}
+
+bool Session::hasTerminals() const noexcept
+{
+  const auto& clients = const_cast<Session*>(this)->remoteClients();
+  return std::any_of(clients.begin(), clients.end(), [](const RemoteClient* c) {
+    return c->role() == PeerRole::Terminal;
+  });
+}
+
 void Session::broadcastToAll(const NetworkMessage& m)
 {
   broadcastToAllClients(m);
