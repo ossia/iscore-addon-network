@@ -176,8 +176,25 @@ void fillStandIns(
   if(pending.empty())
     return;
 
-  const auto todo = std::move(pending);
-  pending.clear();
+  // Only what belongs to *this* document. The list is one per process while
+  // documents are many: draining it wholesale meant one document asking its own
+  // peer about another document's processes, and answering into them with the
+  // wrong context. What is not ours is left for whoever it belongs to.
+  auto* mine = score::IDocument::documentFromObject(ctx.document);
+  std::vector<QPointer<Process::ProcessModel>> todo;
+  {
+    std::vector<QPointer<Process::ProcessModel>> others;
+    for(const auto& weak : pending)
+    {
+      if(!weak)
+        continue;
+      if(score::IDocument::documentFromObject(*weak) == mine)
+        todo.push_back(weak);
+      else
+        others.push_back(weak);
+    }
+    pending = std::move(others);
+  }
 
   for(const auto& weak : todo)
   {

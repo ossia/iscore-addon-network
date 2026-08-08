@@ -52,3 +52,11 @@ score_add_test(test_network_remote_log
   PLUGINS score_addon_network score_plugin_scenario score_lib_process)
 target_include_directories(test_network_remote_log PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
+# Whose stand-ins a document may fill in: the register is one per process.
+score_add_test(test_network_standin_scope
+  SOURCES StandInScopeTest.cpp
+  APP
+  PLUGINS score_addon_network score_plugin_scenario score_lib_process)
+target_include_directories(test_network_standin_scope PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/..")

@@ -122,11 +122,17 @@ void bindDeviceTreeMirror(
     if(doc.HasParseError() || !doc.IsObject())
       return;
 
+    // Inside the guard too: this is where a peer's bytes reach the device and
+    // protocol deserializers, which are written for our own save files and
+    // assert their way through anything else -- and rapidjson's assertions are
+    // compiled out in release, so a missing member is a wild read rather than
+    // a stop.
     Device::Node node;
-    {
-      JSONObject::Deserializer des{doc};
-      des.writeTo(node);
-    }
+    if(!readingWireData("/device/tree", [&] {
+         JSONObject::Deserializer des{doc};
+         des.writeTo(node);
+       }))
+      return;
 
     // Named by the sender and by itself: a mismatch would replace one device
     // with another's tree.

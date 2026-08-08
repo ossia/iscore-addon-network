@@ -11,6 +11,7 @@
 
 #include <Network/Communication/Rpc.hpp>
 #include <Network/Communication/WireJson.hpp>
+#include <Network/Communication/WireRead.hpp>
 
 namespace Network
 {
@@ -88,12 +89,14 @@ void RemoteDeviceCatalog::enumerate(
         continue;
 
       // As the protocol wrote them: held verbatim and handed back in the
-      // command, where the machine that has the protocol reads them.
+      // command, where the machine that has the protocol reads them. Guarded,
+      // because a peer of another build writes what its own protocols write.
       Device::DeviceSettings settings;
-      {
-        JSONObject::Deserializer des{*settingsValue};
-        des.writeTo(settings);
-      }
+      if(!readingWireData("device.enumerate", [&] {
+           JSONObject::Deserializer des{*settingsValue};
+           des.writeTo(settings);
+         }))
+        continue;
 
       onDevice(wireString(e, "category").value_or(QString{}), *name, settings);
     }

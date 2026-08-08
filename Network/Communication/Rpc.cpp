@@ -6,6 +6,7 @@
 #include <QTimer>
 
 #include <Network/Communication/MessageMapper.hpp>
+#include <Network/Communication/WireRead.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Session/Session.hpp>
@@ -113,8 +114,15 @@ void RpcChannel::resolve(
 
   if(result)
   {
+    // An answer is a peer's bytes, and what a caller does with one is
+    // deserialize it -- through factories written for our own save files, which
+    // assert their way through anything else. Guarded here rather than at each
+    // call site, so a caller cannot forget. onRequest already does this for the
+    // asking direction.
     if(pending.onResult)
-      pending.onResult(*result);
+    {
+      readingWireData("an answer to a request", [&] { pending.onResult(*result); });
+    }
   }
   else if(pending.onError)
   {
