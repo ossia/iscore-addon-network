@@ -7,6 +7,8 @@
 
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Communication/WireRead.hpp>
+
+#include <rapidjson/reader.h>
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Session/Session.hpp>
@@ -19,49 +21,58 @@ namespace Network
 {
 namespace
 {
+//! Whether a body a caller handed us is JSON we can put in an envelope as it
+//! stands. Callers build these with JsonWriter, so it is; a corrupt one becomes
+//! a null rather than corrupting the envelope around it.
+//! Checked without building a document: the answer is one bit, and a DOM for a
+//! file read near the inline limit is megabytes allocated to learn it.
+bool wellFormed(const QByteArray& json)
+{
+  rapidjson::StringStream stream{json.constData()};
+  rapidjson::BaseReaderHandler<> ignore;
+  rapidjson::Reader reader;
+  return !reader.Parse<rapidjson::kParseStopWhenDoneFlag>(stream, ignore).IsError();
+}
+
+//! Spliced, not re-encoded.
+//!
+//! These bodies are already JSON: parsing them into a DOM and writing them out
+//! again produced identical bytes at the cost of a full parse and two more
+//! buffers the size of the payload. For a file read near the inline limit that
+//! is ~10 MB parsed and copied twice for nothing, on a browser's one thread.
 QByteArray requestBody(int64_t id, const QByteArray& method, const QByteArray& params)
 {
-  rapidjson::StringBuffer buf;
-  JsonWriter w{buf};
-  w.StartObject();
-  w.Key("id");
-  w.Int64(id);
-  w.Key("method");
-  w.String(method.constData(), method.size());
-  w.Key("params");
-  if(params.isEmpty())
+  const bool usable = !params.isEmpty() && wellFormed(params);
+
+  QByteArray out;
+  out.reserve(params.size() + method.size() + 64);
+  out += "{\"id\":";
+  out += QByteArray::number((qlonglong)id);
+  out += ",\"method\":";
   {
-    w.Null();
+    rapidjson::StringBuffer buf;
+    JsonWriter w{buf};
+    w.String(method.constData(), method.size());
+    out += QByteArray{buf.GetString(), (int)buf.GetLength()};
   }
-  else
-  {
-    rapidjson::Document d;
-    d.Parse(params.constData(), params.size());
-    if(d.HasParseError())
-      w.Null();
-    else
-      d.Accept(w);
-  }
-  w.EndObject();
-  return QByteArray{buf.GetString(), (int)buf.GetLength()};
+  out += ",\"params\":";
+  out += usable ? params : QByteArrayLiteral("null");
+  out += "}";
+  return out;
 }
 
 QByteArray resultBody(int64_t id, const QByteArray& result)
 {
-  rapidjson::StringBuffer buf;
-  JsonWriter w{buf};
-  w.StartObject();
-  w.Key("id");
-  w.Int64(id);
-  w.Key("result");
-  rapidjson::Document d;
-  d.Parse(result.constData(), result.size());
-  if(result.isEmpty() || d.HasParseError())
-    w.Null();
-  else
-    d.Accept(w);
-  w.EndObject();
-  return QByteArray{buf.GetString(), (int)buf.GetLength()};
+  const bool usable = !result.isEmpty() && wellFormed(result);
+
+  QByteArray out;
+  out.reserve(result.size() + 64);
+  out += "{\"id\":";
+  out += QByteArray::number((qlonglong)id);
+  out += ",\"result\":";
+  out += usable ? result : QByteArrayLiteral("null");
+  out += "}";
+  return out;
 }
 
 QByteArray errorBody(int64_t id, const QString& message)
