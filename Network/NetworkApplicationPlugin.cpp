@@ -143,12 +143,26 @@ bool NetworkApplicationPlugin::handleLoading()
       host = m_arg_net_join;
     }
 
+    // The scheme, when the address carries one, is not part of the host: a
+    // page served over https can only reach a host over wss, and splitting on
+    // ':' would otherwise leave "wss" as the address to dial.
+    QString scheme;
+    for(const auto& known : {"wss://", "ws://"})
+    {
+      if(host.startsWith(known))
+      {
+        scheme = known;
+        host.remove(0, qstrlen(known));
+        break;
+      }
+    }
+
     auto v = host.split(":");
 
     if(v.size() >= 1)
-      ip = v[0];
+      ip = scheme + v[0];
     else
-      ip = "127.0.0.1";
+      ip = scheme + "127.0.0.1";
 
     if(v.size() >= 2)
       port = v[1].toInt();

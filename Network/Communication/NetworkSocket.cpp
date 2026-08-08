@@ -26,11 +26,27 @@ NetworkSocket::NetworkSocket(QString ip, int port, QObject* parent)
 {
   init();
 
+  // The address may carry its own scheme. A page served over https cannot open
+  // a plain socket -- the browser refuses it outright, and Qt says so as
+  // "Unsupported WebSocket scheme: ws" -- so reaching a host from anywhere but
+  // this machine means wss, and only the caller knows how it was reached.
+  QString scheme = "ws";
+  for(const auto& known : {"wss://", "ws://"})
+  {
+    if(ip.startsWith(known))
+    {
+      scheme = QString::fromUtf8(known).chopped(3);
+      ip.remove(0, qstrlen(known));
+      break;
+    }
+  }
+
   if(ip.startsWith("::ffff:"))
     ip.remove("::ffff:");
   else if(ip == "::1")
     ip = "127.0.0.1";
-  m_socket->open(QUrl("ws://" + ip + ":" + QString::number(port)));
+
+  m_socket->open(QUrl(scheme + "://" + ip + ":" + QString::number(port)));
 }
 
 void NetworkSocket::sendMessage(const NetworkMessage& mess)
