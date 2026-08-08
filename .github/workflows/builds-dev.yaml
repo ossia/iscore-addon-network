@@ -19,6 +19,7 @@ jobs:
   build:
     name: "Dev ${{ matrix.config.name }}"
     runs-on: ${{ matrix.config.os }}
+    container: ${{ matrix.config.container }}
     strategy:
       fail-fast: false
       matrix:
@@ -26,30 +27,33 @@ jobs:
           - {
               name: "Windows",
               os: windows-latest,
+              container: "",
               dependencies: "curl -L -O https://github.com/ninja-build/ninja/releases/download/v1.13.1/ninja-win.zip && unzip ninja-win.zip",
               additional_flags: "-GNinja"
             }
           - {
               name: "Ubuntu",
-              os: ubuntu-latest,
+              os: [self-hosted, linux, x64, sat-builder],
+              container: "ubuntu:noble",
               dependencies: "sudo apt install -yqq libgl-dev libgl1-mesa-dev libegl1-mesa-dev libdrm-dev libxcomposite-dev libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libxcb-*-dev libX11-*-dev libz-dev libtinfo6 libxext-dev",
               additional_flags: ""
             }
           - {
               name: "macOS",
               os: macos-latest,
+              container: "",
               dependencies: "",
               additional_flags: ""
             }
     steps:
       - name: Checkout addon
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
           path: addon
 
       - name: Checkout score
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ossia/score
           submodules: "recursive"
@@ -86,7 +90,7 @@ jobs:
           additional-flags: ${{ matrix.config.additional_flags }}
 
       - name: Upload release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: plugin-${{ matrix.config.os }}
           path: |
@@ -95,10 +99,11 @@ jobs:
   package:
     name: Package
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, sat-builder]
+    container: ubuntu:noble
     steps:
       - name: Checkout addon
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -106,7 +111,7 @@ jobs:
         uses: ossia/actions/package-addon@master
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: plugin
           path: deploy
