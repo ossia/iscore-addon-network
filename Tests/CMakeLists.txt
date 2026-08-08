@@ -17,3 +17,13 @@ score_add_test(test_network_session_layers
           score_plugin_automation score_plugin_curve)
 target_include_directories(test_network_session_layers PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
+# What is plugged into the other machine: a terminal has none of the hardware,
+# and often not the protocol either, so the list has to come across.
+score_add_test(test_network_remote_enumeration
+  SOURCES RemoteEnumerationTest.cpp
+  APP
+  PLUGINS score_addon_network score_plugin_scenario score_lib_process
+          score_plugin_protocols score_plugin_deviceexplorer)
+target_include_directories(test_network_remote_enumeration PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/..")
