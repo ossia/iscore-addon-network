@@ -47,13 +47,13 @@ jobs:
             }
     steps:
       - name: Checkout addon
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
           path: addon
 
       - name: Checkout score
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ossia/score
           submodules: "recursive"
@@ -90,7 +90,7 @@ jobs:
           additional-flags: ${{ matrix.config.additional_flags }}
 
       - name: Upload release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: plugin-${{ matrix.config.os }}
           path: |
@@ -103,7 +103,7 @@ jobs:
     container: ubuntu:noble
     steps:
       - name: Checkout addon
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -111,7 +111,7 @@ jobs:
         uses: ossia/actions/package-addon@master
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: plugin
           path: deploy
