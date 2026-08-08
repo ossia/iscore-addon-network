@@ -29,6 +29,7 @@ set(HDRS
     Network/Document/FileQueries.hpp
     Network/Document/RemoteEnvironment.hpp
     Network/Document/RemoteCommand.hpp
+    Network/Document/RemoteScript.hpp
     Network/Document/MasterPolicy.hpp
     Network/Document/Timekeeper.hpp
     Network/Document/NTP.hpp
@@ -115,6 +116,7 @@ set(SRCS
     Network/Document/FileQueries.cpp
     Network/Document/RemoteEnvironment.cpp
     Network/Document/RemoteCommand.cpp
+    Network/Document/RemoteScript.cpp
     Network/Document/Transport.cpp
     Network/Document/DeviceStatus.cpp
     Network/Document/DeviceValues.cpp

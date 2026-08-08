@@ -36,3 +36,11 @@ score_add_test(test_network_device_values
           score_plugin_deviceexplorer)
 target_include_directories(test_network_device_values PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
+# A script typed on a terminal runs where the score runs.
+score_add_test(test_network_remote_script
+  SOURCES RemoteScriptTest.cpp
+  APP
+  PLUGINS score_addon_network score_plugin_scenario score_lib_process)
+target_include_directories(test_network_remote_script PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/..")

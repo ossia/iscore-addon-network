@@ -30,6 +30,7 @@
 #include <Network/Client/Client.hpp>
 #include <Network/Client/RemoteClient.hpp>
 #include <Network/Document/DeviceQueries.hpp>
+#include <Network/Document/RemoteScript.hpp>
 #include <Network/Document/FileQueries.hpp>
 #include <Network/Document/ObjectQueries.hpp>
 #include <Network/Document/LibraryQueries.hpp>
@@ -127,6 +128,7 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   bindObjectQueries(*m_rpc, m_context);
   bindLibraryQueries(*m_rpc, m_context);
   bindDeviceStatusQuery(*m_rpc, m_context);
+  bindScriptEvaluation(*m_rpc, m_context);
 
   // A question put to a peer that then leaves would otherwise wait out its
   // timeout with nothing to wait for.
@@ -175,6 +177,7 @@ void NetworkDocumentPlugin::setEditPolicy(EditionPolicy* pol)
   bindObjectQueries(*m_rpc, m_context);
   bindLibraryQueries(*m_rpc, m_context);
   bindDeviceStatusQuery(*m_rpc, m_context);
+  bindScriptEvaluation(*m_rpc, m_context);
 
   // A question put to a peer that then leaves would otherwise wait out its
   // timeout with nothing to wait for.

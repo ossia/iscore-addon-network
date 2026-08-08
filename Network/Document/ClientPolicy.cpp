@@ -22,6 +22,7 @@
 #include <Network/Document/DeviceStatus.hpp>
 #include <Network/Document/DeviceTree.hpp>
 #include <Network/Document/DeviceValues.hpp>
+#include <Network/Document/RemoteScript.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Group/NetworkActions.hpp>
 namespace Network
@@ -233,6 +234,9 @@ TerminalEditionPolicy::TerminalEditionPolicy(
   // and what they contain has to be reported to us.
   bindValueForwarding(*m_session, m_ctx);
   bindValueDisplay(*this, *m_session, m_ctx);
+
+  // The console here edits a score that runs over there.
+  bindScriptForwarding(*m_session, m_ctx);
   bindDeviceTreeMirror(*this, *m_session, m_ctx);
 
   if(!c.app.applicationSettings.gui)
