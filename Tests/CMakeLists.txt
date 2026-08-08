@@ -44,3 +44,11 @@ score_add_test(test_network_remote_script
   PLUGINS score_addon_network score_plugin_scenario score_lib_process)
 target_include_directories(test_network_remote_script PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
+# What the host prints, on a machine that cannot see its console.
+score_add_test(test_network_remote_log
+  SOURCES RemoteLogTest.cpp
+  APP
+  PLUGINS score_addon_network score_plugin_scenario score_lib_process)
+target_include_directories(test_network_remote_log PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/..")

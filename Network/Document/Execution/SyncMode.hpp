@@ -55,6 +55,10 @@ struct SCORE_ADDON_NETWORK_EXPORT MessagesAPI
   const QByteArray device_value_changed;
   const QByteArray device_tree;
 
+  //! Host -> peers: what it printed. The score runs there, so everything that
+  //! complains about it is said there.
+  const QByteArray log_lines;
+
   //! Host -> peers: how far along the score is, so that a peer with no
   //! executor can still show where it has got to.
   const QByteArray exec_position;

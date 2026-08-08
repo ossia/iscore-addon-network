@@ -13,6 +13,10 @@
 
 #include <score_addon_network_export.h>
 
+#include <QStringList>
+
+#include <functional>
+
 #include <memory>
 #include <unordered_map>
 SCORE_SERIALIZE_DATASTREAM_DECLARE(, score::CommandData)
@@ -152,6 +156,12 @@ class SCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final
   SCORE_SERIALIZE_FRIENDS
   MODEL_METADATA_IMPL(NetworkDocumentPlugin)
 public:
+  //! What the other machine printed, as it arrives. The Messages panel shows
+  //! it when there is one; this is for whoever else wants it -- a headless
+  //! terminal has no panel, and a test has no eyes.
+  std::function<void(const QStringList&)> onHostLog;
+
+
   NetworkDocumentPlugin(
       const score::DocumentContext& ctx, EditionPolicy* policy, QObject* parent);
 
