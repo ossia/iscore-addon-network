@@ -46,7 +46,8 @@ NetworkSocket::NetworkSocket(QString ip, int port, QObject* parent)
   else if(ip == "::1")
     ip = "127.0.0.1";
 
-  m_socket->open(QUrl(scheme + "://" + ip + ":" + QString::number(port)));
+  m_url = QUrl(scheme + "://" + ip + ":" + QString::number(port));
+  m_socket->open(m_url);
 }
 
 void NetworkSocket::sendMessage(const NetworkMessage& mess)
@@ -66,9 +67,17 @@ void NetworkSocket::init()
 #else
       &QWebSocket::errorOccurred,
 #endif
-      this, [this]() { qDebug() << "Error: " << m_socket->errorString(); });
+      this, [this]() {
+    qDebug() << "Error: " << m_socket->errorString();
+
+    // Only a connection that never opened: a session that drops later is a
+    // different problem with its own handling.
+    if(!m_everConnected && !m_url.isEmpty())
+      connectionFailed(m_url, m_socket->errorString());
+      });
   connect(m_socket, &QWebSocket::connected, this, [this]() {
     qDebug() << "WS Connected";
+    m_everConnected = true;
     connected();
   });
   connect(m_socket, &QWebSocket::disconnected, this, []() { qDebug("Disconnected"); });

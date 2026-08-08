@@ -51,6 +51,9 @@ ClientSessionBuilder::ClientSessionBuilder(
       m_mastersocket, &NetworkSocket::messageReceived, this,
       &ClientSessionBuilder::on_messageReceived);
   // The only thing anyone ever did on connection.
+  connect(
+      m_mastersocket, &NetworkSocket::connectionFailed, this,
+      [this](const QUrl& url, const QString& reason) { connectionFailed(url, reason); });
   connect(m_mastersocket, &NetworkSocket::connected, this, [this] {
     initiateConnection();
     connected();

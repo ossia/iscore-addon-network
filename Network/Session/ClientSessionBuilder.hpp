@@ -12,6 +12,7 @@
 #include <QByteArray>
 #include <QList>
 #include <QObject>
+#include <QUrl>
 #include <QPair>
 #include <QString>
 
@@ -62,6 +63,10 @@ public:
   void connected() W_SIGNAL(connected);
   void sessionReady() W_SIGNAL(sessionReady);
   void sessionFailed() W_SIGNAL(sessionFailed);
+
+  //! The host was never reached. `url` is what was tried.
+  void connectionFailed(QUrl url, QString reason)
+      W_SIGNAL(connectionFailed, url, reason)
 
 private:
   const score::GUIApplicationContext& m_context;

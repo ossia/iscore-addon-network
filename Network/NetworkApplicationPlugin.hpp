@@ -42,6 +42,10 @@ public:
   setupPlayerConnection(QString name, QString ip, int port, QMap<QString, QByteArray>);
   W_SLOT(setupPlayerConnection)
 
+  //! Say why a session could not be opened, and -- when the reason is likely a
+  //! certificate -- offer the one thing that can fix it from here.
+  void reportUnreachableHost(const QUrl& url, const QString& reason);
+
 private:
   void do_makeServer(score::Document& doc);
   GUIElements makeGUIElements() override;

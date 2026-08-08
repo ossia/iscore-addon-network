@@ -18,10 +18,14 @@
 #include <core/document/DocumentModel.hpp>
 #include <core/presenter/DocumentManager.hpp>
 
+#include <QPushButton>
+#include <QDesktopServices>
+#include <QUrl>
 #include <QAction>
 #include <QApplication>
 #include <QDebug>
 #include <QMenu>
+#include <QAbstractButton>
 #include <QMessageBox>
 #include <QPair>
 #include <QTcpSocket>
@@ -196,6 +200,60 @@ void NetworkApplicationPlugin::joinSession(QString ip, int port, PeerRole role)
   connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed, this, [&]() {
     m_sessionBuilder.reset();
   });
+  connect(
+      m_sessionBuilder.get(), &ClientSessionBuilder::connectionFailed, this,
+      [this](const QUrl& url, const QString& reason) {
+    reportUnreachableHost(url, reason);
+    m_sessionBuilder.reset();
+      });
+}
+
+void NetworkApplicationPlugin::reportUnreachableHost(
+    const QUrl& url, const QString& reason)
+{
+  if(!context.applicationSettings.gui)
+  {
+    qWarning() << "Could not reach" << url.toString() << ':' << reason;
+    return;
+  }
+
+  // A secure socket that never opens is almost always a certificate the
+  // browser will not take on trust. There is no way to accept one from a
+  // socket -- the prompt only exists for a page -- so the way through is to
+  // visit the same host and port once and accept it there.
+  const bool secure = url.scheme() == "wss";
+
+  // Shown, not exec'd: a browser has no nested event loop to run a modal in,
+  // and asking for one throws out of the wasm runtime.
+  auto* box = new QMessageBox{
+      QMessageBox::Warning, QObject::tr("Could not reach the session"),
+      QObject::tr("%1 did not answer.\n\n%2").arg(url.toString(), reason)};
+  box->setAttribute(Qt::WA_DeleteOnClose);
+
+  QPushButton* trust{};
+  if(secure)
+  {
+    box->setInformativeText(QObject::tr(
+        "If that machine's certificate is its own, this browser has to be told "
+        "to accept it before a session can be opened. Opening it in a tab shows "
+        "the usual warning; accept it there, then join again."));
+    trust = box->addButton(QObject::tr("Open it in a tab"), QMessageBox::ActionRole);
+  }
+  box->addButton(QMessageBox::Close);
+
+  QObject::connect(box, &QMessageBox::buttonClicked, box, [box, trust, url](QAbstractButton* b) {
+    if(!trust || b != trust)
+      return;
+
+    // https, not wss: it is the certificate that has to be shown, and only a
+    // page can show it. Same host and port, which is what an exception is
+    // recorded against. Opened from a click, so the browser allows the tab.
+    QUrl page = url;
+    page.setScheme("https");
+    QDesktopServices::openUrl(page);
+  });
+
+  box->show();
 }
 
 void NetworkApplicationPlugin::setupPlayerConnection(
