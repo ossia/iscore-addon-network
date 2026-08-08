@@ -8,6 +8,9 @@
 #include <Device/Protocol/ProtocolFactoryInterface.hpp>
 #include <Device/Protocol/ProtocolList.hpp>
 
+#include <Explorer/Commands/Add/LoadDevice.hpp>
+#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
+
 #include <score/plugins/InterfaceList.hpp>
 
 #include <core/document/Document.hpp>
@@ -118,5 +121,47 @@ TEST_CASE("The protocols offered are the other machine's", "[session][devices]")
     // to be that machine's -- including protocols this one cannot construct.
     const auto& local = ctx.interfaces<Device::ProtocolFactoryList>();
     CHECK(catalog.protocols().size() == (std::size_t)local.size());
+  });
+}
+
+TEST_CASE("A device of a protocol nobody here has still reaches the host", "[session][devices]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    auto master = hostSession(ctx);
+    auto* client = joinSession(ctx, master.port);
+    REQUIRE(client);
+
+    // Stands for what a terminal adds: a protocol this build cannot construct,
+    // whose settings it therefore never decoded and only carries verbatim.
+    const auto absent = UuidKey<Device::ProtocolFactory>::fromString(
+        QString{"c0ffee00-1111-2222-3333-444455556666"});
+    REQUIRE(!ctx.interfaces<Device::ProtocolFactoryList>().get(absent));
+
+    Device::DeviceSettings s;
+    s.protocol = absent;
+    s.name = "Keyboard";
+
+    auto& clientPlug = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+    client->context().document.commandStack().redoAndPush(
+        new Explorer::Command::LoadDevice{clientPlug, s});
+
+    // The device is added on the machine running the score, so the command has
+    // to arrive there -- adding it only locally is the same as not adding it.
+    auto& masterRoot
+        = master.document->context().plugin<Explorer::DeviceDocumentPlugin>().rootNode();
+    REQUIRE(spin_until([&] {
+      return ossia::any_of(masterRoot, [](const Device::Node& n) {
+        return n.is<Device::DeviceSettings>()
+               && n.get<Device::DeviceSettings>().name == "Keyboard";
+      });
+    }));
+
+    const Device::Node* got{};
+    for(const auto& n : masterRoot)
+      if(n.is<Device::DeviceSettings>()
+         && n.get<Device::DeviceSettings>().name == "Keyboard")
+        got = &n;
+    REQUIRE(got);
+    CHECK(got->get<Device::DeviceSettings>().protocol == absent);
   });
 }
