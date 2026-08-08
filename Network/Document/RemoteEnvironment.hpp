@@ -18,9 +18,11 @@ class RpcChannel;
  * interface is asynchronous: an answer arrives when the peer sends it, and
  * there is nowhere to wait in between.
  *
- * isLocal() is false and resolve() returns nothing. That is not a shortcoming
- * to work around -- it is the honest answer, and the reason callers have to ask
- * for bytes rather than open paths of their own.
+ * isLocal() is false, and resolve() returns nothing for anything naming a file
+ * over there. That is not a shortcoming to work around -- it is the honest
+ * answer, and the reason callers have to ask for bytes rather than open paths
+ * of their own. The media cache is the one exception: it is content-addressed
+ * and each machine keeps its own copy, so it resolves here.
  */
 class SCORE_ADDON_NETWORK_EXPORT RemoteEnvironment final : public score::Environment
 {

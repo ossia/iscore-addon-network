@@ -510,6 +510,16 @@ TEST_CASE("The files of a score can be reached from another machine", "[session]
     // callers cannot quietly fall back to opening one.
     CHECK_FALSE(remote.isLocal());
     CHECK(remote.resolve(score::Uri{score::UriScheme::Project, "a"}).isEmpty());
+    CHECK(remote.resolve(score::Uri{score::UriScheme::Library, "a"}).isEmpty());
+
+    // Except the media cache: content-addressed, and each machine keeps its
+    // own, so it names the same bytes on both. A file imported here is written
+    // into it and read straight back -- answering "nowhere" made every dropped
+    // file resolve to nothing, which silently skipped setting it on the
+    // process (ChangeAudioFile::redo does nothing when the duration is zero).
+    const auto cached = remote.resolve(score::Uri{score::UriScheme::Cache, "a.wav"});
+    CHECK(score::isUnder(cached, score::mediaCacheRoot()));
+    CHECK(cached.endsWith("a.wav"));
 
     checkEnvironment(remote, projectDir);
 

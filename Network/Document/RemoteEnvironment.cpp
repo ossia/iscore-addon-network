@@ -1,6 +1,7 @@
 #include "RemoteEnvironment.hpp"
 
 #include <score/serialization/JSONVisitor.hpp>
+#include <score/tools/Uri.hpp>
 
 #include <QObject>
 
@@ -47,9 +48,21 @@ bool RemoteEnvironment::stillConnected(const Callback<Failure>& onFailed) const
 
 RemoteEnvironment::~RemoteEnvironment() = default;
 
-QString RemoteEnvironment::resolve(const score::Uri&) const
+QString RemoteEnvironment::resolve(const score::Uri& uri) const
 {
-  // There is no path here that leads to it.
+  // The media cache is the exception, and the only one: it is content-addressed
+  // and every machine keeps its own, so "<CACHE>:<entry>" names the same bytes
+  // here as it does there. That is the whole point of importing through it --
+  // answering "nowhere" for these would mean a file this machine just wrote
+  // could not be found by the code about to read it.
+  if(uri.scheme == score::UriScheme::Cache)
+  {
+    const auto root = score::mediaCacheRoot();
+    return root.isEmpty() ? QString{} : root + '/' + uri.path;
+  }
+
+  // Everything else names a file on the other machine. There is no path here
+  // that leads to it.
   return {};
 }
 
