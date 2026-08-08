@@ -27,3 +27,12 @@ score_add_test(test_network_remote_enumeration
           score_plugin_protocols score_plugin_deviceexplorer)
 target_include_directories(test_network_remote_enumeration PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
+# What the host's devices report, on a machine that has none.
+score_add_test(test_network_device_values
+  SOURCES DeviceValueTest.cpp
+  APP
+  PLUGINS score_addon_network score_plugin_scenario score_lib_process
+          score_plugin_deviceexplorer)
+target_include_directories(test_network_device_values PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/..")

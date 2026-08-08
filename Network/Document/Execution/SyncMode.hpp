@@ -48,7 +48,11 @@ struct SCORE_ADDON_NETWORK_EXPORT MessagesAPI
   //! Host -> peers: whether one of the score's devices is connected. A peer
   //! that does not run the score has nothing to ask.
   const QByteArray device_status;
+  //! Peer -> host: "set this", which the host carries out on the device.
   const QByteArray device_value;
+  //! Host -> peers: "this is now the value". A notification, not a request:
+  //! applying it as a request would send it straight back where it came from.
+  const QByteArray device_value_changed;
   const QByteArray device_tree;
 
   //! Host -> peers: how far along the score is, so that a peer with no

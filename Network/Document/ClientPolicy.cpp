@@ -232,6 +232,7 @@ TerminalEditionPolicy::TerminalEditionPolicy(
   // No devices here, so editing the tree has to be performed where they are,
   // and what they contain has to be reported to us.
   bindValueForwarding(*m_session, m_ctx);
+  bindValueDisplay(*this, *m_session, m_ctx);
   bindDeviceTreeMirror(*this, *m_session, m_ctx);
 
   if(!c.app.applicationSettings.gui)
