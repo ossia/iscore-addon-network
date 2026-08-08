@@ -53,6 +53,7 @@
 #include <score/tools/FilePath.hpp>
 
 #include <Device/Protocol/ProtocolFactoryInterface.hpp>
+#include <Explorer/Commands/Add/LoadDevice.hpp>
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Explorer/Explorer/DeviceExplorerModel.hpp>
 #include <Network/Client/RemoteClient.hpp>
@@ -1811,5 +1812,58 @@ TEST_CASE("A terminal learns device state from the host itself", "[session]")
     REQUIRE(spin_until([&] {
       return termDevices.remoteConnected(QStringLiteral("hw")) == std::optional{false};
     }));
+  });
+}
+
+TEST_CASE("A terminal sees what a device turned out to contain", "[session]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    score::test::register_connected_probe_protocol(ctx);
+
+    auto master = hostSession(ctx);
+    auto& hostDevices
+        = master.document->context().plugin<Explorer::DeviceDocumentPlugin>();
+
+    auto* client = joinSession(ctx, master.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+    auto& termDevices = client->context().plugin<Explorer::DeviceDocumentPlugin>();
+
+    // Added during the session through the command, as the dialog does: the
+    // command carries the node as it was when it was made, and the children are
+    // found by refreshing -- which a terminal never does.
+    master.document->context().document.commandStack().redoAndPush(
+        new Explorer::Command::LoadDevice{
+            hostDevices,
+            score::test::connected_probe_device_node(QStringLiteral("hw"))});
+
+    auto findDevice = [](Explorer::DeviceDocumentPlugin& plug, const QString& name)
+        -> const Device::Node* {
+      for(const auto& n : plug.rootNode())
+        if(n.is<Device::DeviceSettings>()
+           && n.get<Device::DeviceSettings>().name == name)
+          return &n;
+      return nullptr;
+    };
+
+    REQUIRE(spin_until([&] { return findDevice(termDevices, "hw") != nullptr; }));
+
+    // Nothing was built here, so anything under it came off the wire.
+    REQUIRE(termDevices.list().findDevice(QStringLiteral("hw")) == nullptr);
+
+    Device::AddressSettings addr;
+    addr.name = QStringLiteral("volume");
+    Device::NodePath devicePath;
+    devicePath.push_back(hostDevices.rootNode().indexOfChild(findDevice(hostDevices, "hw")));
+    hostDevices.updateProxy.addAddress(devicePath, addr, 0);
+
+    REQUIRE(spin_until([&] {
+      const auto* n = findDevice(termDevices, "hw");
+      return n && n->childCount() == 1;
+    }));
+    CHECK(findDevice(termDevices, "hw")->childAt(0).displayName()
+          == QStringLiteral("volume"));
+
+    // And the host is not made to echo its own mirror back.
+    CHECK(findDevice(hostDevices, "hw")->childCount() == 1);
   });
 }

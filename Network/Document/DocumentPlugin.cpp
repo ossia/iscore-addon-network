@@ -70,6 +70,7 @@ MessagesAPI::MessagesAPI()
 
     device_status{QByteArrayLiteral("/device/status")}
     , device_value{QByteArrayLiteral("/device/value")}
+    , device_tree{QByteArrayLiteral("/device/tree")}
     , exec_position{QByteArrayLiteral("/exec/position")}
     , ping{QByteArrayLiteral("/ping")}
     , pong{QByteArrayLiteral("/pong")}
