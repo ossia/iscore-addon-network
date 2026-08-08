@@ -72,3 +72,32 @@ TEST_CASE("A burst of logging does not take the host down", "[session][log]")
     CHECK(batches < received.size());
   });
 }
+
+TEST_CASE("Hosting a second document does not chain the log to itself", "[session][log]")
+{
+  score::test::run_in_app([](const score::GUIApplicationContext& ctx) {
+    // The Qt message handler is per process; a session is per document. A
+    // broadcaster that installed its own would be handed the previous one --
+    // itself -- and the next line logged would recurse until the stack ran out.
+    auto first = hostSession(ctx);
+    auto second = hostSession(ctx);
+    REQUIRE(first.port > 0);
+    REQUIRE(second.port > 0);
+
+    auto* client = joinSession(ctx, second.port, Network::PeerRole::Terminal);
+    REQUIRE(client);
+
+    auto* plug = client->context().findPlugin<Network::NetworkDocumentPlugin>();
+    REQUIRE(plug);
+
+    QStringList received;
+    plug->onHostLog = [&](const QStringList& lines) { received += lines; };
+
+    // The line that used to be the last one this process ever printed.
+    qWarning() << "SECOND-HOST-MARKER";
+
+    REQUIRE(spin_until([&] {
+      return received.join(QChar{'\n'}).contains("SECOND-HOST-MARKER");
+    }));
+  });
+}

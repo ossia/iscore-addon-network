@@ -12,6 +12,8 @@
 #include <QTimer>
 
 #include <stdexcept>
+#include <mutex>
+#include <vector>
 
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Communication/WireRead.hpp>
@@ -23,8 +25,36 @@ namespace Network
 {
 namespace
 {
-//! Lines this process printed, on their way to the peers. The Qt handler runs
-//! on whichever thread logged, so nothing here touches the session directly.
+class LogBroadcaster;
+
+/**
+ * @brief The one place this process's log passes through.
+ *
+ * The Qt message handler is per *process* and a session is per *document*, so a
+ * broadcaster must not install one: hosting a second document would hand the
+ * new broadcaster the old handler -- which is this very function -- and the
+ * next line logged would recurse until the stack ran out. Installed once here
+ * instead, with broadcasters subscribing.
+ */
+class LogHub
+{
+public:
+  static void subscribe(LogBroadcaster* b);
+  static void unsubscribe(LogBroadcaster* b);
+
+private:
+  static void handle(QtMsgType, const QMessageLogContext&, const QString&);
+
+  // Guards the list against the handler, which runs on whichever thread
+  // logged: decoders, execution and the asio threads all log, and they do so
+  // while documents are being torn down.
+  static inline std::mutex m_mutex;
+  static inline std::vector<LogBroadcaster*> m_subscribers;
+  static inline QtMessageHandler m_previous{};
+  static inline bool m_installed{};
+};
+
+//! Lines this process printed, on their way to the peers of one session.
 class LogBroadcaster final : public QObject
 {
 public:
@@ -36,46 +66,26 @@ public:
     m_flush.setInterval(std::max(1, ctx.app.applicationSettings.uiEventRate));
     connect(&m_flush, &QTimer::timeout, this, &LogBroadcaster::flush);
 
-    // Chained, not replaced: the console output, the crash log and the
-    // Messages panel are all downstream of whatever was installed before.
-    g_instance = this;
-    m_previous = qInstallMessageHandler(&LogBroadcaster::handle);
+    LogHub::subscribe(this);
   }
 
-  ~LogBroadcaster() override
-  {
-    qInstallMessageHandler(m_previous);
-    g_instance = nullptr;
-  }
+  ~LogBroadcaster() override { LogHub::unsubscribe(this); }
 
-private:
-  static void
-  handle(QtMsgType type, const QMessageLogContext& context, const QString& msg)
-  {
-    // Reporting a failure to send would log, which would report a failure to
-    // send. One line of recursion is one too many.
-    static thread_local bool reentered = false;
-
-    auto* self = g_instance;
-    if(self && self->m_previous)
-      self->m_previous(type, context, msg);
-
-    if(!self || reentered)
-      return;
-
-    reentered = true;
-    QMetaObject::invokeMethod(
-        self, [self, msg] { self->queue(msg); }, Qt::QueuedConnection);
-    reentered = false;
-  }
-
+  //! Called from the hub, already on this object's thread.
   void queue(const QString& line)
   {
+    // A log that outruns the flush would grow without bound and then send one
+    // enormous message: past this, the oldest lines are the ones to lose.
+    constexpr int max_pending = 2000;
+    if(m_pending.size() >= max_pending)
+      m_pending.removeFirst();
+
     m_pending.push_back(line);
     if(!m_flush.isActive())
       m_flush.start();
   }
 
+private:
   void flush()
   {
     if(m_pending.isEmpty())
@@ -83,17 +93,71 @@ private:
 
     auto lines = std::move(m_pending);
     m_pending.clear();
+
+    // Sending can log -- a broken socket says so -- and that line must not come
+    // back round as another batch to send.
+    m_sending = true;
     m_session.broadcastToAllClients(
         m_session.makeMessage(MessagesAPI::instance().log_lines, lines));
+    m_sending = false;
   }
 
-  static inline LogBroadcaster* g_instance{};
+  friend class LogHub;
 
   Session& m_session;
-  QtMessageHandler m_previous{};
   QTimer m_flush;
   QStringList m_pending;
+  bool m_sending{};
 };
+
+void LogHub::subscribe(LogBroadcaster* b)
+{
+  std::lock_guard lock{m_mutex};
+  if(!m_installed)
+  {
+    // Once, and never removed: taking it back out would restore a handler that
+    // may itself have been replaced since.
+    m_previous = qInstallMessageHandler(&LogHub::handle);
+    m_installed = true;
+  }
+  m_subscribers.push_back(b);
+}
+
+void LogHub::unsubscribe(LogBroadcaster* b)
+{
+  std::lock_guard lock{m_mutex};
+  std::erase(m_subscribers, b);
+}
+
+void LogHub::handle(
+    QtMsgType type, const QMessageLogContext& context, const QString& msg)
+{
+  // Chained first, so the console, the crash log and the Messages panel get
+  // what they always got even if everything below throws.
+  if(m_previous)
+    m_previous(type, context, msg);
+
+  static thread_local bool reentered = false;
+  if(reentered)
+    return;
+  reentered = true;
+
+  {
+    std::lock_guard lock{m_mutex};
+    for(auto* sub : m_subscribers)
+    {
+      if(sub->m_sending)
+        continue;
+
+      // Queued: this is whichever thread logged, and the session is the
+      // document's.
+      QMetaObject::invokeMethod(
+          sub, [sub, msg] { sub->queue(msg); }, Qt::QueuedConnection);
+    }
+  }
+
+  reentered = false;
+}
 }
 
 void bindLogBroadcast(
