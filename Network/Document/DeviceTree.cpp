@@ -148,7 +148,11 @@ void bindDeviceTreeMirror(
        || node.get<Device::DeviceSettings>().name != name)
       return;
 
-    plug->explorer().replaceDevice(name, node);
+    // Replace keeps the device's row; a terminal may not have heard of it at
+    // all yet, and replaceDevice says so rather than inventing one.
+    auto& explorer = plug->explorer();
+    if(!explorer.replaceDevice(Device::Node{node}))
+      explorer.addDevice(node);
       });
 }
 }
