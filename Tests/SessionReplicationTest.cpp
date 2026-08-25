@@ -1340,21 +1340,21 @@ TEST_CASE("A terminal is told what its devices can be plugged into",
     // Kinds arrive through the query rather than the per-device broadcast, so
     // set one directly and check the lookup a combo box performs.
     termDevices.setRemoteKinds(
-        QStringLiteral("cam"), Device::DeviceKind::TextureIn);
+        QStringLiteral("cam"), Device::NodeKind::TextureIn);
     termDevices.setRemoteKinds(
-        QStringLiteral("knob"), Device::DeviceKind::MidiIn);
+        QStringLiteral("knob"), Device::NodeKind::MidiIn);
 
     const auto textures
-        = termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureIn);
+        = termDevices.remoteDevicesOfKind(Device::NodeKind::TextureIn);
     REQUIRE(textures.size() == 1);
     CHECK(textures.front() == QStringLiteral("cam"));
 
-    const auto midi = termDevices.remoteDevicesOfKind(Device::DeviceKind::MidiIn);
+    const auto midi = termDevices.remoteDevicesOfKind(Device::NodeKind::MidiIn);
     REQUIRE(midi.size() == 1);
     CHECK(midi.front() == QStringLiteral("knob"));
 
     // And a kind nothing reported is empty rather than everything.
-    CHECK(termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureOut).empty());
+    CHECK(termDevices.remoteDevicesOfKind(Device::NodeKind::TextureOut).empty());
   });
 }
 
@@ -1810,11 +1810,11 @@ TEST_CASE("A terminal learns device state from the host itself", "[session]")
       return termDevices.remoteConnected(QStringLiteral("hw")) == std::optional{true};
     }));
 
-    const auto midi = termDevices.remoteDevicesOfKind(Device::DeviceKind::MidiIn);
+    const auto midi = termDevices.remoteDevicesOfKind(Device::NodeKind::MidiIn);
     REQUIRE(midi.size() == 1);
     CHECK(midi.front() == QStringLiteral("hw"));
-    CHECK(termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureOut).size() == 1);
-    CHECK(termDevices.remoteDevicesOfKind(Device::DeviceKind::TextureIn).empty());
+    CHECK(termDevices.remoteDevicesOfKind(Device::NodeKind::TextureOut).size() == 1);
+    CHECK(termDevices.remoteDevicesOfKind(Device::NodeKind::TextureIn).empty());
 
     // And a change afterwards is reported: a terminal that only learned the
     // state it joined with would show a device as connected for ever.

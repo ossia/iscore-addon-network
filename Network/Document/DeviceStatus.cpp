@@ -29,7 +29,7 @@ void report(Session& session, const Device::DeviceInterface& dev)
   // connected and not known to be a camera, so no combo box would offer it.
   session.broadcastToTerminals(session.makeMessage(
       MessagesAPI::instance().device_status, dev.settings().name, dev.connected(),
-      (int)dev.kinds().toInt()));
+      (int)dev.capabilities().nodeKinds));
 }
 }
 
@@ -88,7 +88,7 @@ void bindDeviceStatusMirror(
     {
       int kinds{};
       s >> kinds;
-      plug->setRemoteKinds(name, Device::DeviceKinds::fromInt(kinds));
+      plug->setRemoteKinds(name, static_cast<Device::NodeKind>(kinds));
     }
   });
 }
@@ -117,7 +117,7 @@ void bindDeviceStatusQuery(RpcChannel& rpc, const score::DocumentContext& ctx)
         // work this out for itself -- the answer used to be a cast to a
         // plug-in's own C++ type -- so it is told.
         w.Key("kinds");
-        w.Int((int)dev.kinds().toInt());
+        w.Int((int)dev.capabilities().nodeKinds);
         w.EndObject();
       });
     }
@@ -150,7 +150,7 @@ void requestDeviceStatus(
       plug->setRemoteConnected(*name, *connected);
 
       if(const auto kinds = wireInt(e, "kinds"))
-        plug->setRemoteKinds(*name, Device::DeviceKinds::fromInt((int)*kinds));
+        plug->setRemoteKinds(*name, static_cast<Device::NodeKind>(*kinds));
     }
       },
       [](const QString& err) {
