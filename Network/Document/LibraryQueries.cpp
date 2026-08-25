@@ -7,6 +7,7 @@
 #include <Library/Panel/LibraryPanelDelegate.hpp>
 #include <Process/ProcessMimeSerialization.hpp>
 #include <Library/ProcessWidget.hpp>
+#include <Library/ProcessEntry.hpp>
 #include <Library/ProcessesItemModel.hpp>
 
 #include <score/application/GUIApplicationContext.hpp>
@@ -20,6 +21,7 @@
 
 #include <ossia/detail/algorithms.hpp>
 
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -71,14 +73,18 @@ void writeNode(JsonWriter& w, const Library::ProcessNode& node)
   w.EndObject();
 }
 
-void readNode(
-    const rapidjson::Value& v, Library::ProcessNode& parent, bool topLevel)
+//! One node of the peer's library, as pure data. Nothing is attached here:
+//! the model turns a staged forest into tree nodes, so that every insertion
+//! carries the signals a view needs.
+std::optional<Library::StagedNode>
+readNode(const rapidjson::Value& v, bool topLevel)
 {
   const auto name = wireString(v, "name");
   if(!name)
-    return;
+    return std::nullopt;
 
-  Library::ProcessData data;
+  Library::StagedNode staged;
+  auto& data = staged.data;
   data.prettyName = *name;
 
   // Computed, not sent: a QIcon does not travel, and the resources are shared.
@@ -89,11 +95,12 @@ void readNode(
   if(const auto custom = wireString(v, "data"))
     data.customData = *custom;
 
-  auto& node = Library::addToLibrary(parent, std::move(data));
-
   if(const auto* children = wireMember(v, "children"); children && children->IsArray())
     for(const auto& child : children->GetArray())
-      readNode(child, node, false);
+      if(auto c = readNode(child, false))
+        staged.children.push_back(std::move(*c));
+
+  return staged;
 }
 }
 
@@ -141,43 +148,42 @@ void importRemoteLibrary(
 
     auto& model = panel->processWidget().processModel();
 
-    model.beginResetModel();
+    if(mirror)
     {
-      auto& root = model.rootNode();
-
       // Replaces rather than adds: this machine's processes will not run.
-      if(mirror)
-      {
-        root.erase(root.begin(), root.end());
-        for(const auto& child : result.GetArray())
-          readNode(child, root, true);
-      }
-      else
-      {
-        // A performer runs the score itself, so its own library is as real as
-        // the peer's; only what it cannot make is worth adding.
-        auto& local = ctx.interfaces<Process::ProcessFactoryList>();
-        auto it = ossia::find_if(root, [](const Library::ProcessData& n) {
-          return n.prettyName == remoteCategory();
-        });
-        auto& category
-            = (it != root.end())
-                  ? *it
-                  : Library::addToLibrary(
-                        root,
-                        Library::ProcessData{{{}, remoteCategory(), {}}, QIcon{}});
-
-        for(const auto& child : result.GetArray())
-          if(const auto childKey = wireString(child, "key"))
-          {
-            const auto key = UuidKey<Process::ProcessModel>::fromString(*childKey);
-            if(key != UuidKey<Process::ProcessModel>{} && local.get(key))
-              continue;
-            readNode(child, category, false);
-          }
-      }
+      std::vector<Library::StagedNode> forest;
+      for(const auto& child : result.GetArray())
+        if(auto node = readNode(child, true))
+          forest.push_back(std::move(*node));
+      model.replaceRoot(std::move(forest));
     }
-    model.endResetModel();
+    else
+    {
+      // A performer runs the score itself, so its own library is as real as
+      // the peer's; only what it cannot make is worth adding. It goes under
+      // one category at the root: these processes answer to no local factory,
+      // so there is no process node to anchor them to.
+      auto& local = ctx.interfaces<Process::ProcessFactoryList>();
+      for(const auto& child : result.GetArray())
+      {
+        const auto childKey = wireString(child, "key");
+        if(!childKey)
+          continue;
+        const auto key = UuidKey<Process::ProcessModel>::fromString(*childKey);
+        if(key != UuidKey<Process::ProcessModel>{} && local.get(key))
+          continue;
+
+        if(auto node = readNode(child, false))
+        {
+          Library::ProcessEntry e;
+          e.atRoot = true;
+          e.categoryPath = QStringList{remoteCategory()};
+          e.node = std::move(*node);
+          model.publish(std::move(e));
+        }
+      }
+      model.flushPending();
+    }
 
     qDebug() << (mirror ? "Library mirrored from the other machine."
                         : "Added the other machine's extras to the library.");
