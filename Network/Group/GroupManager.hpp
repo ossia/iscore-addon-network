@@ -1,6 +1,7 @@
 #pragma once
 #include <score/model/IdentifiedObject.hpp>
 #include <score/model/Identifier.hpp>
+#include <score_addon_network_export.h>
 
 #include <vector>
 class QObject;
@@ -10,7 +11,7 @@ namespace Network
 class Group;
 class Client;
 class RemoteClient;
-class GroupManager : public QObject
+class SCORE_ADDON_NETWORK_EXPORT GroupManager : public QObject
 {
   W_OBJECT(GroupManager)
 public:

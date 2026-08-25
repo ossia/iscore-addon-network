@@ -7,10 +7,17 @@
 #include <ossia/detail/hash_map.hpp>
 
 #include <Netpit/Netpit.hpp>
+#include <Network/Communication/Capabilities.hpp>
+#include <Network/Communication/Rpc.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 
 #include <score_addon_network_export.h>
 
+#include <QStringList>
+
+#include <functional>
+
+#include <memory>
 #include <unordered_map>
 SCORE_SERIALIZE_DATASTREAM_DECLARE(, score::CommandData)
 
@@ -149,6 +156,12 @@ class SCORE_ADDON_NETWORK_EXPORT NetworkDocumentPlugin final
   SCORE_SERIALIZE_FRIENDS
   MODEL_METADATA_IMPL(NetworkDocumentPlugin)
 public:
+  //! What the other machine printed, as it arrives. The Messages panel shows
+  //! it when there is one; this is for whoever else wants it -- a headless
+  //! terminal has no panel, and a test has no eyes.
+  std::function<void(const QStringList&)> onHostLog;
+
+
   NetworkDocumentPlugin(
       const score::DocumentContext& ctx, EditionPolicy* policy, QObject* parent);
 
@@ -191,6 +204,29 @@ public:
   } compensated;
 
   void on_stop();
+
+  //! True once a message from another peer could not be applied, so this copy
+  //! of the document no longer matches the rest of the session.
+  //!
+  //! Peers do not necessarily run the same build -- protocols and processes are
+  //! compiled in conditionally -- so a command can be unreadable or name a
+  //! factory we do not have. Applying the rest of the stream on top of a model
+  //! that already diverged corrupts it silently, and paths start resolving to
+  //! the wrong objects, so we stop and say so instead. Recovering means
+  //! rejoining the session.
+  bool diverged() const noexcept { return !m_divergence.isEmpty(); }
+  const QString& divergenceReason() const noexcept { return m_divergence; }
+  void setDiverged(const QString& reason);
+
+  void divergedChanged(const QString& reason) W_SIGNAL(divergedChanged, reason);
+
+  //! What the other end of the session can construct. Empty until joined.
+  const Capabilities& remoteCapabilities() const noexcept { return m_remoteCaps; }
+  void setRemoteCapabilities(Capabilities c);
+
+  //! Questions to and from the other peers, alongside command replication.
+  //! Null until a session exists.
+  RpcChannel* rpc() const noexcept { return m_rpc.get(); }
 
   void sessionChanged() W_SIGNAL(sessionChanged);
 
@@ -241,6 +277,9 @@ private:
   EditionPolicy* m_policy{};
   ExecutionPolicy* m_exec{};
   GroupManager* m_groups{};
+  QString m_divergence;
+  Capabilities m_remoteCaps;
+  std::unique_ptr<RpcChannel> m_rpc;
 
   std::unordered_map<const Scenario::IntervalModel*, ObjectMetadata> m_intervalsGroups;
   std::unordered_map<const Scenario::EventModel*, ObjectMetadata> m_eventGroups;

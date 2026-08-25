@@ -1,6 +1,8 @@
 
 #include "Session.hpp"
 
+#include <stdexcept>
+
 #include <score/tools/std/Optional.hpp>
 
 #include <ossia/detail/algorithms.hpp>
@@ -41,7 +43,9 @@ MessageMapper& Session::mapper() const
 
 Client& Session::master() const
 {
-  throw;
+  // `throw;` with nothing in flight is std::terminate. A plain Session has no
+  // master -- PlaceholderEditionPolicy makes one -- so say that instead.
+  throw std::logic_error{"this session has no master"};
 }
 
 LocalClient& Session::localClient() const
@@ -111,6 +115,21 @@ void Session::broadcastToAllClients(const NetworkMessage& m)
 {
   for(RemoteClient* client : remoteClients())
     client->sendMessage(m);
+}
+
+void Session::broadcastToTerminals(const NetworkMessage& m)
+{
+  for(RemoteClient* client : remoteClients())
+    if(client->role() == PeerRole::Terminal)
+      client->sendMessage(m);
+}
+
+bool Session::hasTerminals() const noexcept
+{
+  const auto& clients = const_cast<Session*>(this)->remoteClients();
+  return std::any_of(clients.begin(), clients.end(), [](const RemoteClient* c) {
+    return c->role() == PeerRole::Terminal;
+  });
 }
 
 void Session::broadcastToAll(const NetworkMessage& m)

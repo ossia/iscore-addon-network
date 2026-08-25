@@ -1,9 +1,12 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <score/model/IdentifiedObject.hpp>
+
+#include <Network/Client/PeerRole.hpp>
 
 namespace Network
 {
-class Client : public IdentifiedObject<Client>
+class SCORE_ADDON_NETWORK_EXPORT Client : public IdentifiedObject<Client>
 {
   W_OBJECT(Client)
 public:
@@ -33,9 +36,15 @@ public:
 
   void nameChanged(QString arg) W_SIGNAL(nameChanged, arg);
 
+  //! Settled when this peer joins and constant afterwards: it decides what was
+  //! built when the document was read, which cannot be revisited.
+  PeerRole role() const noexcept { return m_role; }
+  void setRole(PeerRole r) noexcept { m_role = r; }
+
   W_PROPERTY(QString, name READ name WRITE setName NOTIFY nameChanged)
 private:
   QString m_name;
+  PeerRole m_role{PeerRole::Performer};
 };
 }
 
