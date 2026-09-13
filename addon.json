@@ -1,0 +1,11 @@
+{
+  "src": "<url to the .zip file created by the release script>",
+  "name": "Network",
+  "raw_name": "iscore-addon-network",
+  "version": "1.0",
+  "kind": "addon",
+  "short": "Distributed sessions",
+  "long": "Sessions where one peer edits a score that another machine runs.",
+  "small": "https://raw.githubusercontent.com/OSSIA/score-addon-tutorial/master/Deployment/icon.png",
+  "key": "33508c6d-46a1-4449-bfff-57246d579621"
+}
