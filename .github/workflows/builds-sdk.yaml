@@ -19,6 +19,7 @@ jobs:
   build:
     name: "SDK ${{ matrix.config.name }} ${{ matrix.version }}"
     runs-on: ${{ matrix.config.os }}
+    container: ${{ matrix.config.container }}
     strategy:
       fail-fast: false
       matrix:
@@ -27,18 +28,21 @@ jobs:
           - {
               name: "Windows",
               os: windows-latest,
+              container: "",
               dependencies: "curl -L -O https://github.com/ninja-build/ninja/releases/download/v1.13.1/ninja-win.zip && unzip ninja-win.zip",
               additional_flags: "-GNinja"
             }
           - {
               name: "Ubuntu",
-              os: ubuntu-latest,
+              os: [self-hosted, linux, x64, sat-builder],
+              container: "ubuntu:noble",
               dependencies: "sudo apt install -yqq libgl-dev libgl1-mesa-dev libegl1-mesa-dev libdrm-dev libxcomposite-dev libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libxcb-*-dev libX11-*-dev libz-dev libtinfo6 libxext-dev",
               additional_flags: ""
             }
           - {
               name: "macOS",
               os: macos-latest,
+              container: "",
               dependencies: "",
               additional_flags: ""
             }
@@ -94,7 +98,8 @@ jobs:
   package:
     name: Package
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, sat-builder]
+    container: ubuntu:noble
     steps:
       - name: Checkout addon
         uses: actions/checkout@v4

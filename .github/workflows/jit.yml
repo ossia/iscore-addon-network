@@ -19,15 +19,16 @@ jobs:
   jit:
     name: "JIT ${{ matrix.config.name }} ${{ matrix.version }}"
     runs-on: ${{ matrix.config.os }}
+    container: ${{ matrix.config.container }}
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         version: [ "latest", "continuous" ]
         config:
-          - { name: "Windows", os: windows-latest }
-          - { name: "Ubuntu", os: ubuntu-latest }
-          - { name: "macOS", os: macos-latest }
+          - { name: "Windows", os: windows-latest, container: "" }
+          - { name: "Ubuntu", os: [self-hosted, linux, x64, sat-builder], container: "ubuntu:noble" }
+          - { name: "macOS", os: macos-latest, container: "" }
 
     steps:
       - name: Checkout addon
