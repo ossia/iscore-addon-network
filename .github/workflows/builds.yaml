@@ -1,0 +1,23 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches: [master, main, dev, develop]
+    tags: ['v*']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ossia score addon: dev tree + SDK (latest/continuous) + JIT, bundled into one
+  # reusable workflow (was builds-dev/builds-sdk/jit/release).
+  #
+  # release is off: the release track runs ./release.sh, which this addon does
+  # not have. Flip it back on once the addon ships release.sh + addon.json.
+  ci:
+    uses: ossia/actions/.github/workflows/score-addon.yml@master
+    secrets: inherit
+    with:
+      release: false
