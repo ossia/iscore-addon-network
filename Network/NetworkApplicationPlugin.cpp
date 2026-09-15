@@ -18,10 +18,14 @@
 #include <core/document/DocumentModel.hpp>
 #include <core/presenter/DocumentManager.hpp>
 
+#include <QPushButton>
+#include <QDesktopServices>
+#include <QUrl>
 #include <QAction>
 #include <QApplication>
 #include <QDebug>
 #include <QMenu>
+#include <QAbstractButton>
 #include <QMessageBox>
 #include <QPair>
 #include <QTcpSocket>
@@ -36,6 +40,7 @@
 #include <Network/Group/Panel/GroupPanelDelegate.hpp>
 #include <Network/Session/ClientSessionBuilder.hpp>
 #include <Network/Session/MasterSession.hpp>
+#include <Network/Document/LibraryQueries.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -68,8 +73,16 @@ NetworkApplicationPlugin::NetworkApplicationPlugin(
   QCommandLineOption net_host_opt(
       "network-host", QCoreApplication::translate("net", "port"), "Name", "");
   parser.addOption(net_host_opt);
+  QCommandLineOption net_terminal_opt(
+      "network-terminal",
+      QCoreApplication::translate(
+          "net", "Join as a terminal: edit and watch the score, but run "
+                 "nothing on this machine."));
+  parser.addOption(net_terminal_opt);
 
   parser.parse(app.applicationSettings.arguments);
+  if(parser.isSet(net_terminal_opt))
+    this->m_arg_role = PeerRole::Terminal;
   this->m_arg_net_join = parser.value(net_join_opt);
   {
     bool ok = false;
@@ -97,6 +110,24 @@ void NetworkApplicationPlugin::on_createdDocument(score::Document& doc)
   }
 }
 
+void NetworkApplicationPlugin::on_documentChanged(
+    score::Document* olddoc, score::Document* newdoc)
+{
+  if(!newdoc || newdoc->role() != score::DocumentRole::Terminal)
+    return;
+
+  auto* plug = newdoc->context().findPlugin<NetworkDocumentPlugin>();
+  if(!plug)
+    return;
+
+  auto* rpc = plug->rpc();
+  auto* session = plug->policy().session();
+  if(!rpc || !session)
+    return;
+
+  importRemoteLibrary(*rpc, context, session->master().id(), true);
+}
+
 bool NetworkApplicationPlugin::handleLoading()
 {
   if(!m_arg_net_join.isEmpty())
@@ -116,12 +147,26 @@ bool NetworkApplicationPlugin::handleLoading()
       host = m_arg_net_join;
     }
 
+    // The scheme, when the address carries one, is not part of the host: a
+    // page served over https can only reach a host over wss, and splitting on
+    // ':' would otherwise leave "wss" as the address to dial.
+    QString scheme;
+    for(const auto& known : {"wss://", "ws://"})
+    {
+      if(host.startsWith(known))
+      {
+        scheme = known;
+        host.remove(0, qstrlen(known));
+        break;
+      }
+    }
+
     auto v = host.split(":");
 
     if(v.size() >= 1)
-      ip = v[0];
+      ip = scheme + v[0];
     else
-      ip = "127.0.0.1";
+      ip = scheme + "127.0.0.1";
 
     if(v.size() >= 2)
       port = v[1].toInt();
@@ -130,7 +175,7 @@ bool NetworkApplicationPlugin::handleLoading()
 
     m_arg_net_host = {};
     m_arg_net_join = {};
-    setupClientConnection(name, ip, port, {});
+    joinSession(ip, port, m_arg_role);
     return true;
   }
   return false;
@@ -139,7 +184,12 @@ bool NetworkApplicationPlugin::handleLoading()
 void NetworkApplicationPlugin::setupClientConnection(
     QString name, QString ip, int port, QMap<QString, QByteArray>)
 {
-  m_sessionBuilder = std::make_unique<ClientSessionBuilder>(context, ip, port);
+  joinSession(ip, port, PeerRole::Performer);
+}
+
+void NetworkApplicationPlugin::joinSession(QString ip, int port, PeerRole role)
+{
+  m_sessionBuilder = std::make_unique<ClientSessionBuilder>(context, ip, port, role);
 
   connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionReady, this, [&]() {
     if(auto panel = context.findPanel<Network::PanelDelegate>())
@@ -150,9 +200,60 @@ void NetworkApplicationPlugin::setupClientConnection(
   connect(m_sessionBuilder.get(), &ClientSessionBuilder::sessionFailed, this, [&]() {
     m_sessionBuilder.reset();
   });
-  connect(m_sessionBuilder.get(), &ClientSessionBuilder::connected, this, [&]() {
-    m_sessionBuilder->initiateConnection();
+  connect(
+      m_sessionBuilder.get(), &ClientSessionBuilder::connectionFailed, this,
+      [this](const QUrl& url, const QString& reason) {
+    reportUnreachableHost(url, reason);
+    m_sessionBuilder.reset();
+      });
+}
+
+void NetworkApplicationPlugin::reportUnreachableHost(
+    const QUrl& url, const QString& reason)
+{
+  if(!context.applicationSettings.gui)
+  {
+    qWarning() << "Could not reach" << url.toString() << ':' << reason;
+    return;
+  }
+
+  // A secure socket that never opens is almost always a certificate the
+  // browser will not take on trust. There is no way to accept one from a
+  // socket -- the prompt only exists for a page -- so the way through is to
+  // visit the same host and port once and accept it there.
+  const bool secure = url.scheme() == "wss";
+
+  // Shown, not exec'd: a browser has no nested event loop to run a modal in,
+  // and asking for one throws out of the wasm runtime.
+  auto* box = new QMessageBox{
+      QMessageBox::Warning, QObject::tr("Could not reach the session"),
+      QObject::tr("%1 did not answer.\n\n%2").arg(url.toString(), reason)};
+  box->setAttribute(Qt::WA_DeleteOnClose);
+
+  QPushButton* trust{};
+  if(secure)
+  {
+    box->setInformativeText(QObject::tr(
+        "If that machine's certificate is its own, this browser has to be told "
+        "to accept it before a session can be opened. Opening it in a tab shows "
+        "the usual warning; accept it there, then join again."));
+    trust = box->addButton(QObject::tr("Open it in a tab"), QMessageBox::ActionRole);
+  }
+  box->addButton(QMessageBox::Close);
+
+  QObject::connect(box, &QMessageBox::buttonClicked, box, [box, trust, url](QAbstractButton* b) {
+    if(!trust || b != trust)
+      return;
+
+    // https, not wss: it is the certificate that has to be shown, and only a
+    // page can show it. Same host and port, which is what an exception is
+    // recorded against. Opened from a click, so the browser allows the tab.
+    QUrl page = url;
+    page.setScheme("https");
+    QDesktopServices::openUrl(page);
   });
+
+  box->show();
 }
 
 void NetworkApplicationPlugin::setupPlayerConnection(
@@ -198,7 +299,8 @@ void NetworkApplicationPlugin::do_makeServer(score::Document& doc)
   {
     auto clt = new LocalClient(m_arg_net_host.toInt(), Id<Client>(0));
     clt->setName(tr("Master"));
-    auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
+    auto serv = new MasterSession(
+        ctx, clt, Id<Session>{score::random_id_generator::getRandomId()});
     auto editpol = new MasterEditionPolicy{serv, ctx};
     plug->setEditPolicy(editpol);
     auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
@@ -208,7 +310,8 @@ void NetworkApplicationPlugin::do_makeServer(score::Document& doc)
   {
     auto clt = new LocalClient(m_arg_net_host.toInt(), Id<Client>(0));
     clt->setName(tr("Master"));
-    auto serv = new MasterSession(ctx, clt, Id<Session>(1234));
+    auto serv = new MasterSession(
+        ctx, clt, Id<Session>{score::random_id_generator::getRandomId()});
     auto policy = new MasterEditionPolicy{serv, ctx};
     auto plug = new NetworkDocumentPlugin{ctx, policy, &doc};
     auto execpol = new MasterExecutionPolicy{*serv, *plug, ctx};
@@ -247,22 +350,34 @@ score::GUIElements NetworkApplicationPlugin::makeGUIElements()
 #endif
 
   QAction* makeServer = new QAction{tr("Make Server"), this};
+#if defined(__EMSCRIPTEN__)
+  // A page cannot listen for connections: LocalClient has no server there, and
+  // QWebSocketServer does not exist. The web build can join a session, not host
+  // one, and saying so beats a menu entry that half-works.
+  makeServer->setEnabled(false);
+  makeServer->setToolTip(
+      tr("A score running in a browser can join a session but cannot host one."));
+#else
   connect(makeServer, &QAction::triggered, this, [this] {
     if(auto doc = currentDocument())
       do_makeServer(*doc);
   });
+#endif
 
   fileMenu->addAction(makeServer);
 
   QAction* connectLocal = new QAction{tr("Join Server"), this};
-  connect(connectLocal, &QAction::triggered, this, [&]() {
-    IpDialog dial{QApplication::activeWindow()};
-
-    if(dial.exec())
-    {
+  connect(connectLocal, &QAction::triggered, this, [this]() {
+    // Shown rather than exec()'d: exec() runs a nested event loop, which the
+    // browser's main thread cannot provide. There it returned immediately with
+    // a rejection, so joining a session from the web build did nothing at all.
+    auto* dial = new IpDialog{QApplication::activeWindow()};
+    dial->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dial, &QDialog::accepted, this, [this, dial] {
       // Default is 127.0.0.1 : 9090
-      setupClientConnection(QString{}, dial.ip(), dial.port(), {});
-    }
+      joinSession(dial->ip(), dial->port(), dial->role());
+    });
+    dial->open();
   });
 
   fileMenu->addAction(connectLocal);

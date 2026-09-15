@@ -13,7 +13,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
 {
   qDebug("SlaveExecutionPolicy");
   auto& mapi = MessagesAPI::instance();
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_entered,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {
     auto it = doc.noncompensated.trigger_evaluation_entered.find(p);
@@ -24,11 +24,11 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     }
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_left,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p) {});
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_finished,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val) {
     auto it = doc.noncompensated.trigger_evaluation_finished.find(p);
@@ -39,7 +39,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     }
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_triggered,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, bool val) {
     auto it = doc.noncompensated.trigger_triggered.find(p);
@@ -49,7 +49,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
         it->second(m.clientId);
     }
       });
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.trigger_triggered_compensated,
       [&](const NetworkMessage& m, Path<Scenario::TimeSyncModel> p, qint64 ns,
           bool val) {
@@ -61,7 +61,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     }
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.interval_speed,
       [&](const NetworkMessage& m, Path<Scenario::IntervalModel> p, double val) {
     auto it = doc.noncompensated.interval_speed_changed.find(p);
@@ -72,7 +72,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     }
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_out_message,
       [&](const NetworkMessage& m, uint64_t process,
           std::vector<std::pair<Id<Client>, ossia::value>> vec) {
@@ -80,7 +80,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     this->on_message(process, std::move(vec));
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_out_audio,
       [&](const NetworkMessage& m, uint64_t process,
           std::vector<std::pair<Id<Client>, std::vector<std::vector<float>>>> vec) {
@@ -88,7 +88,7 @@ SlaveExecutionPolicy::SlaveExecutionPolicy(
     this->on_audio(process, std::move(vec));
       });
 
-  s.mapper().addHandler_(
+  s.mapper().addHandler_(this, 
       mapi.netpit_out_video,
       [&](const NetworkMessage& m, uint64_t process, QByteArray vec) {
     // Apply to the local process

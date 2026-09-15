@@ -1,10 +1,12 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/tools/std/HashMap.hpp>
 
 #include <QDataStream>
 #include <QList>
 #include <QMap>
+#include <QPointer>
 #include <QString>
 
 #include <Network/Communication/NetworkMessage.hpp>
@@ -16,14 +18,25 @@ namespace Network
 {
 struct NetworkMessage;
 
-class MessageMapper
+class SCORE_ADDON_NETWORK_EXPORT MessageMapper
 {
 public:
-  void addHandler(QByteArray addr, std::function<void(const NetworkMessage&)> fun);
+  /**
+   * @brief Register a handler, for as long as `owner` is alive.
+   *
+   * The mapper belongs to the session, which outlives the policies that install
+   * handlers on it -- nothing owns a Session, while a policy dies with its
+   * document. A message arriving in between would run a lambda holding
+   * references to freed objects, which is what happened when two peers in one
+   * process tore down while messages were still in flight.
+   */
+  void addHandler(
+      const QObject* owner, QByteArray addr,
+      std::function<void(const NetworkMessage&)> fun);
   template <typename Fun>
-  void addHandler_(const QByteArray& data, Fun f)
+  void addHandler_(const QObject* owner, const QByteArray& data, Fun f)
   {
-    addHandler(data, [fun = std::move(f)](const NetworkMessage& m) mutable {
+    addHandler(owner, data, [fun = std::move(f)](const NetworkMessage& m) mutable {
       QDataStream ss{m.data};
       DataStreamOutput s{ss};
       [&]<typename... Args>(void (Fun::*)(const NetworkMessage&, Args...) const) {
@@ -43,6 +56,11 @@ public:
   bool contains(const QByteArray& b) const;
 
 private:
-  score::hash_map<QByteArray, std::function<void(const NetworkMessage&)>> m_handlers;
+  struct Handler
+  {
+    QPointer<const QObject> owner;
+    std::function<void(const NetworkMessage&)> fun;
+  };
+  score::hash_map<QByteArray, Handler> m_handlers;
 };
 }

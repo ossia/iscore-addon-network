@@ -32,3 +32,10 @@ Makefile*
 #QtCtreator Qml
 *.qmlproject.user
 *.qmlproject.user.*
+
+# CMake configure output. This add-on is built from score's tree, but it is its
+# own repository, so configuring from here lands next to the sources.
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json

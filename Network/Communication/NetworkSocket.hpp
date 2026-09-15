@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <QUrl>
 #include <QString>
 
 #include <Network/Client/LocalClient.hpp>
@@ -27,8 +28,16 @@ public:
   void connected() W_SIGNAL(connected);
   void messageReceived(NetworkMessage m) W_SIGNAL(messageReceived, m);
 
+  //! Never reached at all. Carries the address it tried, because the usual
+  //! reason a secure one fails is a certificate the browser will not take on
+  //! trust -- and there is no way to ask it to, from a socket.
+  void connectionFailed(QUrl url, QString reason)
+      W_SIGNAL(connectionFailed, url, reason)
+
 private:
   void init();
   QWebSocket* m_socket{};
+  QUrl m_url;
+  bool m_everConnected{};
 };
 }

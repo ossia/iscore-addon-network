@@ -3,6 +3,7 @@
 #include "IpWidget.hpp"
 
 #include <QBoxLayout>
+#include <QCheckBox>
 #include <QDialogButtonBox>
 #include <QFlags>
 #include <QLayout>
@@ -30,6 +31,12 @@ IpDialog::IpDialog(QWidget* parent)
   m_portBox->setValue(9090);
   widg->layout()->addWidget(m_portBox);
 
+  m_terminalBox = new QCheckBox{tr("Remote control only"), this};
+  m_terminalBox->setToolTip(
+      tr("Edit and watch the score, but do not run it here: no devices are "
+         "opened and nothing is played or rendered on this machine."));
+  layout()->addWidget(m_terminalBox);
+
   auto box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
   layout()->addWidget(box);
 
@@ -47,11 +54,17 @@ const QString& IpDialog::ip() const
   return m_ip;
 }
 
+PeerRole IpDialog::role() const
+{
+  return m_role;
+}
+
 void IpDialog::accepted()
 {
   m_ip = m_ipBox->text();
 
   m_port = m_portBox->value();
+  m_role = m_terminalBox->isChecked() ? PeerRole::Terminal : PeerRole::Performer;
   accept();
 }
 

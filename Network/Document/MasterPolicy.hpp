@@ -1,11 +1,12 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <Network/Document/DocumentPlugin.hpp>
 #include <Network/Document/Timekeeper.hpp>
 #include <Network/Session/MasterSession.hpp>
 
 namespace Network
 {
-class MasterEditionPolicy : public EditionPolicy
+class SCORE_ADDON_NETWORK_EXPORT MasterEditionPolicy : public EditionPolicy
 {
 public:
   MasterEditionPolicy(MasterSession* s, const score::DocumentContext& c);

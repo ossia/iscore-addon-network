@@ -7,7 +7,10 @@
 #include <score/plugins/StringFactoryKey.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
+#include <score/application/ApplicationContext.hpp>
 #include <score/tools/IdentifierGeneration.hpp>
+
+#include <core/application/ApplicationSettings.hpp>
 
 #include <core/command/CommandStack.hpp>
 #include <core/document/Document.hpp>
@@ -21,6 +24,7 @@
 
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Client/RemoteClient.hpp>
+#include <Network/Communication/Capabilities.hpp>
 #include <Network/Communication/NetworkMessage.hpp>
 #include <Network/Communication/NetworkSocket.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
@@ -32,6 +36,34 @@ W_OBJECT_IMPL(Network::RemoteClientBuilder)
 namespace Network
 {
 class Client;
+
+namespace
+{
+//! Empty when the joining peer is compatible with us, otherwise why not.
+QString incompatibility(QDataStream& s)
+{
+  if(s.atEnd())
+    return QObject::tr(
+        "it runs a version of score too old to say which formats it speaks");
+
+  qint32 saveFormat{}, streamVersion{};
+  s >> saveFormat >> streamVersion;
+
+  const auto ourSaveFormat
+      = score::AppContext().applicationSettings.saveFormatVersion.value();
+  if(saveFormat != ourSaveFormat)
+    return QObject::tr("it uses document format %1, we use %2")
+        .arg(saveFormat)
+        .arg(ourSaveFormat);
+
+  if(streamVersion != QDataStream::Qt_DefaultCompiledVersion)
+    return QObject::tr("it encodes commands with Qt stream version %1, we use %2")
+        .arg(streamVersion)
+        .arg((int)QDataStream::Qt_DefaultCompiledVersion);
+
+  return {};
+}
+}
 
 RemoteClientBuilder::RemoteClientBuilder(MasterSession& session, QWebSocket* sock)
     : m_session{session}
@@ -50,7 +82,25 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
     QDataStream s{m.data};
     s >> m_clientName;
 
-    // TODO validation
+    // Both ends must agree on the encoding and on what the model means: a
+    // mismatch reads the wrong bytes into the right fields rather than
+    // failing. Refuse the join.
+    if(auto reason = incompatibility(s); !reason.isEmpty())
+    {
+      NetworkMessage rejected;
+      rejected.address = mapi.session_rejected;
+      rejected.sessionId = m_session.id();
+      rejected.clientId = m_session.localClient().id();
+      {
+        QDataStream stream(&rejected.data, QIODevice::WriteOnly);
+        stream << reason;
+      }
+      qWarning() << "Refused a client:" << reason;
+      m_socket->sendMessage(rejected);
+      m_refused = true;
+      return;
+    }
+
     NetworkMessage idOffer;
     idOffer.address = mapi.session_idOffer;
     idOffer.sessionId = m_session.id();
@@ -61,14 +111,55 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
       // TODO make a strong id with the client array!!!!!!
       int32_t id = score::random_id_generator::getRandomId();
       m_clientId = Id<Client>(id);
+      m_offered = true;
       stream << id;
+      stream << Capabilities::local(score::AppContext());
+    }
+
+    if(!s.atEnd())
+    {
+      Capabilities theirs;
+      s >> theirs;
+      if(auto missing = theirs.lacking(Capabilities::local(score::AppContext()));
+         !missing.isEmpty())
+      {
+        qDebug() << "Client" << m_clientName
+                 << "cannot construct everything this session uses:"
+                 << missing.summary();
+      }
+    }
+
+    // Appended last so a peer that predates roles simply does not send one and
+    // is taken for a performer, which is what it is.
+    if(!s.atEnd())
+    {
+      int32_t requested{};
+      s >> requested;
+      if(requested == int32_t(PeerRole::Terminal))
+        m_role = PeerRole::Terminal;
+    }
+
+    {
+      // Confirmed rather than merely acknowledged: the client uses what we
+      // answer, so a host that has to refuse a role has somewhere to say so.
+      QDataStream stream(&idOffer.data, QIODevice::Append);
+      stream << int32_t(m_role);
     }
 
     m_socket->sendMessage(idOffer);
   }
   else if(m.address == mapi.session_join)
   {
-    // TODO validation
+    // Refusing a client only means anything if it cannot then help itself to
+    // the document: nothing obliged it to ask for an id first, or to stop
+    // after being told no, and joining twice made two clients on one socket.
+    if(m_refused || !m_offered || m_joined)
+    {
+      qWarning() << "Ignoring a join from a client that was not admitted";
+      return;
+    }
+    m_joined = true;
+
     NetworkMessage doc;
     doc.address = mapi.session_document;
 
@@ -85,6 +176,13 @@ void RemoteClientBuilder::on_messageReceived(const NetworkMessage& m)
 
     m_remoteClient = new RemoteClient(m_socket, m_clientId);
     m_remoteClient->setName(m_clientName);
+    m_remoteClient->setRole(m_role);
+
+    qDebug().noquote() << "Client" << m_clientName << "joined as"
+                       << (m_role == PeerRole::Terminal
+                               ? "a terminal (it will not run the score)"
+                               : "a performer (it will run the score too)");
+
     clientReady(this, m_remoteClient);
   }
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <score/model/Identifier.hpp>
 
 #include <QList>
@@ -24,7 +25,7 @@ class LocalClient;
 class RemoteClient;
 class RemoteClientBuilder;
 struct NetworkMessage;
-class MasterSession : public Session
+class SCORE_ADDON_NETWORK_EXPORT MasterSession : public Session
 {
   W_OBJECT(MasterSession)
 public:

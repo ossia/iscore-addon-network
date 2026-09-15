@@ -12,6 +12,13 @@
 #include <Network/Communication/MessageMapper.hpp>
 #include <Network/Document/Execution/BasicPruner.hpp>
 #include <Network/Document/MasterPolicy.hpp>
+#include <Network/Document/RemoteCommand.hpp>
+#include <Network/Document/Transport.hpp>
+#include <Network/Document/DeviceStatus.hpp>
+#include <Network/Document/DeviceTree.hpp>
+#include <Network/Document/DeviceValues.hpp>
+#include <Network/Document/RemoteLog.hpp>
+#include <Network/Client/RemoteClient.hpp>
 #include <Network/Group/NetworkActions.hpp>
 
 namespace Network
@@ -27,6 +34,24 @@ MasterEditionPolicy::MasterEditionPolicy(
 {
   auto& stack = c.document.commandStack();
   auto& mapi = MessagesAPI::instance();
+
+  // Peers that do not execute have no other way to know where the score is,
+  // nor whether the devices they can see are connected.
+  bindTransportBroadcast(*this, *m_session, m_ctx);
+  bindDeviceStatusBroadcast(*this, *m_session, m_ctx);
+
+  // A peer with no devices of its own edits the tree here instead.
+  bindValueSetter(*this, *m_session, m_ctx);
+  bindValueBroadcast(*this, *m_session, m_ctx);
+  bindLogBroadcast(*this, *m_session, m_ctx);
+
+  // What our devices turned out to contain: only this machine can refresh them.
+  bindDeviceTreeBroadcast(*this, *m_session, m_ctx);
+
+  // A peer joining mid-session would otherwise see nothing until something
+  // happened to change.
+  con(*s, &Session::clientAdded, this,
+      [this](RemoteClient*) { broadcastAllDeviceStatus(*m_session, m_ctx); });
 
   /////////////////////////////////////////////////////////////////////////////
   /// From the master to the clients
@@ -84,41 +109,68 @@ MasterEditionPolicy::MasterEditionPolicy(
       m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop));
       stop();
     });
+
+    // The ordinary transport too: peers that do not execute have no other way
+    // to know the score started.
+    connect(
+        c.app.actions.action<Actions::Play>().action(), &QAction::triggered, this,
+        [&] { m_session->broadcastToAllClients(m_session->makeMessage(mapi.play)); });
+    connect(
+        c.app.actions.action<Actions::PlayGlobal>().action(), &QAction::triggered,
+        this,
+        [&] { m_session->broadcastToAllClients(m_session->makeMessage(mapi.play)); });
+    connect(
+        c.app.actions.action<Actions::Stop>().action(), &QAction::triggered, this,
+        [&] { m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop)); });
   }
 
   /////////////////////////////////////////////////////////////////////////////
   /// From a client to the master and the other clients
   /////////////////////////////////////////////////////////////////////////////
-  s->mapper().addHandler(mapi.command_new, [&](const NetworkMessage& m) {
-    score::CommandData cmd;
-    DataStreamWriter writer{m.data};
-    writer.writeTo(cmd);
+  s->mapper().addHandler(this, mapi.command_new, [&](const NetworkMessage& m) {
+    if(applyRemoteCommand(m_ctx, m.data, OnCommandFailure::Decline))
+    {
+      m_session->broadcastToOthers(m.clientId, m);
+      return;
+    }
 
-    stack.redoAndPushQuiet(m_ctx.app.instantiateUndoCommand(cmd));
-
-    m_session->broadcastToOthers(m.clientId, m);
+    // Not broadcast: only the sender applied it, so only the sender is out of
+    // step. Told, so it stops editing against a model we do not share.
+    m_session->sendMessage(
+        m.clientId, m_session->makeMessage(mapi.command_rejected));
   });
 
   // Undo-redo
-  s->mapper().addHandler(mapi.command_undo, [&](const NetworkMessage& m) {
-    stack.undoQuiet();
-    m_session->broadcastToOthers(m.clientId, m);
+  // From the wire like any other message: undoQuiet pops whether or not there
+  // is anything to pop.
+  s->mapper().addHandler(this, mapi.command_undo, [&](const NetworkMessage& m) {
+    if(stack.canUndo())
+    {
+      stack.undoQuiet();
+      m_session->broadcastToOthers(m.clientId, m);
+    }
   });
-  s->mapper().addHandler(mapi.command_redo, [&](const NetworkMessage& m) {
-    stack.redoQuiet();
-    m_session->broadcastToOthers(m.clientId, m);
+  s->mapper().addHandler(this, mapi.command_redo, [&](const NetworkMessage& m) {
+    if(stack.canRedo())
+    {
+      stack.redoQuiet();
+      m_session->broadcastToOthers(m.clientId, m);
+    }
   });
 
-  s->mapper().addHandler(mapi.command_index, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.command_index, [&](const NetworkMessage& m) {
     QDataStream stream{m.data};
-    int32_t idx;
+    int32_t idx{};
     stream >> idx;
-    stack.setIndexQuiet(idx);
-    m_session->broadcastToOthers(m.clientId, m);
+    if(idx >= 0 && idx <= stack.size())
+    {
+      stack.setIndexQuiet(idx);
+      m_session->broadcastToOthers(m.clientId, m);
+    }
   });
 
   // Lock-unlock
-  s->mapper().addHandler(mapi.lock, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.lock, [&](const NetworkMessage& m) {
     QDataStream stream{m.data};
     QByteArray data;
     stream >> data;
@@ -126,7 +178,7 @@ MasterEditionPolicy::MasterEditionPolicy(
     m_session->broadcastToOthers(m.clientId, m);
   });
 
-  s->mapper().addHandler(mapi.unlock, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.unlock, [&](const NetworkMessage& m) {
     QDataStream stream{m.data};
     QByteArray data;
     stream >> data;
@@ -134,25 +186,25 @@ MasterEditionPolicy::MasterEditionPolicy(
     m_session->broadcastToOthers(m.clientId, m);
   });
 
-  s->mapper().addHandler(mapi.play, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.play, [&](const NetworkMessage& m) {
     m_session->broadcastToAllClients(m_session->makeMessage(mapi.play));
     play();
   });
-  s->mapper().addHandler(mapi.stop, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.stop, [&](const NetworkMessage& m) {
     m_session->broadcastToAllClients(m_session->makeMessage(mapi.stop));
     stop();
   });
 
-  s->mapper().addHandler(mapi.ping, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.ping, [&](const NetworkMessage& m) {
     qint64 t = std::chrono::duration_cast<std::chrono::nanoseconds>(
                    std::chrono::high_resolution_clock::now().time_since_epoch())
                    .count();
     m_session->sendMessage(m.clientId, m_session->makeMessage(mapi.pong, t));
   });
 
-  s->mapper().addHandler(mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
+  s->mapper().addHandler(this, mapi.pong, [&](const NetworkMessage& m) { m_keep.on_pong(m); });
 
-  s->mapper().addHandler(mapi.session_portinfo, [&](const NetworkMessage& m) {
+  s->mapper().addHandler(this, mapi.session_portinfo, [&](const NetworkMessage& m) {
     QString s;
     int p;
     QDataStream stream{m.data};
@@ -187,8 +239,9 @@ void MasterEditionPolicy::stop()
   auto sm = score::IDocument::try_get<Scenario::ScenarioDocumentModel>(m_ctx.document);
   if(sm)
   {
-    auto stop_action = m_ctx.app.actions.action<Actions::Stop>().action();
-    stop_action->trigger();
+    // not the Stop action: it is registered by the GUI only
+    auto& plug = m_ctx.app.guiApplicationPlugin<Engine::ApplicationPlugin>();
+    plug.execution().request_stop();
   }
 }
 }

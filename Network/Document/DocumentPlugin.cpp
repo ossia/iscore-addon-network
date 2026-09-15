@@ -28,6 +28,13 @@
 
 #include <Netpit/MessageContext.hpp>
 #include <Network/Client/Client.hpp>
+#include <Network/Client/RemoteClient.hpp>
+#include <Network/Document/DeviceQueries.hpp>
+#include <Network/Document/RemoteScript.hpp>
+#include <Network/Document/FileQueries.hpp>
+#include <Network/Document/ObjectQueries.hpp>
+#include <Network/Document/LibraryQueries.hpp>
+#include <Network/Document/DeviceStatus.hpp>
 #include <Network/Client/LocalClient.hpp>
 #include <Network/Document/Execution/SyncMode.hpp>
 #include <Network/Group/Group.hpp>
@@ -55,11 +62,20 @@ MessagesAPI::MessagesAPI()
     , command_undo{QByteArrayLiteral("/command/undo")}
     , command_redo{QByteArrayLiteral("/command/redo")}
     , command_index{QByteArrayLiteral("/command/index")}
+    , command_rejected{QByteArrayLiteral("/command/rejected")}
+    , rpc_request{QByteArrayLiteral("/rpc/request")}
+    , rpc_response{QByteArrayLiteral("/rpc/response")}
     , lock{QByteArrayLiteral("/lock")}
     , unlock{QByteArrayLiteral("/unlock")}
     ,
 
-    ping{QByteArrayLiteral("/ping")}
+    device_status{QByteArrayLiteral("/device/status")}
+    , device_value{QByteArrayLiteral("/device/value")}
+    , device_value_changed{QByteArrayLiteral("/device/value/changed")}
+    , device_tree{QByteArrayLiteral("/device/tree")}
+    , log_lines{QByteArrayLiteral("/log/lines")}
+    , exec_position{QByteArrayLiteral("/exec/position")}
+    , ping{QByteArrayLiteral("/ping")}
     , pong{QByteArrayLiteral("/pong")}
     , play{QByteArrayLiteral("/play")}
     , stop{QByteArrayLiteral("/stop")}
@@ -70,6 +86,7 @@ MessagesAPI::MessagesAPI()
     , session_idOffer{QByteArrayLiteral("/session/idOffer")}
     , session_join{QByteArrayLiteral("/session/join")}
     , session_document{QByteArrayLiteral("/session/document")}
+    , session_rejected{QByteArrayLiteral("/session/rejected")}
     ,
 
     trigger_expression_true{QByteArrayLiteral("/trigger/expression_true")}
@@ -106,6 +123,23 @@ NetworkDocumentPlugin::NetworkDocumentPlugin(
   SCORE_ASSERT(policy);
   m_policy->setParent(this);
 
+  m_rpc = std::make_unique<RpcChannel>(*m_policy->session());
+  bindDeviceQueries(*m_rpc, m_context);
+  bindFileQueries(*m_rpc, m_context);
+  bindObjectQueries(*m_rpc, m_context);
+  bindLibraryQueries(*m_rpc, m_context);
+  bindDeviceStatusQuery(*m_rpc, m_context);
+  bindScriptEvaluation(*m_rpc, m_context);
+
+  // A question put to a peer that then leaves would otherwise wait out its
+  // timeout with nothing to wait for.
+  connect(
+      m_policy->session(), &Session::clientRemoved, m_rpc.get(),
+      [this](RemoteClient* c) {
+    if(c && m_rpc)
+      m_rpc->peerLost(c->id());
+      });
+
   // Base group set-up
   auto allGroup = new Group{"all", Id<Group>{0}, &groupManager()};
   allGroup->addClient(m_policy->session()->localClient().id());
@@ -135,6 +169,26 @@ void NetworkDocumentPlugin::setEditPolicy(EditionPolicy* pol)
   delete m_policy;
   pol->setParent(this);
   m_policy = pol;
+
+  // Its handlers live on the session's mapper, so it belongs to whichever
+  // session we are now part of rather than to the one we just left.
+  m_rpc = std::make_unique<RpcChannel>(*m_policy->session());
+  bindDeviceQueries(*m_rpc, m_context);
+  bindFileQueries(*m_rpc, m_context);
+  bindObjectQueries(*m_rpc, m_context);
+  bindLibraryQueries(*m_rpc, m_context);
+  bindDeviceStatusQuery(*m_rpc, m_context);
+  bindScriptEvaluation(*m_rpc, m_context);
+
+  // A question put to a peer that then leaves would otherwise wait out its
+  // timeout with nothing to wait for.
+  connect(
+      m_policy->session(), &Session::clientRemoved, m_rpc.get(),
+      [this](RemoteClient* c) {
+    if(c && m_rpc)
+      m_rpc->peerLost(c->id());
+      });
+
   m_groups->cleanup(m_policy->session()->remoteClients());
 
   sessionChanged();
@@ -221,6 +275,31 @@ GroupManager& NetworkDocumentPlugin::groupManager() const
 EditionPolicy& NetworkDocumentPlugin::policy() const
 {
   return *m_policy;
+}
+
+void NetworkDocumentPlugin::setRemoteCapabilities(Capabilities c)
+{
+  m_remoteCaps = std::move(c);
+}
+
+void NetworkDocumentPlugin::setDiverged(const QString& reason)
+{
+  // Only the first divergence is meaningful: everything after it is a
+  // consequence of applying the stream to a model that no longer matches.
+  if(!m_divergence.isEmpty())
+    return;
+
+  m_divergence = reason;
+
+  // Stop sending as well as applying: our paths now name different objects
+  // on the other side.
+  if(m_policy)
+    m_policy->setSendCommands(false);
+
+  qWarning() << "Network session diverged:" << reason
+             << "- this document no longer matches the session and must be "
+                "rejoined to edit it safely.";
+  divergedChanged(reason);
 }
 
 void NetworkDocumentPlugin::on_stop()

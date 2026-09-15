@@ -1,11 +1,12 @@
 #pragma once
+#include <score_addon_network_export.h>
 #include <Network/Client/Client.hpp>
 #include <Network/Communication/NetworkServer.hpp>
 class QWebSocket;
 // Has a TCP server to receive incoming connections from other clients.
 namespace Network
 {
-class LocalClient : public Client
+class SCORE_ADDON_NETWORK_EXPORT LocalClient : public Client
 {
   W_OBJECT(LocalClient)
 public:

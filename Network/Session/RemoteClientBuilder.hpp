@@ -2,6 +2,8 @@
 #include <score/model/Identifier.hpp>
 #include <score/tools/std/Optional.hpp>
 
+#include <Network/Client/PeerRole.hpp>
+
 #include <QObject>
 #include <QString>
 
@@ -37,6 +39,12 @@ private:
   RemoteClient* m_remoteClient{};
 
   Id<Client> m_clientId;
+
+  //! A client is served once, and only after being offered an id.
+  bool m_offered{};
+  bool m_refused{};
+  bool m_joined{};
   QString m_clientName;
+  PeerRole m_role{PeerRole::Performer};
 };
 }

@@ -14,13 +14,23 @@ set(HDRS
     Network/Client/Client.hpp
     Network/Client/LocalClient.hpp
     Network/Client/RemoteClient.hpp
+    Network/Communication/Capabilities.hpp
+    Network/Communication/Rpc.hpp
     Network/Communication/MessageMapper.hpp
+    Network/Communication/WireRead.hpp
+    Network/Communication/WireJson.hpp
     Network/Communication/MessageValidator.hpp
     Network/Communication/NetworkMessage.hpp
     Network/Communication/NetworkServer.hpp
     Network/Communication/NetworkSocket.hpp
     Network/Document/ClientPolicy.hpp
     Network/Document/DocumentPlugin.hpp
+    Network/Document/DeviceQueries.hpp
+    Network/Document/FileQueries.hpp
+    Network/Document/RemoteEnvironment.hpp
+    Network/Document/RemoteCommand.hpp
+    Network/Document/RemoteScript.hpp
+    Network/Document/RemoteLog.hpp
     Network/Document/MasterPolicy.hpp
     Network/Document/Timekeeper.hpp
     Network/Document/NTP.hpp
@@ -43,6 +53,15 @@ set(HDRS
     Network/Group/Commands/RemoveClientFromGroup.hpp
     Network/Group/Commands/RemoveGroup.hpp
     Network/Group/Commands/AddCustomMetadata.hpp
+    Network/Client/PeerRole.hpp
+    Network/Group/GroupExecution.hpp
+    Network/Document/Transport.hpp
+    Network/Document/DeviceStatus.hpp
+    Network/Document/DeviceValues.hpp
+    Network/Document/DeviceTree.hpp
+    Network/Document/ObjectQueries.hpp
+    Network/Document/LibraryQueries.hpp
+    Network/Document/RemoteDeviceCatalog.hpp
     Network/Group/Group.hpp
     Network/Group/NetworkActions.hpp
     Network/Group/GroupManager.hpp
@@ -82,6 +101,8 @@ set(SRCS
     Network/Group/GroupMetadataSerialization.cpp
 
     Network/Client/LocalClient.cpp
+    Network/Communication/Capabilities.cpp
+    Network/Communication/Rpc.cpp
     Network/Communication/MessageMapper.cpp
     Network/Communication/MessageValidator.cpp
     Network/Communication/NetworkMessage.cpp
@@ -92,6 +113,19 @@ set(SRCS
     Network/Document/DocumentPluginSerialization.cpp
     Network/Document/PlaceholderPolicy.cpp
     Network/Document/MasterPolicy.cpp
+    Network/Document/DeviceQueries.cpp
+    Network/Document/FileQueries.cpp
+    Network/Document/RemoteEnvironment.cpp
+    Network/Document/RemoteCommand.cpp
+    Network/Document/RemoteScript.cpp
+    Network/Document/RemoteLog.cpp
+    Network/Document/Transport.cpp
+    Network/Document/DeviceStatus.cpp
+    Network/Document/DeviceValues.cpp
+    Network/Document/DeviceTree.cpp
+    Network/Document/ObjectQueries.cpp
+    Network/Document/LibraryQueries.cpp
+    Network/Document/RemoteDeviceCatalog.cpp
     Network/Document/NTP.cpp
     Network/Document/Execution/BasicPruner.cpp
     Network/Document/Execution/DateExpression.cpp
@@ -107,6 +141,7 @@ set(SRCS
     Network/Group/Commands/RemoveClientFromGroup.cpp
     Network/Group/Commands/AddCustomMetadata.cpp
     Network/Group/Group.cpp
+    Network/Group/GroupExecution.cpp
     Network/Group/GroupManager.cpp
     Network/Group/GroupMetadata.cpp
     Network/Group/GroupMetadataWidget.cpp
@@ -155,6 +190,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     score_lib_process
                                     score_plugin_engine
                                     score_plugin_avnd
+                                    score_plugin_library
                                     ${QT_PREFIX}::Core
                                     ${QT_PREFIX}::Widgets
                                     ${QT_PREFIX}::Network
@@ -163,3 +199,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 
 setup_score_plugin(${PROJECT_NAME})
+
+if(SCORE_TESTING)
+  add_subdirectory(Tests)
+endif()

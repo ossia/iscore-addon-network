@@ -31,6 +31,28 @@ public:
   void stop() override;
 };
 
+/**
+ * @brief A client that edits the score but never runs it.
+ *
+ * Everything that makes remote edition work is inherited unchanged: commands,
+ * undo, locks and the rpc channel all replicate exactly as for any peer. Only
+ * the meaning of transport differs. Play here is a request addressed to the
+ * host, and the host's own /play is not an instruction to start anything --
+ * there is nothing on this machine to start.
+ */
+class SCORE_ADDON_NETWORK_EXPORT TerminalEditionPolicy : public ClientEditionPolicy
+{
+public:
+  TerminalEditionPolicy(ClientSession* s, const score::DocumentContext& c);
+
+  void play() override;
+  void stop() override;
+
+private:
+  void requestPlay();
+  void requestStop();
+};
+
 class SCORE_ADDON_NETWORK_EXPORT PlayerClientEditionPolicy : public ClientEditionPolicy
 {
 public:

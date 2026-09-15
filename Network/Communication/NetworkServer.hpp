@@ -14,6 +14,9 @@ public:
   NetworkServer(int port, QObject* parent);
   int port() const;
 
+  //! The port serving wss, or 0 when this machine has no certificate to offer.
+  int securePort() const;
+
   QWebSocketServer& server() const { return *m_server; }
 
   QString m_localAddress;
@@ -23,6 +26,7 @@ public:
 
 private:
   QWebSocketServer* m_server{};
+  QWebSocketServer* m_secureServer{};
 };
 }
 
