@@ -165,11 +165,16 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     score_lib_process
                                     score_plugin_engine
                                     score_plugin_avnd
+                                    )
+
+if(NOT EXISTS "${SCORE_SDK}")
+  target_link_libraries(${PROJECT_NAME} PUBLIC
                                     ${QT_PREFIX}::Core
                                     ${QT_PREFIX}::Widgets
                                     ${QT_PREFIX}::Network
                                     ${QT_PREFIX}::WebSockets
                                     )
+endif()
 
 
 setup_score_plugin(${PROJECT_NAME})
