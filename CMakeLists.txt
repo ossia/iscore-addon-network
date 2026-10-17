@@ -154,6 +154,9 @@ set(SRCS
 
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE SCORE_ADDON_NETWORK_EXPORTS=1)
+if(WIN32)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
 score_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
 # target_compile_options(${PROJECT_NAME} PRIVATE -ftime-trace)
 target_link_libraries(${PROJECT_NAME} PUBLIC
