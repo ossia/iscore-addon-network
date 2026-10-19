@@ -1,3 +1,9 @@
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+
+if(NOT TARGET score_lib_base)
+  include(ScoreExternalAddon)
+endif()
+
 project(score_addon_network LANGUAGES CXX)
 
 if(NOT TARGET score_plugin_avnd)
@@ -147,6 +153,10 @@ set(SRCS
 )
 
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS})
+target_compile_definitions(${PROJECT_NAME} PRIVATE SCORE_ADDON_NETWORK_EXPORTS=1)
+if(WIN32)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
 score_generate_command_list_file(${PROJECT_NAME} "${HDRS}")
 # target_compile_options(${PROJECT_NAME} PRIVATE -ftime-trace)
 target_link_libraries(${PROJECT_NAME} PUBLIC
@@ -155,11 +165,16 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                                     score_lib_process
                                     score_plugin_engine
                                     score_plugin_avnd
+                                    )
+
+if(NOT EXISTS "${SCORE_SDK}")
+  target_link_libraries(${PROJECT_NAME} PUBLIC
                                     ${QT_PREFIX}::Core
                                     ${QT_PREFIX}::Widgets
                                     ${QT_PREFIX}::Network
                                     ${QT_PREFIX}::WebSockets
                                     )
+endif()
 
 
 setup_score_plugin(${PROJECT_NAME})
